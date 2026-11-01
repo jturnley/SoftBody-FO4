@@ -53,7 +53,11 @@ of its HVA collision NIF (closed, outward-facing, one per genital bone) become t
 `SoftBodyVaginaOut`, `SoftBodyVaginaDeep` and `SoftBodyAnus`, per-triangle-shapes that collide with
 the tag `Penis` (A-Body's VirtualPenis) and with the hands. The genital bones carry GT's springs
 (ported from its `FemaleCollisionHandVaginaAnal.xml`): GT's Skyrim anchor bones become kinematic
-NIF-only nodes turned as in GT, since a spring's limits run along its anchor's axes. Slider data for the new shapes: `SoftBodyGenitals.osd`. GT's licence
+NIF-only nodes turned as in GT, since a spring's limits run along its anchor's axes. Their travel
+is capped at 3 units (GT allows up to 30): in scenes 4Stim makes A-Body's penis kinematic, and one
+off the opening dragged her flesh out that far. The drawn shapes (`SoftBodyVulva`,
+`SoftBodyGenitals`) are `BSSubIndexTriShape`s with CBBE's four segments, as body parts are, so
+that they take the NPC's skin tint. Slider data for the new shapes: `SoftBodyGenitals.osd`. GT's licence
 allows conversion with credit to Goutou, no paid use. Needs GT Softbody installed (Skyrim side)
 when building.
 
@@ -64,8 +68,11 @@ Status (2026-11-01):
 - Confirmed in game: jiggle and hand-to-body push on the player and NPCs, local
   dents, the transplanted genitals (undressing works), and the collision pads
   (SMP builds them).
-- Built but not yet tested in game: the genital springs, and the skin seam fix
-  (the patch reads the skin's normal map in CBBE's own tangent frames).
+- Built but not yet tested in game: the genital springs (v0.1 tore the vulva
+  out under a kinematic penis; v0.2 caps their travel), the skin seam fix
+  (the patch reads the skin's normal map in CBBE's own tangent frames), and
+  skin tint on the vulva and genitals (v0.2; v0.1 left them pale on
+  dark-skinned NPCs).
 - Not yet done: penetration testing (blocked by 4Stim leaving the A-Body penis
   flaccid), arm and thigh colliders, clothing, animation-framework hooks.
 

@@ -189,7 +189,10 @@
 
   <!--
     Genitals: GT Softbody's springs (its FemaleCollisionHandVaginaAnal.xml, by
-    Goutou), ported value for value. Each moving genital bone hangs off one of
+    Goutou), ported value for value except travel: GT lets these bones move up
+    to 30 units, and a kinematic penis off the opening (4Stim swaps A-Body to
+    its rigid MaleBodyHard.xml in scenes) dragged her flesh out that far, so
+    every linear limit is capped at 3. Each moving genital bone hangs off one of
     GT's Skyrim skeleton bones; the body NIF carries those as kinematic anchors,
     turned as GT has them (a spring's limits run along its anchor's axes, after
     frameInB), and GT's pelvis as "GT Pelvis". A lower limit above its upper
@@ -434,23 +437,23 @@
   <!-- the hood pulls back, the rear lip and the labia part -->
   <generic-constraint bodyA="Clitoral1" bodyB="Clitoral" template="gtSpring">
     <frameInB><basis x="-0.25" y="0" z="0" w="0.5"/><origin x="0" y="0" z="0"/></frameInB>
-    <linearLowerLimit x="0" y="-10" z="0"/>
+    <linearLowerLimit x="0" y="-3" z="0"/>
     <linearStiffness x="0" y="40" z="0"/>
     <linearDamping x="0" y="10" z="0"/>
   </generic-constraint>
   <generic-constraint bodyA="VaginaB1" bodyB="VaginaB" template="gtSpring">
     <frameInB><basis x="-0.25" y="0" z="0" w="0.5"/><origin x="0" y="0" z="0"/></frameInB>
-    <linearUpperLimit x="0" y="25" z="0"/>
+    <linearUpperLimit x="0" y="3" z="0"/>
     <linearStiffness x="0" y="40" z="0"/>
     <linearDamping x="0" y="10" z="0"/>
   </generic-constraint>
   <generic-constraint bodyA="NPC L Pussy02" bodyB="NPC L Pussy01" template="gtSpring">
-    <linearUpperLimit x="25" y="0" z="0"/>
+    <linearUpperLimit x="3" y="0" z="0"/>
     <linearStiffness x="40" y="0" z="0"/>
     <linearDamping x="10" y="0" z="0"/>
   </generic-constraint>
   <generic-constraint bodyA="NPC R Pussy02" bodyB="NPC R Pussy01" template="gtSpring">
-    <linearLowerLimit x="-25" y="0" z="0"/>
+    <linearLowerLimit x="-3" y="0" z="0"/>
     <linearStiffness x="40" y="0" z="0"/>
     <linearDamping x="10" y="0" z="0"/>
   </generic-constraint>
@@ -458,12 +461,12 @@
   <!-- the deep end -->
   <generic-constraint bodyA="VaginaDeep1" bodyB="VaginaDeep" template="gtSpring">
     <frameInB><basis x="-0.1" y="0" z="0" w="1"/><origin x="0" y="0" z="0"/></frameInB>
-    <linearUpperLimit x="0" y="15" z="0"/>
+    <linearUpperLimit x="0" y="3" z="0"/>
     <linearStiffness x="0" y="20" z="20"/>
     <linearDamping x="0" y="5" z="5"/>
   </generic-constraint>
   <generic-constraint bodyA="VaginaDeep2" bodyB="VaginaDeep1" template="gtSpring">
-    <linearLowerLimit x="0" y="-8" z="0"/>
+    <linearLowerLimit x="0" y="-3" z="0"/>
     <linearStiffness x="600" y="60" z="600"/>
     <linearDamping x="10" y="8" z="10"/>
   </generic-constraint>
@@ -480,7 +483,7 @@
     <enableLinearSprings>1</enableLinearSprings>
     <linearStiffnessLimited>0</linearStiffnessLimited>
     <angularStiffnessLimited>0</angularStiffnessLimited>
-    <linearLowerLimit x="0" y="-8" z="-20"/>
+    <linearLowerLimit x="0" y="-3" z="-3"/>
     <linearUpperLimit x="0" y="0" z="0"/>
     <angularLowerLimit x="0" y="0" z="0"/>
     <angularUpperLimit x="0" y="0" z="0"/>
@@ -502,7 +505,7 @@
     <linearStiffnessLimited>0</linearStiffnessLimited>
     <angularStiffnessLimited>0</angularStiffnessLimited>
     <linearLowerLimit x="1" y="-0.7" z="0"/>
-    <linearUpperLimit x="0" y="0.7" z="10"/>
+    <linearUpperLimit x="0" y="0.7" z="3"/>
     <angularLowerLimit x="0" y="0" z="0"/>
     <angularUpperLimit x="0" y="0" z="0"/>
     <linearStiffness x="0" y="10" z="10"/>
@@ -523,7 +526,7 @@
     <linearStiffnessLimited>0</linearStiffnessLimited>
     <angularStiffnessLimited>0</angularStiffnessLimited>
     <linearLowerLimit x="1" y="1" z="0"/>
-    <linearUpperLimit x="0" y="0" z="5"/>
+    <linearUpperLimit x="0" y="0" z="3"/>
     <angularLowerLimit x="0" y="0" z="0"/>
     <angularUpperLimit x="0" y="0" z="0"/>
     <linearStiffness x="0" y="10" z="10"/>
@@ -606,23 +609,23 @@
 
   <!-- the anus: each quarter opens outward -->
   <generic-constraint bodyA="NPC RT Anus2" bodyB="NPC RT Anus1" template="gtSpring">
-    <linearLowerLimit x="-30" y="0" z="0"/>
+    <linearLowerLimit x="-3" y="0" z="0"/>
     <linearStiffness x="5" y="0" z="0"/>
     <linearDamping x="1" y="0" z="0"/>
   </generic-constraint>
   <generic-constraint bodyA="NPC LT Anus2" bodyB="NPC LT Anus1" template="gtSpring">
     <frameInB><basis x="0" y="0.1" z="0" w="-0.3"/><origin x="0" y="0" z="0"/></frameInB>
-    <linearUpperLimit x="25" y="0" z="0"/>
+    <linearUpperLimit x="3" y="0" z="0"/>
     <linearStiffness x="10" y="0" z="0"/>
     <linearDamping x="1" y="0" z="0"/>
   </generic-constraint>
   <generic-constraint bodyA="NPC RB Anus2" bodyB="NPC RB Anus1" template="gtSpring">
-    <linearUpperLimit x="0" y="20" z="0"/>
+    <linearUpperLimit x="0" y="3" z="0"/>
     <linearStiffness x="0" y="10" z="0"/>
     <linearDamping x="0" y="1" z="0"/>
   </generic-constraint>
   <generic-constraint bodyA="NPC LB Anus2" bodyB="NPC LB Anus1" template="gtSpring">
-    <linearLowerLimit x="0" y="-20" z="0"/>
+    <linearLowerLimit x="0" y="-3" z="0"/>
     <linearStiffness x="0" y="10" z="0"/>
     <linearDamping x="0" y="1" z="0"/>
   </generic-constraint>

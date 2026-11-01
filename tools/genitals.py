@@ -845,9 +845,18 @@ def add_to_nif(nif, cbbe, meshes, bones, root=0, materials=None):
         centre = m["P"].mean(0)
         radius = float(np.linalg.norm(m["P"] - centre, axis=1).max())
         shape = len(nif.blocks)
-        nif.blocks.append(["BSTriShape", struct.pack("<IIiI", nif.add_string(name), 0, -1, shape_flags | (1 if m.get("hidden") else 0))
-                           + struct.pack("<3f9ff", 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1) + struct.pack("<i", -1)
-                           + struct.pack("<4f", *centre, radius)
-                           + struct.pack("<iiiQIHI", skin_block, shape_shader, alpha, desc, len(m["tris"]), len(m["P"]), len(geometry))
-                           + geometry])
+        data = (struct.pack("<IIiI", nif.add_string(name), 0, -1, shape_flags | (1 if m.get("hidden") else 0))
+                + struct.pack("<3f9ff", 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1) + struct.pack("<i", -1)
+                + struct.pack("<4f", *centre, radius)
+                + struct.pack("<iiiQIHI", skin_block, shape_shader, alpha, desc, len(m["tris"]), len(m["P"]), len(geometry))
+                + geometry)
+        if m.get("hidden"):
+            nif.blocks.append(["BSTriShape", data])
+        else:
+            # drawn shapes are body parts as CBBE's and A-Body's are: a BSSubIndexTriShape with CBBE's four segments,
+            # every triangle in the last (a plain BSTriShape with its own skin shader gets no NPC skin tint)
+            nt = len(m["tris"])
+            segments = struct.pack("<III", nt, 4, 4) + struct.pack("<IIII", 0, 0, 0xFFFFFFFF, 0) * 3 \
+                + struct.pack("<IIII", 0, nt, 0xFFFFFFFF, 0)
+            nif.blocks.append(["BSSubIndexTriShape", data + segments])
         nif.add_child(root, shape)
