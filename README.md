@@ -17,6 +17,7 @@ jiggle, using the bones CBBE is already weighted to (no reweighting).
 | `mod/Tools/BodySlide/...` | BodySlide set **CBBE Body SoftBody** (group CBBE): CBBE body + SMP link (generated) |
 | `tools/nif_smp.py` | Minimal FO4 NIF reader; attaches `HDT Skinned Mesh Physics Object` extra data |
 | `tools/build_prototype.py` | Regenerates the `mod/` NIFs and BodySlide files from the installed CBBE |
+| `tools/package.py` | Packs `mod/` into an MO2 install zip in `dist/` |
 
 FO4 Faster HDT-SMP only simulates bones that are not in the actor skeleton, so
 `build_prototype.py` moves each soft region's skin onto a new `<bone>_SB` child
@@ -59,18 +60,32 @@ when building.
 Bone `<shape>`s never collide in FSMP (bones are added to Bullet with
 group/mask 0); only mesh shapes do.
 
-Status (2026-10-31): jiggle and hand-to-body push confirmed in game on the
-player and NPCs (name-anchor build; BodySlide keeps the anchor shape).
-Local dents (49 dent bones) working in game. Not yet: (needs extra bones + Outfit Studio weighting), arm/thigh
-colliders, genitals, clothing, animation-framework hooks.
+Status (2026-11-01):
+- Confirmed in game: jiggle and hand-to-body push on the player and NPCs, local
+  dents, the transplanted genitals (undressing works), and the collision pads
+  (SMP builds them).
+- Built but not yet tested in game: the genital springs, and the skin seam fix
+  (the patch reads the skin's normal map in CBBE's own tangent frames).
+- Not yet done: penetration testing (blocked by 4Stim leaving the A-Body penis
+  flaccid), arm and thigh colliders, clothing, animation-framework hooks.
+
+## Requirements
+
+- Fallout 4 with F4SE
+- CBBE and BodySlide
+- FO4 Faster HDT-SMP
+- a female skeleton with SMP support (tested with DFS and Skeletal
+  Adjustments for CBBE)
+- optional: A-Body (male), whose `VirtualPenis` collides with the openings
 
 ## Install / test
 
-1. In MO2, enable **SoftBody FO4 Prototype** and make sure it is above
-   (higher priority than) the CBBE mod. FO4 Faster HDT-SMP must be enabled.
-2. Open BodySlide, pick **CBBE Body SoftBody**, choose your preset, Build.
-   This replaces the FemaleBody.nif in Bodyslide_Output (currently True
-   Wasteland Body SMP). To go back, rebuild the TWB set.
+1. Install the zip from `dist/` (or a release) with MO2. It must win conflicts
+   with CBBE and with any other SMP body (for example TWB SMP). It ships its own
+   `FemaleHands.nif`, which overrides other hands mods.
+2. Open BodySlide, pick **CBBE Body SoftBody** (group CBBE), choose your
+   preset, and Build (tick Build Morphs for LooksMenu). This replaces the
+   `FemaleBody.nif` you built before.
 3. In game, on a nude female actor: watch idle/run jiggle, then bring a hand to
    the chest (e.g. a pose or animation that touches the body).
 4. Debug: set `enableBulletVisualization` to `true` in
@@ -87,7 +102,23 @@ colliders, genitals, clothing, animation-framework hooks.
 
 ## Rebuild
 
+Needs CBBE (FO4) and GT Softbody (Skyrim SE) installed; the paths are the
+arguments of `build_prototype.py` (see its top).
+
 ```
 python -I tools/build_prototype.py
+python -I tools/package.py
 ```
-then copy `mod/` over `E:\FO4-MO2\mods\SoftBody FO4 Prototype`.
+The first rebuilds `mod/`; the second packs it into an MO2 install zip,
+`dist/SoftBodyFO4-<date>-<commit>.zip`. Commit before packaging, so the zip
+names the commit it was built from.
+
+## Credits
+
+- GT Softbody (Skyrim SE) by Goutou: soft-body design, genital geometry,
+  textures, collision pads and springs. Conversion is permitted with credit;
+  no paid use.
+- CBBE by Ousnius and the CBBE team: the body, its BodySlide set and its
+  slider data. Conversion permission was obtained by the 4Stim project lead.
+- FO4 Faster HDT-SMP; FSMP (GPL3) source used as the reference for SMP
+  semantics.
