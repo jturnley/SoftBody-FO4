@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SliderGroups>
+    <Group name="CBBE">
+        <Member name="CBBE Body SoftBody" />
+    </Group>
+</SliderGroups>

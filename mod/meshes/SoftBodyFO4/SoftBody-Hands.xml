@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SoftBody FO4 prototype - CBBE hands (shape "BaseFemaleHands3rd:0").
+
+  Kinematic only: the hands follow the animation and push the soft regions
+  defined in SoftBody-CBBE.xml.
+
+  Contact comes from the per-triangle-shape only: bone shapes never collide
+  in FSMP (bones are added to Bullet with group/mask 0).
+-->
+<system>
+
+  <bone-default>
+    <mass>0</mass>
+  </bone-default>
+
+  <!-- SMP only builds a system when the XML names skin bones -->
+  <bone name="LArm_ForeArm2_skin"/>
+  <bone name="LArm_ForeArm3_skin"/>
+  <bone name="LArm_Hand"/>
+  <bone name="LArm_Finger11"/>
+  <bone name="LArm_Finger12"/>
+  <bone name="LArm_Finger13"/>
+  <bone name="LArm_Finger21"/>
+  <bone name="LArm_Finger22"/>
+  <bone name="LArm_Finger23"/>
+  <bone name="LArm_Finger31"/>
+  <bone name="LArm_Finger32"/>
+  <bone name="LArm_Finger33"/>
+  <bone name="LArm_Finger41"/>
+  <bone name="LArm_Finger42"/>
+  <bone name="LArm_Finger43"/>
+  <bone name="LArm_Finger51"/>
+  <bone name="LArm_Finger52"/>
+  <bone name="LArm_Finger53"/>
+  <bone name="RArm_ForeArm2_skin"/>
+  <bone name="RArm_ForeArm3_skin"/>
+  <bone name="RArm_Hand"/>
+  <bone name="RArm_Finger11"/>
+  <bone name="RArm_Finger12"/>
+  <bone name="RArm_Finger13"/>
+  <bone name="RArm_Finger21"/>
+  <bone name="RArm_Finger22"/>
+  <bone name="RArm_Finger23"/>
+  <bone name="RArm_Finger31"/>
+  <bone name="RArm_Finger32"/>
+  <bone name="RArm_Finger33"/>
+  <bone name="RArm_Finger41"/>
+  <bone name="RArm_Finger42"/>
+  <bone name="RArm_Finger43"/>
+  <bone name="RArm_Finger51"/>
+  <bone name="RArm_Finger52"/>
+  <bone name="RArm_Finger53"/>
+
+  <!-- FO4 renames a single-shape armor's geometry to "<ARMA>[sex]/<ARMO>" on
+       attach; the hidden SoftBodyFO4NameAnchor shape in FemaleHands.nif keeps
+       this name intact -->
+  <per-triangle-shape name="BaseFemaleHands3rd:0">
+    <margin>0.5</margin>
+    <penetration>0.5</penetration>
+    <shared>public</shared>
+    <tag>SB_Hands</tag>
+    <can-collide-with-tag>SB_Body</can-collide-with-tag>
+    <can-collide-with-tag>SB_Vagina</can-collide-with-tag>
+    <can-collide-with-tag>SB_Anus</can-collide-with-tag>
+  </per-triangle-shape>
+
+</system>
