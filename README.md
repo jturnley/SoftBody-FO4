@@ -80,7 +80,8 @@ Status (2026-11-01):
 
 ## Install / test
 
-1. Install the zip from `dist/` (or a release) with MO2. It must win conflicts
+1. Install the zip from the latest
+   [release](https://github.com/jturnley/SoftBody-FO4/releases) with MO2. It must win conflicts
    with CBBE and with any other SMP body (for example TWB SMP). It ships its own
    `FemaleHands.nif`, which overrides other hands mods.
 2. Open BodySlide, pick **CBBE Body SoftBody** (group CBBE), choose your
@@ -111,7 +112,9 @@ python -I tools/package.py
 ```
 The first rebuilds `mod/`; the second packs it into an MO2 install zip,
 `dist/SoftBodyFO4-<date>-<commit>.zip`. Commit before packaging, so the zip
-names the commit it was built from.
+names the commit it was built from. With `--release <tag>` it also publishes
+the zip as a GitHub pre-release of HEAD (push first); the notes list the
+commits since the previous release.
 
 ## Credits
 
