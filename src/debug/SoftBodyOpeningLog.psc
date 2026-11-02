@@ -25,12 +25,17 @@ EndFunction
 
 Function Run(float afMaxSeconds = 900.0) Global
 	float started = Utility.GetCurrentRealTime()
-	Debug.Notification("SoftBody log: waiting for a 4Stim scene")
+	String run = "run " + (started as int)
+	; written first, so a run always leaves a trace (and shows WriteIni works)
+	bool written = GardenOfEden2.WriteIni(LogFile(), run, "started", "waiting for the player's 4Stim scene")
+	Debug.Notification("SoftBody log: waiting for a 4Stim scene (log file " + written + ")")
 	while FourStim.GetPlayerSceneActorCount() < 2 && Utility.GetCurrentRealTime() - started < 120.0
 		Utility.Wait(0.5)
 	endwhile
 	int count = FourStim.GetPlayerSceneActorCount()
+	GardenOfEden2.WriteIni(LogFile(), run, "scene_actors", "" + count)
 	if count < 2
+		GardenOfEden2.WriteIni(LogFile(), run, "stopped", "no player scene with two actors within two minutes")
 		Debug.Notification("SoftBody log: no scene with two actors, stopped")
 		return
 	endif
@@ -41,9 +46,12 @@ Function Run(float afMaxSeconds = 900.0) Global
 	String[] himNodes
 	int role = 0
 	while role < count
-		Actor a = Game.GetForm(FourStim.GetPlayerSceneActorID(role)) as Actor
+		int id = FourStim.GetPlayerSceneActorID(role)
+		Actor a = Game.GetForm(id) as Actor
 		if a
 			String[] nodes = GardenOfEden2.GetModelNodes(a)
+			; what this actor's 3D offers: node count and whether the bones looked for are there
+			GardenOfEden2.WriteIni(LogFile(), run, "actor" + role, "form " + id + " nodes " + nodes.Length + " VaginaDB02 " + nodes.Find("VaginaDB02") + " Pelvis_skin " + nodes.Find("Pelvis_skin") + " Penis_05_SMP " + nodes.Find("Penis_05_SMP") + " Penis_05 " + nodes.Find("Penis_05"))
 			if her == None && nodes.Find("VaginaDB02") >= 0
 				her = a
 				herNodes = nodes
@@ -55,6 +63,7 @@ Function Run(float afMaxSeconds = 900.0) Global
 		role += 1
 	endwhile
 	if her == None
+		GardenOfEden2.WriteIni(LogFile(), run, "stopped", "no actor in the scene has the SoftBody genital bones")
 		Debug.Notification("SoftBody log: no actor in the scene has the SoftBody genital bones")
 		return
 	endif
@@ -190,7 +199,6 @@ Function Run(float afMaxSeconds = 900.0) Global
 		header += "," + names[k]
 		k += 1
 	endwhile
-	String run = "run " + (started as int)
 	GardenOfEden2.WriteIni(LogFile(), run, "her", "form " + her.GetFormID())
 	if him
 		GardenOfEden2.WriteIni(LogFile(), run, "him", "form " + him.GetFormID() + " tip node " + himNodes[tip])
