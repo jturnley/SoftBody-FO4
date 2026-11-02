@@ -58,6 +58,14 @@ namespace
 		return a_root ? a_root->GetObjectByName(RE::BSFixedString(a_name)) : nullptr;
 	}
 
+	// a world point in a node's own frame. FO4 keeps NiMatrix3 transposed from what NiTransform's operator* assumes
+	// (4Strands' BodyProbe found the same with skin-to-bone), so the stored matrix itself maps world to local
+	RE::NiPoint3 ToLocal(const RE::NiAVObject* a_node, const RE::NiPoint3& a_world)
+	{
+		const auto& w = a_node->world;
+		return (w.rotate * (a_world - w.translate)) / w.scale;
+	}
+
 	void Append(std::string& a_line, const RE::NiPoint3& a_point)
 	{
 		a_line += std::format(",{:.3f},{:.3f},{:.3f}", a_point.x, a_point.y, a_point.z);
@@ -105,7 +113,6 @@ namespace
 			}
 			return;
 		}
-		const auto toPelvis = pelvis->world.Invert();
 		const char* scene = a_thread->getCurrentSceneID();
 		const float t = std::chrono::duration<float>(std::chrono::steady_clock::now() - since).count();
 		std::string line = std::format("sample,{},{:.2f},{}", samples++, t, scene ? scene : "");
@@ -118,14 +125,14 @@ namespace
 			auto* bone = Find(her, p.bone);
 			auto* anchor = Find(her, p.anchor);
 			if (bone && anchor) {
-				Append(line, anchor->world.Invert() * bone->world.translate);
+				Append(line, ToLocal(anchor, bone->world.translate));
 			} else {
 				AppendMissing(line, 3);
 			}
 		}
 		for (const auto* name : kPenis) {
 			if (auto* node = Find(him, name)) {
-				Append(line, toPelvis * node->world.translate);
+				Append(line, ToLocal(pelvis, node->world.translate));
 			} else {
 				AppendMissing(line, 3);
 			}
