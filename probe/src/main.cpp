@@ -45,7 +45,7 @@ namespace
 	// A-Body's penis chain: tip, middle, base (the _SMP bones are the simulated ones)
 	constexpr const char* kPenis[] = { "Penis_05_SMP", "Penis_03_SMP", "Penis_01_SMP" };
 
-	constexpr auto kInterval = 100ms;
+	constexpr auto kInterval = 25ms;
 
 	FourStimAPI::ThreadInterface*         threads{ nullptr };
 	std::atomic<std::int32_t>             followed{ -1 };
@@ -98,7 +98,9 @@ namespace
 	std::mutex                                                      heldLock;
 	std::unordered_map<std::string, RE::NiPointer<RE::NiAVObject>> held;
 	std::string                                                     scene;
-	std::atomic_bool                                                resolved{ false };
+	std::atomic_bool                                                resolved{ false };   // her nodes held
+	std::atomic_bool                                                complete{ false };   // his too
+	int                                                             attempts{ 0 };
 
 	RE::NiAVObject* Held(const char* a_who, const char* a_name)
 	{
@@ -142,9 +144,12 @@ namespace
 			for (const auto* name : kPenis) {
 				hold("him", him, name);
 			}
-			REX::INFO("thread {}: holding {} nodes (her {}, him {})", id, held.size(), her ? "found" : "missing", him ? "found" : "missing");
+			if (him || attempts++ % 20 == 0) {
+				REX::INFO("thread {}: holding {} nodes (her {}, him {})", id, held.size(), her ? "found" : "missing", him ? "found" : "missing");
+			}
+			resolved = her != nullptr;
+			complete = her && him;
 		}
-		resolved = true;
 		pending = false;
 	}
 
@@ -198,7 +203,8 @@ namespace
 			if (followed.load() < 0) {
 				continue;
 			}
-			if (!resolved) {
+			// her first; him may not be loaded yet at scene start, so he is looked for again about once a second
+			if (!resolved || (!complete && samples.load() % 40 == 39)) {
 				if (!pending.exchange(true)) {
 					if (auto* tasks = F4SE::GetTaskInterface()) {
 						tasks->AddTask(Resolve);
@@ -206,7 +212,9 @@ namespace
 						pending = false;
 					}
 				}
-				continue;
+				if (!resolved) {
+					continue;
+				}
 			}
 			Sample();
 		}
@@ -226,6 +234,8 @@ namespace
 			samples = 0;
 			since = std::chrono::steady_clock::now();
 			resolved = false;
+			complete = false;
+			attempts = 0;
 			followed = a_thread->getThreadID();
 			REX::INFO("following 4Stim thread {} in {} with {} actor(s)", a_thread->getThreadID(), a_thread->getCurrentSceneID(), a_thread->getActorCount());
 			REX::INFO("{}", Header());
