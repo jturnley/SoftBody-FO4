@@ -32,11 +32,13 @@ GT_BODY = r"CalienteTools\BodySlide\ShapeData\GT_Softbody (CBBE)\GT_Softbody (CB
 GT_COLLISION = r"CalienteTools\BodySlide\ShapeData\GT_Softbody_HVACollision (CBBE)\GT_Softbody_HVACollision (CBBE).nif"
 # GT's in-game collision NIF: it carries the genital node tree its springs hang from
 GT_SKELETON = r"meshes\actors\character\character assets\Xml Addon\SMP Object FemaleHVA_0.nif"
-# The openings' collision shapes: (tag, margin, penetration) as GT has them; they hold anything tagged
-# COLLIDE_WITH (A-Body's VirtualPenis is "Penis")
-COLLISION_SHAPES = {"SoftBodyVaginaOut": ("SB_Vagina", 0.1, 0.1), "SoftBodyVaginaDeep": ("SB_Vagina", 0.2, 0.2),
-                    "SoftBodyAnus": ("SB_Anus", 0.2, 0.2)}
-COLLIDE_WITH = ("Penis", "SB_Hands")
+# The openings' collision shapes: (tag, margin, penetration). Per-vertex (each point a sphere of margin x its bone's
+# margin-multiplier: 2 on the canal bones, 1 elsewhere), and colliding with everything but each other, as a body
+# whose lip and anus proxies do collide in FO4 has them. GT's per-triangle pads (margin 0.1-0.2) built in SMP but
+# never collided with A-Body's penis, itself per-triangle in 4Stim scenes (MaleBodyHard.xml).
+COLLISION_SHAPES = {"SoftBodyVaginaOut": ("SB_Vagina", 0.35, 0.8), "SoftBodyVaginaDeep": ("SB_Vagina", 0.15, 0.8),
+                    "SoftBodyAnus": ("SB_Anus", 0.3, 0.8)}
+NO_COLLIDE_WITH = ("SB_Vagina", "SB_Anus")
 # The game's own Data (for the skin material the genitals' material is made from)
 GAME_DATA = sys.argv[4] if len(sys.argv) > 4 else r"E:\FO4-MO2\Fallout 4\Data"
 
@@ -117,19 +119,19 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
 
 
 def collision_xml(collision):
-    """per-triangle-shapes for the openings. As GT does, the body bones get a weight threshold of 1: only the
-    genital bones' share of a pad collides, and pads wholly on body bones are dropped."""
+    """per-vertex-shapes for the openings. Any body bones a pad is weighted to get a weight threshold of 1, so only
+    the genital bones' share collides (the pads are built wholly on genital bones, so there are normally none)."""
     lines = []
     for name, body_bones in collision.items():
         tag, margin, penetration = COLLISION_SHAPES[name]
-        lines += ['  <per-triangle-shape name="%s">' % name,
+        lines += ['  <per-vertex-shape name="%s">' % name,
                   '    <margin>%g</margin>' % margin,
                   '    <penetration>%g</penetration>' % penetration,
                   '    <shared>public</shared>',
                   '    <tag>%s</tag>' % tag]
-        lines += ['    <can-collide-with-tag>%s</can-collide-with-tag>' % t for t in COLLIDE_WITH]
+        lines += ['    <no-collide-with-tag>%s</no-collide-with-tag>' % t for t in NO_COLLIDE_WITH]
         lines += ['    <weight-threshold bone="%s">1</weight-threshold>' % b for b in body_bones]
-        lines += ['  </per-triangle-shape>']
+        lines += ['  </per-vertex-shape>']
     return lines
 
 

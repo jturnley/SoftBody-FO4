@@ -44,8 +44,8 @@ SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's rea
 # GT's genital bones (ported); every other GT bone's share of a vertex is taken from CBBE's surface instead
 GENITAL_PREFIXES = ("NPC L Pussy", "NPC R Pussy", "Vagina", "Clitoral", "NPC LT Anus", "NPC RT Anus",
                     "NPC LB Anus", "NPC RB Anus", "Pussy")
-# GT's collision for the openings (its HVA collision NIF): small closed pads facing out, one per genital bone, round
-# the opening, the canal and the anus; a penis is held in the channel between them. Hidden shapes here.
+# GT's collision for the openings (its HVA collision NIF): small closed pads, one per genital bone, round the opening,
+# the canal and the anus; a penis is held in the channel between them. Hidden shapes here, collided per vertex.
 COLLISION = {"body_VaginaOut": "SoftBodyVaginaOut", "body_VaginaDeep": "SoftBodyVaginaDeep", "body_anus": "SoftBodyAnus"}
 # The Skyrim skeleton bones GT's genital springs hang from. They become kinematic NIF-only nodes here, in GT's own
 # orientation (a spring's limits run along its anchor's axes); GT's pelvis comes as GT_PELVIS, as FO4's Pelvis_skin
@@ -597,30 +597,39 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     meshes = {VULVA: vulva,
               GENITALS: dict(P=gen_P, UV=gen_UV, tris=gen_tris, weights=gen_w, src=gen_src, fixed_normals={})}
 
-    # 6. the collision pads: GT's own winding and genital weights; the body's share follows the nearest point of
-    # the canals above, so a pad stays on the wall it guards
+    # 6. the collision pads: GT's geometry, each pad wholly on its own genital bone (GT's pelvis share dropped), as
+    # the lip and anus proxies of a body that does collide in FO4 have it: a pad then moves as one with its bone, and
+    # every one of its points collides; a point GT left on the pelvis alone takes its pad's main bone
     if collision_path:
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.csgraph import connected_components
         coll = SseNif(str(collision_path))
-        gen_tree = cKDTree(gen_P)
         report["collision_triangles"] = {}
         for gt_name, name in COLLISION.items():
             shape = coll.shape(gt_name)
             P = T(shape.positions)
-            _, near = gen_tree.query(P)
+            tris = np.array(shape.triangles)
+            e = np.concatenate([tris[:, [0, 1]], tris[:, [1, 2]], tris[:, [2, 0]]])
+            _, piece = connected_components(coo_matrix((np.ones(len(e)), (e[:, 0], e[:, 1])), shape=(len(P), len(P))),
+                                            directed=False)
+            genital_w = [{b: w for b, w in gw.items() if is_genital(b)} for gw in shape.weights]
+            main = {}
+            for k, gw in enumerate(genital_w):
+                for b, w in gw.items():
+                    main.setdefault(piece[k], {}).setdefault(b, 0.0)
+                    main[piece[k]][b] += w
             w_all = []
-            for k, gw in enumerate(shape.weights):
-                gw = {b: w for b, w in gw.items() if is_genital(b)}
-                g = sum(gw.values())
-                body_w = {b: w for b, w in gen_w[near[k]].items() if not is_genital(b)}
-                total = sum(body_w.values())
-                w = {b: x / total * (1 - g) for b, x in body_w.items()} if total > 0 else {}
-                w.update(gw)
-                w_all.append(top4(w or {"Pelvis_skin": 1.0}))
+            for k, gw in enumerate(genital_w):
+                if not gw:
+                    if piece[k] not in main:
+                        raise ValueError("%s: a pad with no genital bone" % gt_name)
+                    gw = {max(main[piece[k]], key=main[piece[k]].get): 1.0}
+                w_all.append(top4(gw))
             for b in shape.bone_names:
                 if is_genital(b):
                     bones.setdefault(b, bone_frame(shape, b))
             _, _, src = surface(P)
-            meshes[name] = dict(P=P, UV=np.zeros((len(P), 2)), tris=np.array(shape.triangles), weights=w_all,
+            meshes[name] = dict(P=P, UV=np.zeros((len(P), 2)), tris=tris, weights=w_all,
                                 src=src, fixed_normals={}, hidden=True)
             report["collision_triangles"][name] = len(shape.triangles)
 
@@ -777,7 +786,7 @@ def own_shader(nif, template, material=None, textures=None):
 
 
 def add_to_nif(nif, cbbe, meshes, bones, root=0, materials=None):
-    """Commit the cut CBBE, add the genital bones under Pelvis_skin and the new shapes (hidden ones app-culled).
+    """Commit the cut CBBE, add the genital bones under Pelvis_skin and the new shapes (hidden ones without a shader).
     materials: {shape: (material path, [texture paths])} for shapes that do not use the body's skin."""
     cbbe.skin.commit()
     skin = cbbe.skin
@@ -813,8 +822,9 @@ def add_to_nif(nif, cbbe, meshes, bones, root=0, materials=None):
         nif.block_types.append("BSTriShape")
     for name, m in meshes.items():
         tangents(m)
-        # hidden (app-culled, never drawn) shapes may share the body's shader, as the name anchor does
-        shape_shader = shader if m.get("hidden") else own_shader(nif, shader, *(materials or {}).get(name, ()))
+        # hidden (collision only) shapes have no shader, so they are never drawn: as a body whose hidden collision
+        # proxies work in FO4 has them (an app-culled shape, as before, built in SMP but did not collide)
+        shape_shader = -1 if m.get("hidden") else own_shader(nif, shader, *(materials or {}).get(name, ()))
         used = sorted({b for w in m["weights"] for b in w})
         index = {b: i for i, b in enumerate(used)}
         verts = bytearray()
@@ -845,18 +855,15 @@ def add_to_nif(nif, cbbe, meshes, bones, root=0, materials=None):
         centre = m["P"].mean(0)
         radius = float(np.linalg.norm(m["P"] - centre, axis=1).max())
         shape = len(nif.blocks)
-        data = (struct.pack("<IIiI", nif.add_string(name), 0, -1, shape_flags | (1 if m.get("hidden") else 0))
+        data = (struct.pack("<IIiI", nif.add_string(name), 0, -1, shape_flags)
                 + struct.pack("<3f9ff", 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1) + struct.pack("<i", -1)
                 + struct.pack("<4f", *centre, radius)
                 + struct.pack("<iiiQIHI", skin_block, shape_shader, alpha, desc, len(m["tris"]), len(m["P"]), len(geometry))
                 + geometry)
-        if m.get("hidden"):
-            nif.blocks.append(["BSTriShape", data])
-        else:
-            # drawn shapes are body parts as CBBE's and A-Body's are: a BSSubIndexTriShape with CBBE's four segments,
-            # every triangle in the last (a plain BSTriShape with its own skin shader gets no NPC skin tint)
-            nt = len(m["tris"])
-            segments = struct.pack("<III", nt, 4, 4) + struct.pack("<IIII", 0, 0, 0xFFFFFFFF, 0) * 3 \
-                + struct.pack("<IIII", 0, nt, 0xFFFFFFFF, 0)
-            nif.blocks.append(["BSSubIndexTriShape", data + segments])
+        # body parts, as CBBE's and A-Body's are (collision proxies included): a BSSubIndexTriShape with CBBE's four
+        # segments, every triangle in the last (a plain BSTriShape with its own skin shader gets no NPC skin tint)
+        nt = len(m["tris"])
+        segments = struct.pack("<III", nt, 4, 4) + struct.pack("<IIII", 0, 0, 0xFFFFFFFF, 0) * 3 \
+            + struct.pack("<IIII", 0, nt, 0xFFFFFFFF, 0)
+        nif.blocks.append(["BSSubIndexTriShape", data + segments])
         nif.add_child(root, shape)

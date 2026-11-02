@@ -49,9 +49,12 @@ the CBBE surface under it) and `SoftBodyGenitals` (GT's vagina texture, its mode
 re-baked to tangent space; material made from the game's own skin .bgsm). GT's 22 genital bones
 sit under `Pelvis_skin`. Each new shape gets its own copy of the shader block: two drawn shapes
 sharing one hang the game when the body is put on. Collision for the openings is GT's own: the pads
-of its HVA collision NIF (closed, outward-facing, one per genital bone) become the hidden shapes
-`SoftBodyVaginaOut`, `SoftBodyVaginaDeep` and `SoftBodyAnus`, per-triangle-shapes that collide with
-the tag `Penis` (A-Body's VirtualPenis) and with the hands. The genital bones carry GT's springs
+of its HVA collision NIF (one per genital bone) become the hidden shapes `SoftBodyVaginaOut`,
+`SoftBodyVaginaDeep` and `SoftBodyAnus`. They follow the recipe of a TWB body whose lip and anus
+proxies do collide in FO4: per-vertex shapes (spheres), weighted wholly to their genital bones,
+colliding with everything except each other, hidden by having no shader. GT's per-triangle pads
+(v0.1–v0.2) built in SMP but never collided with A-Body's penis, which is itself per-triangle in
+4Stim scenes (`MaleBodyHard.xml`). The genital bones carry GT's springs
 (ported from its `FemaleCollisionHandVaginaAnal.xml`): GT's Skyrim anchor bones become kinematic
 NIF-only nodes turned as in GT, since a spring's limits run along its anchor's axes. Their travel
 is capped at 3 units (GT allows up to 30): in scenes 4Stim makes A-Body's penis kinematic, and one
