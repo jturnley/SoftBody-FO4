@@ -70,8 +70,12 @@ group/mask 0); only mesh shapes do.
 Status (2026-11-01):
 - Confirmed in game: jiggle and hand-to-body push on the player and NPCs, local
   dents, the transplanted genitals (undressing works), and vaginal and anal
-  collision with A-Body in 4Stim scenes (v0.3; the openings don't open wide
-  enough yet: tuning).
+  collision with A-Body in 4Stim scenes (v0.3).
+- v0.6, measured in game with `probe/` (doggy, vaginal): the physics opens the
+  canal to about the penis's width (0.3 to 3-4 units across) and the labia from
+  6 to 10. The skin around the openings now follows the lip bones (v0.1-v0.5
+  barely moved it), and the entrance looked right in a first test. Team
+  feedback pending.
 - v0.4: the genitals keep their own texture. v0.1-v0.3 shipped their material
   with the skin material's SkinTint flag and root template, so in game FO4
   dressed them in the actor's skin texture. Without the flag they don't take
