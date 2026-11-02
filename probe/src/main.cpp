@@ -45,13 +45,13 @@ namespace
 	// A-Body's penis chain: tip, middle, base (the _SMP bones are the simulated ones)
 	constexpr const char* kPenis[] = { "Penis_05_SMP", "Penis_03_SMP", "Penis_01_SMP" };
 
-	constexpr float kInterval = 0.1f;
+	constexpr auto kInterval = 100ms;
 
-	FourStimAPI::ThreadInterface* threads{ nullptr };
-	std::atomic<std::int32_t>     followed{ -1 };
-	float                         clock{ 0.0f };
-	float                         lastSample{ -1.0f };
-	std::int32_t                  samples{ 0 };
+	FourStimAPI::ThreadInterface*         threads{ nullptr };
+	std::atomic<std::int32_t>             followed{ -1 };
+	std::atomic_bool                      pending{ false };
+	std::chrono::steady_clock::time_point since;
+	std::int32_t                          samples{ 0 };
 
 	RE::NiAVObject* Find(RE::NiAVObject* a_root, const char* a_name)
 	{
@@ -107,7 +107,8 @@ namespace
 		}
 		const auto toPelvis = pelvis->world.Invert();
 		const char* scene = a_thread->getCurrentSceneID();
-		std::string line = std::format("sample,{},{:.2f},{}", samples++, clock, scene ? scene : "");
+		const float t = std::chrono::duration<float>(std::chrono::steady_clock::now() - since).count();
+		std::string line = std::format("sample,{},{:.2f},{}", samples++, t, scene ? scene : "");
 		for (const auto& w : kWidths) {
 			auto* a = Find(her, w.a);
 			auto* b = Find(her, w.b);
@@ -132,34 +133,47 @@ namespace
 		REX::INFO("{}", line);
 	}
 
-	// after every PlayerCharacter::Update, on the main thread
-	using Update_t = void (*)(RE::PlayerCharacter*, float);
-	Update_t originalUpdate{ nullptr };
-
-	void Update(RE::PlayerCharacter* a_player, float a_delta)
+	// One sample, on the main thread (queued by the timer below)
+	void SampleNow()
 	{
-		originalUpdate(a_player, a_delta);
-		clock += a_delta;
 		const auto id = followed.load();
-		if (id < 0 || !threads || clock - lastSample < kInterval) {
-			return;
+		if (id >= 0 && threads) {
+			auto* thread = threads->getThread(id);
+			if (!thread || !thread->isRunning()) {
+				REX::INFO("thread {} over after {} samples", id, samples);
+				followed = -1;
+			} else {
+				Sample(thread);
+			}
 		}
-		lastSample = clock;
-		auto* thread = threads->getThread(id);
-		if (!thread || !thread->isRunning()) {
-			REX::INFO("thread {} over after {} samples", id, samples);
-			followed = -1;
-			return;
-		}
-		Sample(thread);
+		pending = false;
 	}
+
+	// Every kInterval while a scene is followed, queues a sample onto the main thread through F4SE's task interface
+	// (PlayerCharacter::Update is no frame clock: it stops while 4Stim drives the player)
+	void Timer(std::stop_token a_stop)
+	{
+		while (!a_stop.stop_requested()) {
+			std::this_thread::sleep_for(kInterval);
+			if (followed.load() >= 0 && !pending.exchange(true)) {
+				if (auto* tasks = F4SE::GetTaskInterface()) {
+					tasks->AddTask(SampleNow);
+				} else {
+					pending = false;
+				}
+			}
+		}
+	}
+
+	std::jthread timer;
 
 	struct ThreadStarted : FourStimAPI::ThreadEventListener
 	{
 		void listen(FourStimAPI::Thread* a_thread) override
 		{
-			followed = a_thread->getThreadID();
 			samples = 0;
+			since = std::chrono::steady_clock::now();
+			followed = a_thread->getThreadID();
 			REX::INFO("following 4Stim thread {} in {} with {} actor(s)", a_thread->getThreadID(), a_thread->getCurrentSceneID(), a_thread->getActorCount());
 			REX::INFO("{}", Header());
 		}
@@ -213,8 +227,6 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 		REX::ERROR("could not register the F4SE message listener");
 		return false;
 	}
-	// Actor::Update, vtable slot 0xCF (as 4Strands hooks it)
-	REL::Relocation<std::uintptr_t> vtable{ RE::VTABLE::PlayerCharacter[0] };
-	originalUpdate = reinterpret_cast<Update_t>(vtable.write_vfunc(0xCF, &Update));
+	timer = std::jthread(Timer);
 	return true;
 }
