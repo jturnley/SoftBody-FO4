@@ -82,19 +82,52 @@ def read_ba2(path, rel):
     return zlib.decompress(blob) if packed else blob
 
 
-def make_bgsm(template, textures):
-    """The template material with its first textures replaced (BGSM v2: nine sized strings follow a fixed header)."""
-    if template[:4] != b"BGSM":
-        raise ValueError("not a BGSM")
+def bgsm_fields(data):
+    """Offsets in a BGSM v2: {"root": (start, end) of the root material path string, "skin_tint": the SkinTint
+    flag's byte, "hair_tint": the hair tint colour's}. Fields after the nine texture paths, in order."""
+    if data[:4] != b"BGSM" or struct.unpack_from("<I", data, 4)[0] != 2:
+        raise ValueError("not a BGSM v2")
     p = 63
-    out = bytearray(template[:p])
+    for _ in range(9):
+        p += 4 + struct.unpack_from("<I", data, p)[0]
+    p += 1                  # EnableEditorAlphaRef
+    p += 1 + 4 + 4          # RimLighting, RimPower, BackLightPower
+    p += 1 + 4              # SubsurfaceLighting, its rolloff
+    p += 1 + 12 + 4 + 4     # SpecularEnabled, SpecularColor, SpecularMult, Smoothness
+    p += 4                  # FresnelPower
+    p += 6 * 4              # wetness: spec scale, spec power scale, min var, env map scale, fresnel, metalness
+    root = (p, p + 4 + struct.unpack_from("<I", data, p)[0])
+    p = root[1]
+    p += 1                  # AnisoLighting
+    emit = data[p]
+    p += 1 + (12 if emit else 0) + 4   # EmitEnabled, [EmittanceColor], EmittanceMult
+    p += 3                  # ModelSpaceNormals, ExternalEmittance, BackLighting
+    p += 9                  # ReceiveShadows, HideSecret, CastShadows, DissolveFade, AssumeShadowmask, Glowmap,
+                            # EnvironmentMappingWindow, EnvironmentMappingEye, Hair
+    hair_tint = p
+    p += 12 + 1 + 1         # HairTintColor, Tree, Facegen
+    return {"root": root, "skin_tint": p, "hair_tint": hair_tint}
+
+
+def make_bgsm(template, textures):
+    """The template material with its first textures replaced and its skin ties cut: no root material and no
+    SkinTint flag. With SkinTint set, FO4 dresses the shape in the actor's own skin textures in game (a body part
+    always, it seems), so the genitals showed plain skin; a working TWB vulva material has neither."""
+    f = bgsm_fields(template)
+    if struct.unpack_from("<3f", template, f["hair_tint"]) != (1.0, 1.0, 1.0):
+        raise ValueError("unexpected BGSM layout: the hair tint should read 1,1,1")
+    data = bytearray(template)
+    data[f["skin_tint"]] = 0
+    data[f["root"][0]:f["root"][1]] = struct.pack("<I", 1) + b"\0"
+    p = 63
+    out = bytearray(data[:p])
     for k in range(9):
-        n = struct.unpack_from("<I", template, p)[0]
-        old = template[p + 4:p + 4 + n]
+        n = struct.unpack_from("<I", data, p)[0]
+        old = bytes(data[p + 4:p + 4 + n])
         p += 4 + n
         new = (textures[k] + "\0").encode("latin-1") if k < len(textures) else old
         out += struct.pack("<I", len(new)) + new
-    return bytes(out + template[p:])
+    return bytes(out + data[p:])
 
 
 def bake_normals(mesh, vagina_vertices, R, msn_path, diffuse_path):

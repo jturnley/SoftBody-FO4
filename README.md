@@ -69,8 +69,13 @@ group/mask 0); only mesh shapes do.
 
 Status (2026-11-01):
 - Confirmed in game: jiggle and hand-to-body push on the player and NPCs, local
-  dents, the transplanted genitals (undressing works), and the collision pads
-  (SMP builds them).
+  dents, the transplanted genitals (undressing works), and vaginal and anal
+  collision with A-Body in 4Stim scenes (v0.3; the openings don't open wide
+  enough yet: tuning).
+- v0.4: the genitals keep their own texture. v0.1-v0.3 shipped their material
+  with the skin material's SkinTint flag and root template, so in game FO4
+  dressed them in the actor's skin texture. Without the flag they don't take
+  the NPC's skin tint either; their rim is matched to the default skin.
 - Built but not yet tested in game: the genital springs (v0.1 tore the vulva
   out under a kinematic penis; v0.2 caps their travel), the skin seam fix
   (the patch reads the skin's normal map in CBBE's own tangent frames), and
