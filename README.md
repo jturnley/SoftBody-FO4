@@ -108,6 +108,23 @@ Status (2026-11-01):
    `F4SE\Plugins\FO4FasterHdtSMP\configs.xml` and restart to see the collision
    shapes. `logLevel` 3+ there gives more detail in the F4SE log.
 
+## Opening logger (temporary)
+
+`src/debug/SoftBodyOpeningLog.psc` logs the openings during a 4Stim scene, for
+tuning. It needs Garden of Eden Papyrus Script Extender and 4Stim, and isn't in
+the release zips. Compile it from its own folder with the CK's
+PapyrusCompiler.exe (import the game's base sources, Garden of Eden's and
+4Stim's) and put the `.pex` in `Scripts\`. Then in the console, before or
+during a scene:
+
+```
+cgf "SoftBodyOpeningLog.Run"
+```
+
+About twice a second, it writes the opening widths, each genital bone's distance
+from its anchor, and the penis tip's distances to the openings to
+`Data\F4SE\SoftBodyOpenings.ini` (MO2: `overwrite\F4SE`).
+
 ## What to report back
 
 - Does the body load at all (no invisible / exploded body)? An invisible or
