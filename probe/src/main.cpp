@@ -51,7 +51,7 @@ namespace
 	std::atomic<std::int32_t>             followed{ -1 };
 	std::atomic_bool                      pending{ false };
 	std::chrono::steady_clock::time_point since;
-	std::int32_t                          samples{ 0 };
+	std::atomic<std::int32_t>             samples{ 0 };
 
 	RE::NiAVObject* Find(RE::NiAVObject* a_root, const char* a_name)
 	{
@@ -93,37 +93,88 @@ namespace
 		return header;
 	}
 
-	void Sample(FourStimAPI::Thread* a_thread)
+	// The nodes sampled, held (NiPointer) from scene start to scene end so a read off the main thread can't meet a freed
+	// node. Keys: "her:<node>" and "him:<node>".
+	std::mutex                                                      heldLock;
+	std::unordered_map<std::string, RE::NiPointer<RE::NiAVObject>> held;
+	std::string                                                     scene;
+	std::atomic_bool                                                resolved{ false };
+
+	RE::NiAVObject* Held(const char* a_who, const char* a_name)
 	{
-		RE::NiAVObject* her = nullptr;
-		RE::NiAVObject* him = nullptr;
-		for (std::uint32_t i = 0; i < a_thread->getActorCount(); ++i) {
-			auto* actor = a_thread->getActor(i) ? static_cast<RE::Actor*>(a_thread->getActor(i)->getGameActor()) : nullptr;
-			auto* root = actor ? actor->Get3D() : nullptr;
-			if (!her && Find(root, "VaginaDB02")) {
-				her = root;
-			} else if (!him && Find(root, kPenis[0])) {
-				him = root;
+		const auto it = held.find(std::format("{}:{}", a_who, a_name));
+		return it != held.end() ? it->second.get() : nullptr;
+	}
+
+	// On the main thread: find her (the genital bones) and him (the penis) in the thread and hold their nodes
+	void Resolve()
+	{
+		const auto id = followed.load();
+		auto* thread = id >= 0 && threads ? threads->getThread(id) : nullptr;
+		if (thread) {
+			RE::NiAVObject* her = nullptr;
+			RE::NiAVObject* him = nullptr;
+			for (std::uint32_t i = 0; i < thread->getActorCount(); ++i) {
+				auto* actor = thread->getActor(i) ? static_cast<RE::Actor*>(thread->getActor(i)->getGameActor()) : nullptr;
+				auto* root = actor ? actor->Get3D() : nullptr;
+				if (!her && Find(root, "VaginaDB02")) {
+					her = root;
+				} else if (!him && Find(root, kPenis[0])) {
+					him = root;
+				}
 			}
+			std::scoped_lock lock{ heldLock };
+			held.clear();
+			auto hold = [](const char* a_who, RE::NiAVObject* a_root, const char* a_name) {
+				if (auto* node = Find(a_root, a_name)) {
+					held[std::format("{}:{}", a_who, a_name)] = RE::NiPointer<RE::NiAVObject>(node);
+				}
+			};
+			hold("her", her, "Pelvis_skin");
+			for (const auto& w : kWidths) {
+				hold("her", her, w.a);
+				hold("her", her, w.b);
+			}
+			for (const auto& p : kBones) {
+				hold("her", her, p.bone);
+				hold("her", her, p.anchor);
+			}
+			for (const auto* name : kPenis) {
+				hold("him", him, name);
+			}
+			REX::INFO("thread {}: holding {} nodes (her {}, him {})", id, held.size(), her ? "found" : "missing", him ? "found" : "missing");
 		}
-		auto* pelvis = Find(her, "Pelvis_skin");
+		resolved = true;
+		pending = false;
+	}
+
+	// On the main thread at scene end: let the nodes go
+	void Release()
+	{
+		std::scoped_lock lock{ heldLock };
+		held.clear();
+	}
+
+	// Off the main thread, at whatever point of the frame the timer wakes: as the SMP wireframe sees the bones, after
+	// SMP has written them. (Read on the main thread through F4SE's task queue, they always showed the rest pose: the
+	// game had reset the nodes from their locals and SMP had not written yet.)
+	void Sample()
+	{
+		std::scoped_lock lock{ heldLock };
+		auto* pelvis = Held("her", "Pelvis_skin");
 		if (!pelvis) {
-			if (samples++ == 0) {
-				REX::INFO("no actor in thread {} carries the SoftBody genital bones", a_thread->getThreadID());
-			}
 			return;
 		}
-		const char* scene = a_thread->getCurrentSceneID();
 		const float t = std::chrono::duration<float>(std::chrono::steady_clock::now() - since).count();
-		std::string line = std::format("sample,{},{:.2f},{}", samples++, t, scene ? scene : "");
+		std::string line = std::format("sample,{},{:.2f},{}", samples.fetch_add(1), t, scene);
 		for (const auto& w : kWidths) {
-			auto* a = Find(her, w.a);
-			auto* b = Find(her, w.b);
+			auto* a = Held("her", w.a);
+			auto* b = Held("her", w.b);
 			line += a && b ? std::format(",{:.3f}", (a->world.translate - b->world.translate).Length()) : ","s;
 		}
 		for (const auto& p : kBones) {
-			auto* bone = Find(her, p.bone);
-			auto* anchor = Find(her, p.anchor);
+			auto* bone = Held("her", p.bone);
+			auto* anchor = Held("her", p.anchor);
 			if (bone && anchor) {
 				Append(line, ToLocal(anchor, bone->world.translate));
 			} else {
@@ -131,7 +182,7 @@ namespace
 			}
 		}
 		for (const auto* name : kPenis) {
-			if (auto* node = Find(him, name)) {
+			if (auto* node = Held("him", name)) {
 				Append(line, ToLocal(pelvis, node->world.translate));
 			} else {
 				AppendMissing(line, 3);
@@ -140,35 +191,24 @@ namespace
 		REX::INFO("{}", line);
 	}
 
-	// One sample, on the main thread (queued by the timer below)
-	void SampleNow()
-	{
-		const auto id = followed.load();
-		if (id >= 0 && threads) {
-			auto* thread = threads->getThread(id);
-			if (!thread || !thread->isRunning()) {
-				REX::INFO("thread {} over after {} samples", id, samples);
-				followed = -1;
-			} else {
-				Sample(thread);
-			}
-		}
-		pending = false;
-	}
-
-	// Every kInterval while a scene is followed, queues a sample onto the main thread through F4SE's task interface
-	// (PlayerCharacter::Update is no frame clock: it stops while 4Stim drives the player)
 	void Timer(std::stop_token a_stop)
 	{
 		while (!a_stop.stop_requested()) {
 			std::this_thread::sleep_for(kInterval);
-			if (followed.load() >= 0 && !pending.exchange(true)) {
-				if (auto* tasks = F4SE::GetTaskInterface()) {
-					tasks->AddTask(SampleNow);
-				} else {
-					pending = false;
-				}
+			if (followed.load() < 0) {
+				continue;
 			}
+			if (!resolved) {
+				if (!pending.exchange(true)) {
+					if (auto* tasks = F4SE::GetTaskInterface()) {
+						tasks->AddTask(Resolve);
+					} else {
+						pending = false;
+					}
+				}
+				continue;
+			}
+			Sample();
 		}
 	}
 
@@ -178,8 +218,14 @@ namespace
 	{
 		void listen(FourStimAPI::Thread* a_thread) override
 		{
+			{
+				std::scoped_lock lock{ heldLock };
+				const char* id = a_thread->getCurrentSceneID();
+				scene = id ? id : "";
+			}
 			samples = 0;
 			since = std::chrono::steady_clock::now();
+			resolved = false;
 			followed = a_thread->getThreadID();
 			REX::INFO("following 4Stim thread {} in {} with {} actor(s)", a_thread->getThreadID(), a_thread->getCurrentSceneID(), a_thread->getActorCount());
 			REX::INFO("{}", Header());
@@ -190,12 +236,33 @@ namespace
 	{
 		void listen(FourStimAPI::Thread* a_thread) override
 		{
+			{
+				std::scoped_lock lock{ heldLock };
+				const char* id = a_thread->getCurrentSceneID();
+				scene = id ? id : "";
+			}
 			REX::INFO("thread {} now in {}", a_thread->getThreadID(), a_thread->getCurrentSceneID());
+		}
+	};
+
+	struct ThreadStopped : FourStimAPI::ThreadEventListener
+	{
+		void listen(FourStimAPI::Thread* a_thread) override
+		{
+			if (a_thread->getThreadID() != followed.load()) {
+				return;
+			}
+			followed = -1;
+			REX::INFO("thread {} over after {} samples", a_thread->getThreadID(), samples.load());
+			if (auto* tasks = F4SE::GetTaskInterface()) {
+				tasks->AddTask(Release);
+			}
 		}
 	};
 
 	ThreadStarted started;
 	SceneChanged  changed;
+	ThreadStopped stopped;
 
 	void Connect()
 	{
@@ -214,6 +281,7 @@ namespace
 		}
 		threads->registerThreadStartListener(&started);
 		threads->registerNodeChangedListener(&changed);
+		threads->registerThreadStopListener(&stopped);
 		REX::INFO("following 4Stim's scenes (thread interface version {})", threads->getVersion());
 	}
 
