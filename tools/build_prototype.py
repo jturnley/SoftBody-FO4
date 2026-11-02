@@ -38,7 +38,9 @@ GT_SKELETON = r"meshes\actors\character\character assets\Xml Addon\SMP Object Fe
 # never collided with A-Body's penis, itself per-triangle in 4Stim scenes (MaleBodyHard.xml).
 COLLISION_SHAPES = {"SoftBodyVaginaOut": ("SB_Vagina", 0.35, 0.8), "SoftBodyVaginaDeep": ("SB_Vagina", 0.15, 0.8),
                     "SoftBodyAnus": ("SB_Anus", 0.3, 0.8)}
-NO_COLLIDE_WITH = ("SB_Vagina", "SB_Anus")
+# ... and not with A-Body's balls ("Balls"): in doggy they hit the pads and were thrown up; A-Body's own anus shapes
+# skip them too
+NO_COLLIDE_WITH = ("SB_Vagina", "SB_Anus", "Balls")
 # The game's own Data (for the skin material the genitals' material is made from)
 GAME_DATA = sys.argv[4] if len(sys.argv) > 4 else r"E:\FO4-MO2\Fallout 4\Data"
 

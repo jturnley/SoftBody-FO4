@@ -457,6 +457,7 @@
     <tag>SB_Vagina</tag>
     <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
     <no-collide-with-tag>SB_Anus</no-collide-with-tag>
+    <no-collide-with-tag>Balls</no-collide-with-tag>
   </per-vertex-shape>
   <per-vertex-shape name="SoftBodyVaginaDeep">
     <margin>0.15</margin>
@@ -465,6 +466,7 @@
     <tag>SB_Vagina</tag>
     <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
     <no-collide-with-tag>SB_Anus</no-collide-with-tag>
+    <no-collide-with-tag>Balls</no-collide-with-tag>
   </per-vertex-shape>
   <per-vertex-shape name="SoftBodyAnus">
     <margin>0.3</margin>
@@ -473,6 +475,7 @@
     <tag>SB_Anus</tag>
     <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
     <no-collide-with-tag>SB_Anus</no-collide-with-tag>
+    <no-collide-with-tag>Balls</no-collide-with-tag>
   </per-vertex-shape>
 
   <generic-constraint bodyA="LBreast_skin_SB" bodyB="LBreast_skin" template="breastSpring"/>
