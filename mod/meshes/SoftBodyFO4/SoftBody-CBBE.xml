@@ -240,7 +240,7 @@
     Goutou), ported value for value except travel: GT lets these bones move up
     to 30 units, and a kinematic penis off the opening (4Stim swaps A-Body to
     its rigid MaleBodyHard.xml in scenes) dragged her flesh out that far, so
-    every linear limit is capped at 3. Each moving genital bone hangs off one of
+    every linear limit is capped at 3, the canal walls' at 4 (4Stim aligns the penis about 3 units off the canal's centre, which pinned the front wall at 3). Each moving genital bone hangs off one of
     GT's Skyrim skeleton bones; the body NIF carries those as kinematic anchors,
     turned as GT has them (a spring's limits run along its anchor's axes, after
     frameInB), and GT's pelvis as "GT Pelvis". A lower limit above its upper
@@ -606,7 +606,7 @@
     <enableLinearSprings>1</enableLinearSprings>
     <linearStiffnessLimited>0</linearStiffnessLimited>
     <angularStiffnessLimited>0</angularStiffnessLimited>
-    <linearLowerLimit x="0" y="-3" z="-3"/>
+    <linearLowerLimit x="0" y="-4" z="-4"/>
     <linearUpperLimit x="0" y="0" z="0"/>
     <angularLowerLimit x="0" y="0" z="0"/>
     <angularUpperLimit x="0" y="0" z="0"/>

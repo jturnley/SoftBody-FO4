@@ -41,6 +41,8 @@ WEIGHT_FADE = 1.5        # the vulva's weights go from CBBE's (outer seam) to fi
 OVER_DEPTH = 1.5        # GT triangles further than this from the cut CBBE surface are not "over" it
 EASE = 0.8              # the patch's outer band this wide is eased onto CBBE's surface
 SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's real seams jump much further)
+OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1 ...
+OPENING_FADE = 1.5      # ... fading out over this distance from them
 # GT's genital bones (ported); every other GT bone's share of a vertex is taken from CBBE's surface instead
 GENITAL_PREFIXES = ("NPC L Pussy", "NPC R Pussy", "Vagina", "Clitoral", "NPC LT Anus", "NPC RT Anus",
                     "NPC LB Anus", "NPC RB Anus", "Pussy")
@@ -368,6 +370,12 @@ def blend_weights(dicts, bary):
     return out
 
 
+def smooth_fade(d, width):
+    """1 at d = 0, easing to 0 at d = width"""
+    x = min(1.0, max(0.0, d / width))
+    return 1 - x * x * (3 - 2 * x)
+
+
 def top4(w):
     items = sorted(((k, v) for k, v in w.items() if v > 1e-4), key=lambda kv: -kv[1])[:4]
     total = sum(v for _, v in items)
@@ -451,6 +459,9 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     # lies flat; measured from the outer edge, so the slit and anus seams with the genitals never move
     d, _ = cKDTree(patch_P[outer_v]).query(patch_P)
     edge_dist = d.copy()
+    # and from the openings (the slit and anus edges), where the skin should follow the lip bones (OPENING_PULL)
+    inner_v = [pfirst[i] for l in loops if l is not outer for i in l]
+    opening_dist, _ = cKDTree(patch_P[inner_v]).query(patch_P)
     ease = np.clip(1 - d / EASE, 0, 1)
     ease = ease * ease * (3 - 2 * ease)
     blend_normals = {}
@@ -559,6 +570,14 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                 if share:
                     w[bone] = w.get(bone, 0) + x * (1 - g) * share
         w.update(gw)
+        # near the openings, more of the skin rides on GT's lip and anus bones than GT gives it: GT lets those bones
+        # travel up to 25 units, so its 5-30% shares moved the skin a lot; with SoftBody's 3-unit cap the entrance
+        # barely opened while the bones behind it did. The genital share is pulled toward 1 by OPENING_PULL at the
+        # edge, fading out over OPENING_FADE; GT's mix between its genital bones is kept
+        pull = OPENING_PULL * smooth_fade(opening_dist[k], OPENING_FADE)
+        if g > 1e-4 and pull > 0:
+            share = g + (1 - g) * pull
+            w = {b: x * ((share / g) if b in gw else (1 - share) / (1 - g)) for b, x in w.items()} if g < 1 else w
         vul_w.append(top4(w))
     _, gen_body_w, gen_src = surface(gen_P)
     gen_w = []
