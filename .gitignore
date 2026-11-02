@@ -1,3 +1,7 @@
 dist/
 __pycache__/
 *.pyc
+probe/build/
+probe/.xmake/
+.vs/
+vsxmake*/
