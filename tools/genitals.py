@@ -43,6 +43,7 @@ EASE = 0.8              # the patch's outer band this wide is eased onto CBBE's 
 SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's real seams jump much further)
 OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1 ...
 OPENING_FADE = 1.5      # ... fading out over this distance from them
+ANUS_PULL = 0.85        # the anal canal's share on the anus bones goes this much of the way to 1
 # GT's genital bones (ported); every other GT bone's share of a vertex is taken from CBBE's surface instead
 GENITAL_PREFIXES = ("NPC L Pussy", "NPC R Pussy", "Vagina", "Clitoral", "NPC LT Anus", "NPC RT Anus",
                     "NPC LB Anus", "NPC RB Anus", "Pussy")
@@ -370,6 +371,16 @@ def blend_weights(dicts, bary):
     return out
 
 
+def pull_toward(w, gw, pull):
+    """w with its genital bones' (gw's) total share pulled `pull` of the way to 1, their mix kept, the rest scaled down"""
+    g = sum(gw.values())
+    if g <= 0 or pull <= 0 or g >= 1:
+        return w
+    total = sum(w.values())
+    share = g + (total - g) * pull
+    return {b: x * ((share / g) if b in gw else (total - share) / (total - g)) for b, x in w.items()}
+
+
 def smooth_fade(d, width):
     """1 at d = 0, easing to 0 at d = width"""
     x = min(1.0, max(0.0, d / width))
@@ -574,12 +585,14 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         # travel up to 25 units, so its 5-30% shares moved the skin a lot; with SoftBody's 3-unit cap the entrance
         # barely opened while the bones behind it did. The genital share is pulled toward 1 by OPENING_PULL at the
         # edge, fading out over OPENING_FADE; GT's mix between its genital bones is kept
-        pull = OPENING_PULL * smooth_fade(opening_dist[k], OPENING_FADE)
-        if g > 1e-4 and pull > 0:
-            share = g + (1 - g) * pull
-            w = {b: x * ((share / g) if b in gw else (1 - share) / (1 - g)) for b, x in w.items()} if g < 1 else w
-        vul_w.append(top4(w))
+        vul_w.append(top4(pull_toward(w, gw, OPENING_PULL * smooth_fade(opening_dist[k], OPENING_FADE))))
     _, gen_body_w, gen_src = surface(gen_P)
+    # The parts that must open with the penis ride on their bones like the outer skin does (GT leaves them mostly on
+    # the pelvis, its bones travelling far enough to drag them anyway): the labia minora, vestibule and clitoris (2Vagina
+    # off the canal walls, which GT already puts wholly on their ring bones) by OPENING_PULL, the anal canal by
+    # ANUS_PULL. An anal-canal point GT left wholly on the pelvis takes its nearest anus bone.
+    n_vagina = len(vagina.positions)
+    anus_bones = {b: T(anus.bone_position(b)) for b in anus.bone_names if is_genital(b)}
     gen_w = []
     for k in range(len(gen_P)):
         if snap[k]:                          # the rims: exactly their twins' weights, or the seam opens
@@ -592,7 +605,16 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
             b = anchor(b)
             w[b] = w.get(b, 0) + x * (1 - g)
         w.update(gw)
-        gen_w.append(top4(w))
+        if k < n_vagina:
+            on_walls = sum(x for b, x in gw.items() if b.startswith("VaginaD")) >= 0.5
+            pull = 0.0 if on_walls else OPENING_PULL
+        else:
+            pull = ANUS_PULL
+            if g < 1e-4 and anus_bones:
+                nearest = min(anus_bones, key=lambda b: np.linalg.norm(anus_bones[b] - gen_P[k]))
+                w = {**w, nearest: 1e-3}
+                gw = {nearest: 1e-3}
+        gen_w.append(top4(pull_toward(w, gw, pull)))
 
     # 5. genital bones, placed and turned by the fit (a skin bind's rotation is the bone's world rotation transposed)
     def bone_frame(shape, b):
