@@ -37,7 +37,7 @@ GT_SKELETON = r"meshes\actors\character\character assets\Xml Addon\SMP Object Fe
 # whose lip and anus proxies do collide in FO4 has them. GT's per-triangle pads (margin 0.1-0.2) built in SMP but
 # never collided with A-Body's penis, itself per-triangle in 4Stim scenes (MaleBodyHard.xml).
 COLLISION_SHAPES = {"SoftBodyVaginaOut": ("SB_Vagina", 0.35, 0.8), "SoftBodyVaginaDeep": ("SB_Vagina", 0.15, 0.8),
-                    "SoftBodyAnus": ("SB_Anus", 0.3, 0.8)}
+                    "SoftBodyAnus": ("SB_Anus", 0.3, 0.8), "SoftBodyAnalCanal": ("SB_Anus", 0.5, 0.8)}
 # ... and not with A-Body's balls ("Balls"): in doggy they hit the pads and were thrown up; A-Body's own anus shapes
 # skip them too
 NO_COLLIDE_WITH = ("SB_Vagina", "SB_Anus", "Balls")

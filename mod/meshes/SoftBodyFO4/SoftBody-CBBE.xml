@@ -249,6 +249,7 @@
       lips    Clitoral1, VaginaB1, NPC L/R Pussy02
       canal   VaginaD{B,F,R,L}01-03 (three rings of four), VaginaDeep1/2
       anus    NPC {LT,RT,LB,RB} Anus2
+    and SoftBody's own anal canal rings, SB Anus{T,L,B,R}1-3 (at the end).
   -->
   <bone-default name="gtClitoral">
     <mass>0.1</mass>
@@ -327,6 +328,17 @@
     <restitution>0.2</restitution>
     <margin-multiplier>1</margin-multiplier>
   </bone-default>
+  <bone-default name="sbAnalCanal">
+    <mass>0.1</mass>
+    <inertia x="8" y="8" z="8"/>
+    <linearDamping>0.7</linearDamping>
+    <angularDamping>0.3</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0.02</restitution>
+    <margin-multiplier>2</margin-multiplier>
+  </bone-default>
 
   <!-- anchors (kinematic: the default template) -->
   <bone name="GT Pelvis"/>
@@ -343,6 +355,18 @@
   <bone name="NPC RT Anus1"/>
   <bone name="NPC LB Anus1"/>
   <bone name="NPC RB Anus1"/>
+  <bone name="SB AnusT1 Base"/>
+  <bone name="SB AnusL1 Base"/>
+  <bone name="SB AnusB1 Base"/>
+  <bone name="SB AnusR1 Base"/>
+  <bone name="SB AnusT2 Base"/>
+  <bone name="SB AnusL2 Base"/>
+  <bone name="SB AnusB2 Base"/>
+  <bone name="SB AnusR2 Base"/>
+  <bone name="SB AnusT3 Base"/>
+  <bone name="SB AnusL3 Base"/>
+  <bone name="SB AnusB3 Base"/>
+  <bone name="SB AnusR3 Base"/>
 
   <bone name="Clitoral1" template="gtClitoral"/>
   <bone name="VaginaB1" template="gtLipBack"/>
@@ -366,6 +390,18 @@
   <bone name="NPC RT Anus2" template="gtAnus"/>
   <bone name="NPC LB Anus2" template="gtAnus"/>
   <bone name="NPC RB Anus2" template="gtAnus"/>
+  <bone name="SB AnusT1" template="sbAnalCanal"/>
+  <bone name="SB AnusL1" template="sbAnalCanal"/>
+  <bone name="SB AnusB1" template="sbAnalCanal"/>
+  <bone name="SB AnusR1" template="sbAnalCanal"/>
+  <bone name="SB AnusT2" template="sbAnalCanal"/>
+  <bone name="SB AnusL2" template="sbAnalCanal"/>
+  <bone name="SB AnusB2" template="sbAnalCanal"/>
+  <bone name="SB AnusR2" template="sbAnalCanal"/>
+  <bone name="SB AnusT3" template="sbAnalCanal"/>
+  <bone name="SB AnusL3" template="sbAnalCanal"/>
+  <bone name="SB AnusB3" template="sbAnalCanal"/>
+  <bone name="SB AnusR3" template="sbAnalCanal"/>
 
   <!--
     Collision surface: the body mesh itself. Kinematic bone influences are
@@ -471,6 +507,15 @@
   </per-vertex-shape>
   <per-vertex-shape name="SoftBodyAnus">
     <margin>0.3</margin>
+    <penetration>0.8</penetration>
+    <shared>public</shared>
+    <tag>SB_Anus</tag>
+    <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
+    <no-collide-with-tag>SB_Anus</no-collide-with-tag>
+    <no-collide-with-tag>Balls</no-collide-with-tag>
+  </per-vertex-shape>
+  <per-vertex-shape name="SoftBodyAnalCanal">
+    <margin>0.5</margin>
     <penetration>0.8</penetration>
     <shared>public</shared>
     <tag>SB_Anus</tag>
@@ -753,5 +798,41 @@
     <linearStiffness x="0" y="10" z="0"/>
     <linearDamping x="0" y="1" z="0"/>
   </generic-constraint>
+
+  <!-- the anal canal (SoftBody's own, not GT's): three rings of four bones, at 2, 4 and 6 deep, each held on its
+       base by a spring that lets it go only straight outward (its base's x), up to 4 -->
+  <generic-constraint-default name="sbAnalWall">
+    <frameInB>
+      <basis x="0" y="0" z="0" w="1"/>
+      <origin x="0" y="0" z="0"/>
+    </frameInB>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <enableAngularSprings>0</enableAngularSprings>
+    <enableLinearSprings>1</enableLinearSprings>
+    <linearStiffnessLimited>0</linearStiffnessLimited>
+    <angularStiffnessLimited>0</angularStiffnessLimited>
+    <linearLowerLimit x="0" y="0" z="0"/>
+    <linearUpperLimit x="4" y="0" z="0"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="15" y="0" z="0"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="2" y="0" z="0"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+  <generic-constraint bodyA="SB AnusT1" bodyB="SB AnusT1 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusL1" bodyB="SB AnusL1 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusB1" bodyB="SB AnusB1 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusR1" bodyB="SB AnusR1 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusT2" bodyB="SB AnusT2 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusL2" bodyB="SB AnusL2 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusB2" bodyB="SB AnusB2 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusR2" bodyB="SB AnusR2 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusT3" bodyB="SB AnusT3 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusL3" bodyB="SB AnusL3 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusB3" bodyB="SB AnusB3 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusR3" bodyB="SB AnusR3 Base" template="sbAnalWall"/>
 
 </system>

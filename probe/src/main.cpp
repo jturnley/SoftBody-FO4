@@ -25,6 +25,9 @@ namespace
 		{ "VaginaDB02", "VaginaDB00" }, { "VaginaDF02", "VaginaDF00" }, { "VaginaDL02", "VaginaDL00" }, { "VaginaDR02", "VaginaDR00" },
 		{ "VaginaDB03", "VaginaDB00" }, { "VaginaDF03", "VaginaDF00" }, { "VaginaDL03", "VaginaDL00" }, { "VaginaDR03", "VaginaDR00" },
 		{ "NPC LT Anus2", "NPC LT Anus1" }, { "NPC RT Anus2", "NPC RT Anus1" }, { "NPC LB Anus2", "NPC LB Anus1" }, { "NPC RB Anus2", "NPC RB Anus1" },
+		{ "SB AnusT1", "SB AnusT1 Base" }, { "SB AnusB1", "SB AnusB1 Base" }, { "SB AnusL1", "SB AnusL1 Base" }, { "SB AnusR1", "SB AnusR1 Base" },
+		{ "SB AnusT2", "SB AnusT2 Base" }, { "SB AnusB2", "SB AnusB2 Base" }, { "SB AnusL2", "SB AnusL2 Base" }, { "SB AnusR2", "SB AnusR2 Base" },
+		{ "SB AnusT3", "SB AnusT3 Base" }, { "SB AnusB3", "SB AnusB3 Base" }, { "SB AnusL3", "SB AnusL3 Base" }, { "SB AnusR3", "SB AnusR3 Base" },
 	};
 
 	struct Width
@@ -40,6 +43,9 @@ namespace
 		{ "canal2_LR", "VaginaDL02", "VaginaDR02" }, { "canal2_FB", "VaginaDF02", "VaginaDB02" },
 		{ "canal3_LR", "VaginaDL03", "VaginaDR03" }, { "canal3_FB", "VaginaDF03", "VaginaDB03" },
 		{ "anus_LTRB", "NPC LT Anus2", "NPC RB Anus2" }, { "anus_RTLB", "NPC RT Anus2", "NPC LB Anus2" },
+		{ "anal1_TB", "SB AnusT1", "SB AnusB1" }, { "anal1_LR", "SB AnusL1", "SB AnusR1" },
+		{ "anal2_TB", "SB AnusT2", "SB AnusB2" }, { "anal2_LR", "SB AnusL2", "SB AnusR2" },
+		{ "anal3_TB", "SB AnusT3", "SB AnusB3" }, { "anal3_LR", "SB AnusL3", "SB AnusR3" },
 	};
 
 	// A-Body's penis chain: tip, middle, base (the _SMP bones are the simulated ones)

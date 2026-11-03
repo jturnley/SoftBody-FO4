@@ -50,7 +50,10 @@ re-baked to tangent space; material made from the game's own skin .bgsm). GT's 2
 sit under `Pelvis_skin`. Each new shape gets its own copy of the shader block: two drawn shapes
 sharing one hang the game when the body is put on. Collision for the openings is GT's own: the pads
 of its HVA collision NIF (one per genital bone) become the hidden shapes `SoftBodyVaginaOut`,
-`SoftBodyVaginaDeep` and `SoftBodyAnus`. They follow the recipe of a TWB body whose lip and anus
+`SoftBodyVaginaDeep` and `SoftBodyAnus`. The anal canal is SoftBody's own past its entrance: GT's is a
+pocket 2.5 deep that only its anus ring moved, so it is stretched into a tube 8 deep with three rings
+of four bones (`SB Anus{T,L,B,R}1-3`, at 2, 4 and 6 deep, each sprung to go straight outward up to
+4) and a hidden pad tube at each ring (`SoftBodyAnalCanal`). The pads follow the recipe of a TWB body whose lip and anus
 proxies do collide in FO4: per-vertex shapes (spheres), weighted wholly to their genital bones,
 colliding with everything except each other, hidden by having no shader. GT's per-triangle pads
 (v0.1–v0.2) built in SMP but never collided with A-Body's penis, which is itself per-triangle in
@@ -76,6 +79,9 @@ Status (2026-11-01):
   6 to 10. The skin around the openings now follows the lip bones (v0.1-v0.5
   barely moved it), and the entrance looked right in a first test. Team
   feedback pending.
+- v0.7, measured in game (doggy, anal): the anus ring opens from about 1 to 3-4
+  across, about the shaft's width, but the visible canal was a short narrow
+  pocket the penis passed through. v0.8 replaces it with the deeper tube above.
 - v0.4: the genitals keep their own texture. v0.1-v0.3 shipped their material
   with the skin material's SkinTint flag and root template, so in game FO4
   dressed them in the actor's skin texture. Without the flag they don't take
