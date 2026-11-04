@@ -252,6 +252,8 @@
       anus    NPC {LT,RT,LB,RB} Anus2
     and SoftBody's own canal rings (written by build_prototype.py from the NIF's bones): anal SB Anus{T,L,B,R}1-3,
     vaginal SB VagIn_0-11 (the entrance) and SB Vag{1-5}_{0-11}, each on a kinematic "<bone> Base".
+    The rims (the lips, the anus's Anus2 and SB VagIn_*) are made kinematic and their springs dropped by
+    build_prototype.py (DRIVEN_BONES): the SoftBodyFO4 plugin places them round the penis.
   -->
   <bone-default name="gtClitoral">
     <mass>0.1</mass>
@@ -442,10 +444,10 @@
   <bone name="SB VagIn_8 Base"/>
   <bone name="SB VagIn_9 Base"/>
 
-  <bone name="Clitoral1" template="gtClitoral"/>
-  <bone name="VaginaB1" template="gtLipBack"/>
-  <bone name="NPC L Pussy02" template="gtLip"/>
-  <bone name="NPC R Pussy02" template="gtLip"/>
+  <bone name="Clitoral1"/>
+  <bone name="VaginaB1"/>
+  <bone name="NPC L Pussy02"/>
+  <bone name="NPC R Pussy02"/>
   <bone name="VaginaDeep1" template="gtDeep1"/>
   <bone name="VaginaDeep2" template="gtDeep2"/>
   <bone name="VaginaDB01" template="gtCanal"/>
@@ -460,10 +462,10 @@
   <bone name="VaginaDF03" template="gtCanal"/>
   <bone name="VaginaDR03" template="gtCanal"/>
   <bone name="VaginaDL03" template="gtCanal"/>
-  <bone name="NPC LT Anus2" template="gtAnus"/>
-  <bone name="NPC RT Anus2" template="gtAnus"/>
-  <bone name="NPC LB Anus2" template="gtAnus"/>
-  <bone name="NPC RB Anus2" template="gtAnus"/>
+  <bone name="NPC LT Anus2"/>
+  <bone name="NPC RT Anus2"/>
+  <bone name="NPC LB Anus2"/>
+  <bone name="NPC RB Anus2"/>
   <bone name="SB AnusB1" template="sbCanal"/>
   <bone name="SB AnusB2" template="sbCanal"/>
   <bone name="SB AnusB3" template="sbCanal"/>
@@ -536,18 +538,18 @@
   <bone name="SB Vag5_7" template="sbCanal"/>
   <bone name="SB Vag5_8" template="sbCanal"/>
   <bone name="SB Vag5_9" template="sbCanal"/>
-  <bone name="SB VagIn_0" template="sbCanal"/>
-  <bone name="SB VagIn_1" template="sbCanal"/>
-  <bone name="SB VagIn_10" template="sbCanal"/>
-  <bone name="SB VagIn_11" template="sbCanal"/>
-  <bone name="SB VagIn_2" template="sbCanal"/>
-  <bone name="SB VagIn_3" template="sbCanal"/>
-  <bone name="SB VagIn_4" template="sbCanal"/>
-  <bone name="SB VagIn_5" template="sbCanal"/>
-  <bone name="SB VagIn_6" template="sbCanal"/>
-  <bone name="SB VagIn_7" template="sbCanal"/>
-  <bone name="SB VagIn_8" template="sbCanal"/>
-  <bone name="SB VagIn_9" template="sbCanal"/>
+  <bone name="SB VagIn_0"/>
+  <bone name="SB VagIn_1"/>
+  <bone name="SB VagIn_10"/>
+  <bone name="SB VagIn_11"/>
+  <bone name="SB VagIn_2"/>
+  <bone name="SB VagIn_3"/>
+  <bone name="SB VagIn_4"/>
+  <bone name="SB VagIn_5"/>
+  <bone name="SB VagIn_6"/>
+  <bone name="SB VagIn_7"/>
+  <bone name="SB VagIn_8"/>
+  <bone name="SB VagIn_9"/>
 
   <!--
     Collision surface: the body mesh itself. Kinematic bone influences are
@@ -754,28 +756,6 @@
   <!-- the hood pulls back, the rear lip and the labia part -->
   <!-- the hood and the outer lips give a little (real ones barely move round a shaft; the entrance ring does the
        opening), the rear lip more -->
-  <generic-constraint bodyA="Clitoral1" bodyB="Clitoral" template="gtSpring">
-    <frameInB><basis x="-0.25" y="0" z="0" w="0.5"/><origin x="0" y="0" z="0"/></frameInB>
-    <linearLowerLimit x="0" y="-1.5" z="0"/>
-    <linearStiffness x="0" y="40" z="0"/>
-    <linearDamping x="0" y="10" z="0"/>
-  </generic-constraint>
-  <generic-constraint bodyA="VaginaB1" bodyB="VaginaB" template="gtSpring">
-    <frameInB><basis x="-0.25" y="0" z="0" w="0.5"/><origin x="0" y="0" z="0"/></frameInB>
-    <linearUpperLimit x="0" y="5" z="0"/>
-    <linearStiffness x="0" y="40" z="0"/>
-    <linearDamping x="0" y="10" z="0"/>
-  </generic-constraint>
-  <generic-constraint bodyA="NPC L Pussy02" bodyB="NPC L Pussy01" template="gtSpring">
-    <linearUpperLimit x="3" y="0" z="0"/>
-    <linearStiffness x="40" y="0" z="0"/>
-    <linearDamping x="10" y="0" z="0"/>
-  </generic-constraint>
-  <generic-constraint bodyA="NPC R Pussy02" bodyB="NPC R Pussy01" template="gtSpring">
-    <linearLowerLimit x="-3" y="0" z="0"/>
-    <linearStiffness x="40" y="0" z="0"/>
-    <linearDamping x="10" y="0" z="0"/>
-  </generic-constraint>
 
   <!-- the deep end -->
   <generic-constraint bodyA="VaginaDeep1" bodyB="VaginaDeep" template="gtSpring">
@@ -927,27 +907,6 @@
   <generic-constraint bodyA="VaginaDL01" bodyB="VaginaDeep1" template="gtCanalTop"/>
 
   <!-- the anus: each quarter opens outward -->
-  <generic-constraint bodyA="NPC RT Anus2" bodyB="NPC RT Anus1" template="gtSpring">
-    <linearLowerLimit x="-5" y="0" z="0"/>
-    <linearStiffness x="5" y="0" z="0"/>
-    <linearDamping x="1" y="0" z="0"/>
-  </generic-constraint>
-  <generic-constraint bodyA="NPC LT Anus2" bodyB="NPC LT Anus1" template="gtSpring">
-    <frameInB><basis x="0" y="0.1" z="0" w="-0.3"/><origin x="0" y="0" z="0"/></frameInB>
-    <linearUpperLimit x="5" y="0" z="0"/>
-    <linearStiffness x="10" y="0" z="0"/>
-    <linearDamping x="1" y="0" z="0"/>
-  </generic-constraint>
-  <generic-constraint bodyA="NPC RB Anus2" bodyB="NPC RB Anus1" template="gtSpring">
-    <linearUpperLimit x="0" y="5" z="0"/>
-    <linearStiffness x="0" y="10" z="0"/>
-    <linearDamping x="0" y="1" z="0"/>
-  </generic-constraint>
-  <generic-constraint bodyA="NPC LB Anus2" bodyB="NPC LB Anus1" template="gtSpring">
-    <linearLowerLimit x="0" y="-5" z="0"/>
-    <linearStiffness x="0" y="10" z="0"/>
-    <linearDamping x="0" y="1" z="0"/>
-  </generic-constraint>
 
   <!-- the canals (SoftBody's own, not GT's): rings of bones round the anal canal and round the vaginal entrance and
        canal, each held on its base by a spring that lets it go only straight outward (its base's x), up to 4 -->
@@ -1044,18 +1003,6 @@
   <generic-constraint bodyA="SB Vag5_7" bodyB="SB Vag5_7 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_8" bodyB="SB Vag5_8 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_9" bodyB="SB Vag5_9 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_0" bodyB="SB VagIn_0 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_1" bodyB="SB VagIn_1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_10" bodyB="SB VagIn_10 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_11" bodyB="SB VagIn_11 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_2" bodyB="SB VagIn_2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_3" bodyB="SB VagIn_3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_4" bodyB="SB VagIn_4 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_5" bodyB="SB VagIn_5 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_6" bodyB="SB VagIn_6 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_7" bodyB="SB VagIn_7 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_8" bodyB="SB VagIn_8 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB VagIn_9" bodyB="SB VagIn_9 Base" template="sbCanalWall"/>
 
 
 </system>

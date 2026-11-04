@@ -9,7 +9,8 @@
 //     is measured again, until it is within the tolerance. Then, if the penis runs at an angle to the canal (missionary:
 //     about 20 degrees), 4Stim's penis bend is tried a step or two to learn its effect, set to match, and the entrance
 //     centred again.
-//  3. optionally logs her genital bones and the penis (what was SoftBodyProbe), for tuning.
+//  3. places the openings' rims round the penis (their bones kinematic in her physics files), every few ms.
+//  4. optionally logs her genital bones and the penis (what was SoftBodyProbe), for tuning.
 // Settings: Data\F4SE\Plugins\SoftBodyFO4.ini. Keys, with the game in front: F11 align now, Alt+F11 align to the
 // vagina, Alt+Shift+F11 to the anus (and that act's physics), Shift+F11 auto-align on or off, Ctrl+F11 back to the
 // scene's own alignment.
@@ -37,6 +38,12 @@ namespace
 		float tolerance = 0.4F;  // game units: the penis line within this of the opening's centre is aligned
 		int   maxSteps = 5;
 		float maxStep = 6.0F;  // the most he is moved in one step
+		// the openings' rims, placed round the penis (game units, at his scale 1)
+		bool  driveOpenings = true;
+		float penisRadius = 1.8F;     // the shaft's
+		float penisTipLength = 1.5F;  // the rounded tip: the radius grows from 0 at its end to the shaft's over this
+		float penisTipExtra = 1.0F;   // the penis's end beyond its last bone (Penis_05_SMP)
+		float rimSmoothing = 0.02F;   // seconds: how quickly the rims follow
 
 		void Load()
 		{
@@ -57,6 +64,13 @@ namespace
 			tolerance = f("fAlignTolerance", tolerance);
 			maxSteps = i("iAlignMaxSteps", maxSteps);
 			maxStep = f("fAlignMaxStep", maxStep);
+			driveOpenings = i("bDriveOpenings", 1) != 0;
+			penisRadius = f("fPenisRadius", penisRadius);
+			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
+			penisTipExtra = f("fPenisTipExtra", penisTipExtra);
+			rimSmoothing = std::max(0.0F, f("fRimSmoothing", rimSmoothing));
+			REX::INFO("settings: openings driven {}, penis radius {}, tip length {}, tip beyond its bone {}, rim smoothing {}s",
+				driveOpenings, penisRadius, penisTipLength, penisTipExtra, rimSmoothing);
 			REX::INFO("settings: swap physics {}, auto-align {}, log samples {}, align key {:#x}, tolerance {}, {} steps of up to {}",
 				swapPhysics, autoAlign, logSamples, alignKey, tolerance, maxSteps, maxStep);
 		}
@@ -140,6 +154,17 @@ namespace
 	{
 		const auto& w = a_node->world;
 		return (w.rotate * (a_world - w.translate)) / w.scale;
+	}
+
+	// a point in a node's own frame, in the world (ToLocal's inverse)
+	V ToWorld(const RE::NiAVObject* a_node, const V& a_local)
+	{
+		const auto& w = a_node->world;
+		const auto& e = w.rotate.entry;
+		const V     s(a_local.x * w.scale, a_local.y * w.scale, a_local.z * w.scale);
+		return V(w.translate.x + e[0][0] * s.x + e[1][0] * s.y + e[2][0] * s.z,
+			w.translate.y + e[0][1] * s.x + e[1][1] * s.y + e[2][1] * s.z,
+			w.translate.z + e[0][2] * s.x + e[1][2] * s.y + e[2][2] * s.z);
 	}
 
 	V DirToLocal(const RE::NiAVObject* a_node, const V& a_world)
@@ -312,6 +337,116 @@ namespace
 		himPosition = himAt;
 	}
 
+	// ---------------------------------------------------------------- the openings' rims, round the penis
+	// Left to collision, the rims opened where the thrusting penis shoved their pads: along the slit, lagging, oval.
+	// So her physics files make the rims' bones kinematic, and here each is pushed straight out from the penis's axis
+	// to its radius, from where it rests, wherever the penis (shaft and rounded tip) passes within that radius of it.
+	// The skin on them opens round the shaft and closes behind it. Nothing else of hers is moved.
+	struct Rim
+	{
+		const char* name;
+		int         opening;  // 0 the vagina, 1 the anus: its centre gives the way out when the axis runs through a bone
+	};
+	constexpr Rim kRims[] = {
+		{ "Clitoral1", 0 }, { "VaginaB1", 0 }, { "NPC L Pussy02", 0 }, { "NPC R Pussy02", 0 },
+		{ "SB VagIn_0", 0 }, { "SB VagIn_1", 0 }, { "SB VagIn_2", 0 }, { "SB VagIn_3", 0 }, { "SB VagIn_4", 0 }, { "SB VagIn_5", 0 },
+		{ "SB VagIn_6", 0 }, { "SB VagIn_7", 0 }, { "SB VagIn_8", 0 }, { "SB VagIn_9", 0 }, { "SB VagIn_10", 0 }, { "SB VagIn_11", 0 },
+		{ "NPC LT Anus2", 1 }, { "NPC RT Anus2", 1 }, { "NPC LB Anus2", 1 }, { "NPC RB Anus2", 1 },
+	};
+
+	struct Driven
+	{
+		RE::NiPointer<RE::NiAVObject> node;
+		V                             rest;  // its own local position, as the NIF has it
+		V                             now;
+		int                           opening{ 0 };
+	};
+	std::unordered_map<std::string, Driven> driven;  // under heldLock
+
+	// on the main thread, from Resolve: a rim bone's rest is taken once, when it is first seen
+	void HoldRim(RE::NiAVObject* a_her, const Rim& a_rim)
+	{
+		auto* node = Find(a_her, a_rim.name);
+		if (!node) {
+			return;
+		}
+		auto& d = driven[a_rim.name];
+		if (d.node.get() != node) {
+			d = Driven{ RE::NiPointer<RE::NiAVObject>(node), node->local.translate, node->local.translate, a_rim.opening };
+			REX::INFO("rim {}: rest ({:.3f}, {:.3f}, {:.3f})", a_rim.name, d.rest.x, d.rest.y, d.rest.z);
+		}
+	}
+
+	// off the main thread, every few milliseconds, under heldLock
+	void DriveRims(float a_dt)
+	{
+		auto*      tip = Held("him", kPenis[0]);
+		auto*      base = Held("him", kPenis[2]);
+		const bool penis = Settings::driveOpenings && tip && base;
+		V          b(0, 0, 0), u(0, 0, 0);
+		float      length = 0, scale = 1;
+		if (penis) {
+			b = base->world.translate;
+			const V t = tip->world.translate;
+			u = Unit(Sub(t, b));
+			scale = tip->world.scale;
+			length = Len(Sub(t, b)) + Settings::penisTipExtra * scale;
+		}
+		// each opening's centre, from its kinematic rim anchors
+		V    centre[2];
+		bool haveCentre[2]{};
+		for (int o = 0; o < 2; ++o) {
+			const Opening& op = o == 0 ? kVagina : kAnus;
+			V              c(0, 0, 0);
+			int            n = 0;
+			for (const auto* name : op.rim) {
+				if (auto* r = Held("her", name)) {
+					c = Add(c, r->world.translate);
+					++n;
+				}
+			}
+			haveCentre[o] = n == 4;
+			centre[o] = Mul(c, 0.25F);
+		}
+		const float follow = Settings::rimSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::rimSmoothing) : 1.0F;
+		const float radius = Settings::penisRadius * scale;
+		const float tipLength = Settings::penisTipLength * scale;
+		for (auto& [name, d] : driven) {
+			auto* node = d.node.get();
+			auto* parent = node ? node->parent : nullptr;
+			if (!parent) {
+				continue;
+			}
+			V target = d.rest;
+			if (penis) {
+				const V     w0 = ToWorld(parent, d.rest);
+				const V     rel = Sub(w0, b);
+				const float along = Dot(rel, u);
+				const float fromTip = length - along;
+				if (along > 0 && fromTip > 0) {
+					const float r = fromTip >= tipLength ? radius : radius * std::sqrt(fromTip / tipLength);
+					const V     perp = Sub(rel, Mul(u, along));
+					const float dist = Len(perp);
+					if (dist < r) {
+						// out from the axis; a touch of the way out from the opening's centre keeps a bone the axis runs
+						// through from flipping sides
+						V out(0, 0, 0);
+						if (haveCentre[d.opening]) {
+							out = Sub(w0, centre[d.opening]);
+							out = Unit(Sub(out, Mul(u, Dot(out, u))));
+						}
+						const V dir = Unit(Add(perp, Mul(out, 0.05F)));
+						if (Len(dir) > 0) {
+							target = ToLocal(parent, Add(w0, Mul(dir, r - dist)));
+						}
+					}
+				}
+			}
+			d.now = Add(d.now, Mul(Sub(target, d.now), follow));
+			node->local.translate = d.now;
+		}
+	}
+
 	// On the main thread: find her and him in the thread and hold their nodes
 	void Resolve()
 	{
@@ -344,6 +479,11 @@ namespace
 			for (const auto* name : kPenis) {
 				hold("him", him, name);
 			}
+			if (her) {
+				for (const auto& r : kRims) {
+					HoldRim(her, r);
+				}
+			}
 			if (him || attempts++ % 20 == 0) {
 				REX::INFO("thread {}: holding {} nodes (her {}, him {})", id, held.size(), her ? "found" : "missing", him ? "found" : "missing");
 			}
@@ -357,6 +497,12 @@ namespace
 	{
 		std::scoped_lock lock{ heldLock };
 		held.clear();
+		for (auto& [name, d] : driven) {
+			if (auto* node = d.node.get()) {
+				node->local.translate = d.rest;
+			}
+		}
+		driven.clear();
 	}
 
 	// Off the main thread, at whatever point of the frame the timer wakes: as the SMP wireframe sees the bones, after
@@ -960,6 +1106,25 @@ namespace
 
 	std::jthread timer;
 
+	// the rims, faster than the timer: a frame or so behind the penis
+	void Driver(std::stop_token a_stop)
+	{
+		auto last = Clock::now();
+		while (!a_stop.stop_requested()) {
+			std::this_thread::sleep_for(4ms);
+			const auto  now = Clock::now();
+			const float dt = std::chrono::duration<float>(now - last).count();
+			last = now;
+			if (followed.load() < 0 || !resolved) {
+				continue;
+			}
+			std::scoped_lock lock{ heldLock };
+			DriveRims(dt);
+		}
+	}
+
+	std::jthread driver;
+
 	// ---------------------------------------------------------------- 4Stim's events (main thread)
 
 	void OnScene(FourStimAPI::Thread* a_thread)
@@ -1078,5 +1243,6 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 		return false;
 	}
 	timer = std::jthread(Timer);
+	driver = std::jthread(Driver);
 	return true;
 }

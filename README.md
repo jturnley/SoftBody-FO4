@@ -154,6 +154,14 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   missionary: about 20), it tries two steps of 4Stim's penis bend to learn its effect, sets the bend
   that lines it up, and centres the entrance again. Keys (game in front): **F11** align now, **Alt+F11** align to the vagina, **Alt+Shift+F11** to the anus (either also sets that act's physics, for the rest of the scene), **Shift+F11** auto-align on/off,
   **Ctrl+F11** back to the scene's own alignment.
+- **Openings round the penis.** Left to collision, the rims opened where the thrusting penis shoved
+  their pads: along the slit, lagging behind, oval (v0.14: the entrance 7.3 front to back, 3.5 across).
+  So the rims' bones (GT's four lip bones, the 12-bone vaginal entrance ring, GT's four anus-rim bones)
+  are kinematic in her physics files, and the plugin pushes each straight out from the penis's axis to
+  its radius, from where it rests, every 4 ms, wherever the shaft or its rounded tip passes within that
+  radius of it. The skin opens round the shaft and closes behind it; the canals inside stay SMP.
+  `bDriveOpenings`, `fPenisRadius` (1.8), `fPenisTipLength`, `fPenisTipExtra`, `fRimSmoothing` in the INI.
+  The lips no longer jiggle or take a hand's push.
 - **Tuning log.** With `bLogSamples=1` it logs her genital bones and the penis every 25 ms to
   `Documents\My Games\Fallout4\F4SE\SoftBodyFO4.log` (what `probe/` did).
 

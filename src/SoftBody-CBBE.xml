@@ -204,6 +204,8 @@
       anus    NPC {LT,RT,LB,RB} Anus2
     and SoftBody's own canal rings (written by build_prototype.py from the NIF's bones): anal SB Anus{T,L,B,R}1-3,
     vaginal SB VagIn_0-11 (the entrance) and SB Vag{1-5}_{0-11}, each on a kinematic "<bone> Base".
+    The rims (the lips, the anus's Anus2 and SB VagIn_*) are made kinematic and their springs dropped by
+    build_prototype.py (DRIVEN_BONES): the SoftBodyFO4 plugin places them round the penis.
   -->
   <bone-default name="gtClitoral">
     <mass>0.1</mass>

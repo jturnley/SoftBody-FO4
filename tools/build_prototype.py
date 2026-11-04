@@ -146,14 +146,36 @@ def collision_xml(collision, skip=()):
 
 
 CANAL_PREFIXES = ("SB Anus", "SB Vag")
+# The openings' rims, placed by the SoftBodyFO4 plugin (round the penis, from its line) rather than simulated: kinematic
+# in every XML, their springs dropped. GT's lips and anus rim, and SoftBody's vaginal entrance ring.
+DRIVEN_BONES = ("Clitoral1", "VaginaB1", "NPC L Pussy02", "NPC R Pussy02",
+                "NPC LT Anus2", "NPC RT Anus2", "NPC LB Anus2", "NPC RB Anus2")
+DRIVEN_PREFIXES = ("SB VagIn_",)
+
+
+def driven(bone):
+    return bone in DRIVEN_BONES or (bone.startswith(DRIVEN_PREFIXES) and not bone.endswith(" Base"))
+
+
+def kinematic_driven(text):
+    """The driven bones made kinematic (no template) and their springs (as bodyA) dropped"""
+    import re
+    def bone(m):
+        return '<bone name="%s"/>' % m.group(1) if driven(m.group(1)) else m.group(0)
+    text = re.sub(r'<bone name="([^"]+)" template="[^"]+"/>', bone, text)
+    def constraint(m):
+        return "" if driven(m.group(2)) else m.group(0)
+    return re.sub(r'(\n[ \t]*<generic-constraint bodyA="([^"]+)"[^>]*?(?:/>|>.*?</generic-constraint>))', constraint,
+                  text, flags=re.S)
 
 
 def canal_xml(nif_bones):
     """The canals' ring bones (SoftBody's own, in the NIF): each a sbCanal bone on a kinematic "<bone> Base", held by
     sbCanalWall"""
     rings = sorted(b for b in nif_bones if b.startswith(CANAL_PREFIXES) and not b.endswith(" Base"))
-    return (['  <bone name="%s Base"/>' % b for b in rings], ['  <bone name="%s" template="sbCanal"/>' % b for b in rings],
-            ['  <generic-constraint bodyA="%s" bodyB="%s Base" template="sbCanalWall"/>' % (b, b) for b in rings])
+    return (['  <bone name="%s Base"/>' % b for b in rings],
+            ['  <bone name="%s"%s/>' % (b, "" if driven(b) else ' template="sbCanal"') for b in rings],
+            ['  <generic-constraint bodyA="%s" bodyB="%s Base" template="sbCanalWall"/>' % (b, b) for b in rings if not driven(b)])
 
 
 def write_xml(rel, dents=None, collision=None, skip=(), suffix="", nif_bones=()):
@@ -176,6 +198,7 @@ def write_xml(rel, dents=None, collision=None, skip=(), suffix="", nif_bones=())
         for marker, lines in markers:
             assert marker in text, (rel, marker)
             text = text.replace("  " + marker, "\n".join(lines))
+        text = kinematic_driven(text)
     dst = os.path.join(OUT, rel[:-4] + suffix + rel[-4:])
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     open(dst, "w", encoding="utf-8").write(text)
