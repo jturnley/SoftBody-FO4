@@ -163,7 +163,9 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   with its bones on the skin. It keeps the original as `.nif.bak`. (To do: let the plugin do this.)
 - **Openings round the penis.** Left to collision, the rims opened where the thrusting penis shoved
   their pads: along the slit, lagging behind, oval (v0.14: the entrance 7.3 front to back, 3.5 across).
-  So the rims' bones (GT's four lip bones, the 12-bone vaginal entrance ring, GT's four anus-rim bones)
+  So the rims' bones (GT's four lip bones, the 12-bone vaginal entrance ring, GT's four anus-rim bones,
+  and since v0.19 a ring of 12 of our own at each visible hole, `SB VagRim_*` and `SB AnusRim_*`, which
+  the skin within about 2.5 of the hole rides on, easing out, so the holes open round, not as diamonds)
   are kinematic in her physics files, and the plugin pushes each straight out from the penis's axis to
   its radius, from where it rests, every 4 ms, wherever the shaft or its rounded tip passes within that
   radius of it. A bone that sits out from the edge it carries (GT's lip bones, about 3 from the

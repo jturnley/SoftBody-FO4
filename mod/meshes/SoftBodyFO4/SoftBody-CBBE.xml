@@ -368,6 +368,18 @@
   <bone name="SB AnusR1 Base"/>
   <bone name="SB AnusR2 Base"/>
   <bone name="SB AnusR3 Base"/>
+  <bone name="SB AnusRim_0 Base"/>
+  <bone name="SB AnusRim_1 Base"/>
+  <bone name="SB AnusRim_10 Base"/>
+  <bone name="SB AnusRim_11 Base"/>
+  <bone name="SB AnusRim_2 Base"/>
+  <bone name="SB AnusRim_3 Base"/>
+  <bone name="SB AnusRim_4 Base"/>
+  <bone name="SB AnusRim_5 Base"/>
+  <bone name="SB AnusRim_6 Base"/>
+  <bone name="SB AnusRim_7 Base"/>
+  <bone name="SB AnusRim_8 Base"/>
+  <bone name="SB AnusRim_9 Base"/>
   <bone name="SB AnusT1 Base"/>
   <bone name="SB AnusT2 Base"/>
   <bone name="SB AnusT3 Base"/>
@@ -443,6 +455,18 @@
   <bone name="SB VagIn_7 Base"/>
   <bone name="SB VagIn_8 Base"/>
   <bone name="SB VagIn_9 Base"/>
+  <bone name="SB VagRim_0 Base"/>
+  <bone name="SB VagRim_1 Base"/>
+  <bone name="SB VagRim_10 Base"/>
+  <bone name="SB VagRim_11 Base"/>
+  <bone name="SB VagRim_2 Base"/>
+  <bone name="SB VagRim_3 Base"/>
+  <bone name="SB VagRim_4 Base"/>
+  <bone name="SB VagRim_5 Base"/>
+  <bone name="SB VagRim_6 Base"/>
+  <bone name="SB VagRim_7 Base"/>
+  <bone name="SB VagRim_8 Base"/>
+  <bone name="SB VagRim_9 Base"/>
 
   <bone name="Clitoral1"/>
   <bone name="VaginaB1"/>
@@ -475,6 +499,18 @@
   <bone name="SB AnusR1" template="sbCanal"/>
   <bone name="SB AnusR2" template="sbCanal"/>
   <bone name="SB AnusR3" template="sbCanal"/>
+  <bone name="SB AnusRim_0"/>
+  <bone name="SB AnusRim_1"/>
+  <bone name="SB AnusRim_10"/>
+  <bone name="SB AnusRim_11"/>
+  <bone name="SB AnusRim_2"/>
+  <bone name="SB AnusRim_3"/>
+  <bone name="SB AnusRim_4"/>
+  <bone name="SB AnusRim_5"/>
+  <bone name="SB AnusRim_6"/>
+  <bone name="SB AnusRim_7"/>
+  <bone name="SB AnusRim_8"/>
+  <bone name="SB AnusRim_9"/>
   <bone name="SB AnusT1" template="sbCanal"/>
   <bone name="SB AnusT2" template="sbCanal"/>
   <bone name="SB AnusT3" template="sbCanal"/>
@@ -550,6 +586,18 @@
   <bone name="SB VagIn_7"/>
   <bone name="SB VagIn_8"/>
   <bone name="SB VagIn_9"/>
+  <bone name="SB VagRim_0"/>
+  <bone name="SB VagRim_1"/>
+  <bone name="SB VagRim_10"/>
+  <bone name="SB VagRim_11"/>
+  <bone name="SB VagRim_2"/>
+  <bone name="SB VagRim_3"/>
+  <bone name="SB VagRim_4"/>
+  <bone name="SB VagRim_5"/>
+  <bone name="SB VagRim_6"/>
+  <bone name="SB VagRim_7"/>
+  <bone name="SB VagRim_8"/>
+  <bone name="SB VagRim_9"/>
 
   <!--
     Collision surface: the body mesh itself. Kinematic bone influences are

@@ -219,6 +219,8 @@ namespace
 		{ "anal1_TB", "SB AnusT1", "SB AnusB1" }, { "anal1_LR", "SB AnusL1", "SB AnusR1" },
 		{ "anal2_TB", "SB AnusT2", "SB AnusB2" }, { "anal2_LR", "SB AnusL2", "SB AnusR2" },
 		{ "anal3_TB", "SB AnusT3", "SB AnusB3" }, { "anal3_LR", "SB AnusL3", "SB AnusR3" },
+		{ "vagRim_FB", "SB VagRim_0", "SB VagRim_6" }, { "vagRim_LR", "SB VagRim_3", "SB VagRim_9" },
+		{ "anusRim_TB", "SB AnusRim_0", "SB AnusRim_6" }, { "anusRim_LR", "SB AnusRim_3", "SB AnusRim_9" },
 		{ "vagIn_FB", "SB VagIn_0", "SB VagIn_6" }, { "vagIn_LR", "SB VagIn_3", "SB VagIn_9" },
 		{ "vag1_FB", "SB Vag1_0", "SB Vag1_6" }, { "vag1_LR", "SB Vag1_3", "SB Vag1_9" },
 		{ "vag2_FB", "SB Vag2_0", "SB Vag2_6" }, { "vag2_LR", "SB Vag2_3", "SB Vag2_9" },
@@ -238,10 +240,10 @@ namespace
 		std::array<const char*, 4> rim;
 		std::array<const char*, 4> deep;
 	};
-	// the vagina: its entrance ring (at the back of the slit, where a real entrance is) and the canal's second ring
-	constexpr Opening kVagina{ "vagina", { "SB VagIn_0 Base", "SB VagIn_3 Base", "SB VagIn_6 Base", "SB VagIn_9 Base" },
+	// each: its visible rim's ring (the vagina's at the back of the slit, where a real entrance is) and a canal ring
+	constexpr Opening kVagina{ "vagina", { "SB VagRim_0 Base", "SB VagRim_3 Base", "SB VagRim_6 Base", "SB VagRim_9 Base" },
 		{ "SB Vag2_0 Base", "SB Vag2_3 Base", "SB Vag2_6 Base", "SB Vag2_9 Base" } };
-	constexpr Opening kAnus{ "anus", { "NPC LT Anus1", "NPC RT Anus1", "NPC LB Anus1", "NPC RB Anus1" },
+	constexpr Opening kAnus{ "anus", { "SB AnusRim_0 Base", "SB AnusRim_3 Base", "SB AnusRim_6 Base", "SB AnusRim_9 Base" },
 		{ "SB AnusT2 Base", "SB AnusB2 Base", "SB AnusL2 Base", "SB AnusR2 Base" } };
 
 	// her body's physics files, as the NIF names them (relative to Data)
@@ -355,6 +357,9 @@ namespace
 		{ "SB VagIn_0", 0 }, { "SB VagIn_1", 0 }, { "SB VagIn_2", 0 }, { "SB VagIn_3", 0 }, { "SB VagIn_4", 0 }, { "SB VagIn_5", 0 },
 		{ "SB VagIn_6", 0 }, { "SB VagIn_7", 0 }, { "SB VagIn_8", 0 }, { "SB VagIn_9", 0 }, { "SB VagIn_10", 0 }, { "SB VagIn_11", 0 },
 		{ "NPC LT Anus2", 1 }, { "NPC RT Anus2", 1 }, { "NPC LB Anus2", 1 }, { "NPC RB Anus2", 1 },
+		// the visible rims: 12 bones round each hole, at the skin
+		{ "SB VagRim_0", 0 }, { "SB VagRim_1", 0 }, { "SB VagRim_2", 0 }, { "SB VagRim_3", 0 }, { "SB VagRim_4", 0 }, { "SB VagRim_5", 0 }, { "SB VagRim_6", 0 }, { "SB VagRim_7", 0 }, { "SB VagRim_8", 0 }, { "SB VagRim_9", 0 }, { "SB VagRim_10", 0 }, { "SB VagRim_11", 0 },
+		{ "SB AnusRim_0", 1 }, { "SB AnusRim_1", 1 }, { "SB AnusRim_2", 1 }, { "SB AnusRim_3", 1 }, { "SB AnusRim_4", 1 }, { "SB AnusRim_5", 1 }, { "SB AnusRim_6", 1 }, { "SB AnusRim_7", 1 }, { "SB AnusRim_8", 1 }, { "SB AnusRim_9", 1 }, { "SB AnusRim_10", 1 }, { "SB AnusRim_11", 1 },
 	};
 
 	struct Driven

@@ -97,6 +97,20 @@ VAG_FLOOR_REACH = (0.7, 1.6)
 # easing out between VAG_BACK_REACH of the channel and toward the slit's own edge, which never moves (nor do the ring
 # weights reach it: they ease out within VAG_RIM_EASE of it).
 VAG_BACK = 1.2
+# The visible rims. Opened on GT's few lip and anus bones they showed as diamonds; each opening now has a ring of
+# RIM_SIDES bones of our own at its skin (SB VagRim_*, SB AnusRim_*), which the SoftBodyFO4 plugin pushes out round
+# the penis. The skin within *_RIM_REACH of the opening's axis rides on it, wholly at the inner distance and easing
+# out by the outer, so the hole opens round and the skin round it eases open; for the vagina it gives way to the
+# canal's rings where those take over (on_rings), and fades past VAG_RIM_GATE in. Skin within reach of both openings
+# (the perineum) shares itself between them.
+RIM_SIDES = 12
+VAG_RIM_DEPTH = 0.0          # along the canal from the slit, as VAG_ENTRANCE
+VAG_RIM_RADIUS = 0.5
+VAG_RIM_REACH = (0.6, 2.6)
+VAG_RIM_GATE = (0.6, 1.4)
+ANAL_RIM_DEPTH = -0.3        # along the anal canal from the anus bones' ring (the pucker sits a little outside it)
+ANAL_RIM_RADIUS = 0.35
+ANAL_RIM_REACH = (0.45, 1.8)
 VAG_BACK_REACH = (0.7, 2.0)
 VAG_BACK_DEPTH = (3.5, 9.0)
 VAG_RIM_EASE = 1.0
@@ -819,6 +833,50 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     into = np.clip((vdepth - VAG_FLOOR) / VAG_FLOOR_EASE, 0, 1)
     on_rings = np.where(in_pocket[vidx], 1.0, (near * near * (3 - 2 * near)) * (into * into * (3 - 2 * into))) * rim_fade
 
+    # the visible rims' rings, and how much of a point rides on each (see RIM_SIDES)
+    rim_bones = {}
+    def rim_ring(prefix, centre, axis, up_v, left_v, radius):
+        ring = []
+        for k in range(RIM_SIDES):
+            a = 360.0 * k / RIM_SIDES
+            out = across(a, up_v, left_v)
+            name = "%s_%d" % (prefix, k)
+            rim_bones[name] = (centre + radius * out, np.column_stack([out, np.cross(axis, out), axis]))
+            rim_bones[name + " Base"] = rim_bones[name]
+            ring.append((name, a))
+        return ring
+    vrim_c = vag_S + (VAG_RIM_DEPTH - vag_start) * vag_ax2 + vag_centre(VAG_RIM_DEPTH)
+    vrim = rim_ring("SB VagRim", vrim_c, vag_ax2, vag_up, vag_left, VAG_RIM_RADIUS)
+    # the anus rim round the hole itself: the middle of the canal's points at the rim's depth
+    adepth = (gen_P[n_vagina:] - mouth) @ ax
+    at_rim = gen_P[n_vagina:][np.abs(adepth - ANAL_RIM_DEPTH) < 0.3]
+    if len(at_rim) < 8:
+        raise ValueError("no anal canal points at the rim's depth")
+    arim_c = at_rim.mean(0) + (ANAL_RIM_DEPTH - (at_rim.mean(0) - mouth) @ ax) * ax
+    arim = rim_ring("SB AnusRim", arim_c, ax, up, left, ANAL_RIM_RADIUS)
+    def reach(p, c, axis, lo, hi):
+        off = p - c
+        d = off @ axis
+        return smoothstep((hi - np.linalg.norm(off - d * axis)) / (hi - lo)), d
+    def rim_blend(p, w, canal=0.0):
+        """w with p's rim shares blended in (canal: how much of p the vaginal canal's rings already carry)"""
+        fv, dv = reach(p, vrim_c, vag_ax2, *VAG_RIM_REACH)
+        fv *= smoothstep((VAG_RIM_GATE[1] - dv) / (VAG_RIM_GATE[1] - VAG_RIM_GATE[0])) * (1 - canal)
+        fa, _ = reach(p, arim_c, ax, *ANAL_RIM_REACH)
+        total = fv + fa
+        if total <= 1e-4:
+            return w
+        if total > 1:
+            fv, fa = fv / total, fa / total
+        out = {b: x * (1 - fv - fa) for b, x in w.items()}
+        for f, c, axis, u_, l_, ring in ((fv, vrim_c, vag_ax2, vag_up, vag_left, vrim), (fa, arim_c, ax, up, left, arim)):
+            if f > 0:
+                for b, x in ring_weights(p, c, axis, u_, l_, np.zeros(3), [(0.0, ring)]).items():
+                    out[b] = out.get(b, 0) + f * x
+        return top4(out)
+    # the anal canal's first ring is the rim's (in place of GT's four anus bones)
+    anal_rings[0] = (ANAL_RIM_DEPTH, arim)
+
     def surface(points):
         """UVs, body weights and the source (CBBE vertices, barycentrics) of the nearest CBBE surface point"""
         res = closest_on_triangles(points, full.P, full.tris, ctree, cent)
@@ -866,7 +924,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
             w = {b: x * (1 - pull) for b, x in w.items()}
             for b, x in mix.items():
                 w[b] = w.get(b, 0) + pull * x / mt
-        vul_w.append(top4(w))
+        vul_w.append(rim_blend(vulva_P[k], top4(w)))
     _, gen_body_w, gen_src = surface(gen_P)
     # The parts that must open with the penis ride on their bones like the outer skin does (GT leaves them mostly on
     # the pelvis, its bones travelling far enough to drag them anyway): the labia minora, vestibule and clitoris (2Vagina
@@ -905,6 +963,10 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                               vag_centre((gen_P[k] - vag_S) @ vag_ax2 + vag_start), vag_rings)
         if blend > 0:
             w = top4({b: (1 - blend) * w.get(b, 0) + blend * rw.get(b, 0) for b in set(w) | set(rw)})
+        if k < n_vagina:
+            w = rim_blend(gen_P[k], w, on_rings[k])
+        elif (gen_P[k] - mouth) @ ax <= 0:      # past the anus ring the canal has its rings (the first the rim's)
+            w = rim_blend(gen_P[k], w)
         gen_w.append(w)
 
     # 5. genital bones, placed and turned by the fit (a skin bind's rotation is the bone's world rotation transposed)
@@ -917,6 +979,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                 bones[b] = bone_frame(shape, b)
     bones.update(anal_bones)
     bones.update(vag_bones)
+    bones.update(rim_bones)
     used = {b for w in vul_w + gen_w for b in w}
     report = dict(fit_scale=s, fit_rotation_deg=math.degrees(math.acos(max(-1, min(1, (np.trace(R) - 1) / 2)))),
                   fit_median=fit_med, fit_max=fit_max, cut_triangles=len(drop), hole_edge=len(hole_v),

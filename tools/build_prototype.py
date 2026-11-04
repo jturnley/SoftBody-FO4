@@ -147,10 +147,10 @@ def collision_xml(collision, skip=()):
 
 CANAL_PREFIXES = ("SB Anus", "SB Vag")
 # The openings' rims, placed by the SoftBodyFO4 plugin (round the penis, from its line) rather than simulated: kinematic
-# in every XML, their springs dropped. GT's lips and anus rim, and SoftBody's vaginal entrance ring.
+# in every XML, their springs dropped. GT's lips and anus rim, SoftBody's vaginal entrance ring and both visible rims.
 DRIVEN_BONES = ("Clitoral1", "VaginaB1", "NPC L Pussy02", "NPC R Pussy02",
                 "NPC LT Anus2", "NPC RT Anus2", "NPC LB Anus2", "NPC RB Anus2")
-DRIVEN_PREFIXES = ("SB VagIn_",)
+DRIVEN_PREFIXES = ("SB VagIn_", "SB VagRim_", "SB AnusRim_")
 
 
 def driven(bone):
