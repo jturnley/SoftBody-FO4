@@ -43,6 +43,8 @@ namespace
 		float penisRadius = 2.0F;     // the shaft's (A-Body's: 2.2 at the root, 1.8 two thirds along)
 		float penisTipLength = 1.5F;  // the rounded tip: the radius grows from 0 at its end to the shaft's over this
 		float penisTipExtra = 0.75F;  // the penis's end beyond its last bone (Penis_05_SMP; A-Body's: 0.73)
+		float penisBaseExtra = 4.0F;  // the shaft carried on behind its first bone (Penis_01_SMP), into his body, so
+		                              // a rim at the root, fully in, stays open round it
 		float rimSmoothing = 0.02F;   // seconds: how quickly the rims follow
 		float rimEdge = 0.5F;         // an opening's edge at rest, from its centre: where a rim bone's skin starts
 
@@ -69,6 +71,7 @@ namespace
 			penisRadius = f("fPenisRadius", penisRadius);
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
 			penisTipExtra = f("fPenisTipExtra", penisTipExtra);
+			penisBaseExtra = std::max(0.0F, f("fPenisBaseExtra", penisBaseExtra));
 			rimSmoothing = std::max(0.0F, f("fRimSmoothing", rimSmoothing));
 			rimEdge = std::max(0.0F, f("fRimEdge", rimEdge));
 			REX::INFO("settings: openings driven {}, penis radius {}, tip length {}, tip beyond its bone {}, rim smoothing {}s",
@@ -458,7 +461,7 @@ namespace
 				const V     rel = Sub(edge, b);
 				const float along = Dot(rel, u);
 				const float fromTip = length - along;
-				if (along > 0 && fromTip > 0) {
+				if (along > -Settings::penisBaseExtra * scale && fromTip > 0) {
 					const float r = fromTip >= tipLength ? radius : radius * std::sqrt(fromTip / tipLength);
 					const V     perp = Sub(rel, Mul(u, along));
 					const float dist = Len(perp);
