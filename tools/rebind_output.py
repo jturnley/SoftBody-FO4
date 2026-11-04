@@ -29,7 +29,8 @@ from nif_smp import Nif  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REFERENCE = os.path.join(ROOT, r"mod\Tools\BodySlide\ShapeData\CBBE SoftBody\CBBEBodySoftBody.nif")
 SKIN_SHAPES = ("SoftBodyVulva", "SoftBodyGenitals")          # the drawn skin: the displacement field
-ALL_SHAPES = SKIN_SHAPES + ("SoftBodyVaginaOut", "SoftBodyAnus", "SoftBodyAnalCanal", "SoftBodyVaginalCanal")
+ALL_SHAPES = SKIN_SHAPES + ("SoftBodyVaginaOut", "SoftBodyAnus", "SoftBodyAnalCanal", "SoftBodyVaginalCanal",
+                             "CBBE")   # CBBE: its skin round the openings rides on the rims too
 FIELD_K = 24          # skin points averaged for a node's move
 FIELD_SIGMA = 0.8     # game units: their weight falls off over this from the nearest
 

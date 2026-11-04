@@ -163,17 +163,22 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   with its bones on the skin. It keeps the original as `.nif.bak`. (To do: let the plugin do this.)
 - **Openings round the penis.** Left to collision, the rims opened where the thrusting penis shoved
   their pads: along the slit, lagging behind, oval (v0.14: the entrance 7.3 front to back, 3.5 across).
-  So the rims' bones (GT's four lip bones, the 12-bone vaginal entrance ring, GT's four anus-rim bones,
-  and since v0.19 a ring of 12 of our own at each visible hole, `SB VagRim_*` and `SB AnusRim_*`, which
-  the skin within about 2.5 of the hole rides on, easing out, so the holes open round, not as diamonds)
-  are kinematic in her physics files, and the plugin pushes each straight out from the penis's axis to
-  its radius, from where it rests, every 4 ms, wherever the shaft or its rounded tip passes within that
-  radius of it. A bone that sits out from the edge it carries (GT's lip bones, about 3 from the
-  slit's middle) is measured by that edge instead (`fRimEdge` from the opening's centre), so the lips
-  part as far as the slit must; the hood moves a third as much. The skin opens round the shaft and
-  closes behind it; the canals inside stay SMP.
-  Only the opening in use opens (the perineum is short: a penis in one passes the other's rim). `bDriveOpenings`, `fPenisRadius` (2.0), `fPenisTipLength`, `fPenisTipExtra`, `fRimSmoothing` in the INI.
-  The lips no longer jiggle or take a hand's push.
+  So each opening has a ring of 12 bones of our own at its hole (`SB VagRim_*`, `SB AnusRim_*`), plus
+  the 12-bone vaginal entrance ring inside. They're kinematic in her physics files, and every 4 ms the
+  plugin moves each ring round the penis wherever the shaft or its rounded tip passes the opening. The
+  ring's centre moves onto his line (up to `fRimFollow`, 1.5), and it opens to his thickness there.
+  v0.20 instead pushed each bone out from his line on its own. He swings 10–20° through a stroke, which
+  puts his line about a unit off the hole's centre, so both sides of the ring were pushed the same way
+  and it shut. That left only one depth where it stayed open.
+  Since v0.21 the skin round each hole rides on its ring out to 4–4.5 units, CBBE's body included (557
+  of its vertices). Each point gets the share that keeps the skin's area as the hole opens from its rest
+  size to `fPenisRadius`, so the opening is spread over the crotch instead of stretched into the vulva.
+  The vulva meets CBBE only 1.7 units from the vagina's middle at the sides. v0.19 tore that seam, and
+  v0.20, holding it, stretched the skin. GT's lip and anus bones are no longer driven (moved on their
+  own, they folded the skin).
+  Only the opening in use opens (the perineum is short: a penis in one passes the other's rim).
+  `bDriveOpenings`, `fPenisRadius` (2.0), `fPenisTipLength`, `fPenisTipExtra`, `fPenisBaseExtra`,
+  `fRimSmoothing`, `fRimFollow`, `fRimCatch` in the INI. The lips no longer jiggle or take a hand's push.
 - **Tuning log.** With `bLogSamples=1` it logs her genital bones and the penis every 25 ms to
   `Documents\My Games\Fallout4\F4SE\SoftBodyFO4.log` (what `probe/` did).
 

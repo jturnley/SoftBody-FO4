@@ -25,15 +25,19 @@ class SkinnedShape:
         self.nif = nif
         self.index = next(i for i, (t, _) in enumerate(nif.blocks) if t.endswith("TriShape") and nif.net(i)[0] == shape)
         data = nif.blocks[self.index][1]
-        self.skin = struct.unpack_from("<i", data, 88)[0]
-        desc = struct.unpack_from("<Q", data, 100)[0]
+        # the fixed offsets below are for a shape with no extra data; BodySlide gives its output's body one (the SMP
+        # file's), which moves everything after it by 4
+        o = self.o = 4 * struct.unpack_from("<I", data, 4)[0]
+        self.skin = struct.unpack_from("<i", data, o + 88)[0]
+        desc = struct.unpack_from("<Q", data, o + 100)[0]
         if not (desc >> 44) & 0x40:
             raise ValueError("%s has no skin weights in its vertices" % shape)
         if (desc >> 44) & 0x400:
             raise ValueError("%s uses full-precision vertices (not handled)" % shape)
-        self.nvert = struct.unpack_from("<H", data, 112)[0]
+        self.nvert = struct.unpack_from("<H", data, o + 112)[0]
         self.stride = (desc & 0xF) * 4
         self.skin_at = ((desc >> 28) & 0xF) * 4
+        self.vert_at = o + 118
         self.data = bytearray(data)
         inst = nif.blocks[self.skin][1]
         _, self.bone_data, nb = struct.unpack_from("<iiI", inst, 0)
@@ -42,10 +46,10 @@ class SkinnedShape:
         self.binds = bytearray(nif.blocks[self.bone_data][1])
 
     def position(self, v):
-        return struct.unpack_from("<3e", self.data, 118 + v * self.stride)
+        return struct.unpack_from("<3e", self.data, self.vert_at + v * self.stride)
 
     def influences(self, v):
-        at = 118 + v * self.stride + self.skin_at
+        at = self.vert_at + v * self.stride + self.skin_at
         weights = struct.unpack_from("<4e", self.data, at)
         indices = struct.unpack_from("<4B", self.data, at + 8)
         return [(i, w) for i, w in zip(indices, weights) if w > 0]
@@ -57,7 +61,7 @@ class SkinnedShape:
         weights = [struct.unpack("<e", struct.pack("<e", w))[0] for _, w in influences]
         weights[0] += 1 - sum(weights)  # keep the half-float sum at 1
         influences = [(i, w) for (i, _), w in zip(influences, weights)] + [(0, 0.0)] * (4 - len(influences))
-        at = 118 + v * self.stride + self.skin_at
+        at = self.vert_at + v * self.stride + self.skin_at
         struct.pack_into("<4e", self.data, at, *[w for _, w in influences])
         struct.pack_into("<4B", self.data, at + 8, *[i for i, _ in influences])
 

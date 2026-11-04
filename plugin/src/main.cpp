@@ -47,6 +47,8 @@ namespace
 		                              // a rim at the root, fully in, stays open round it
 		float rimSmoothing = 0.02F;   // seconds: how quickly the rims follow
 		float rimEdge = 0.5F;         // an opening's edge at rest, from its centre: where a rim bone's skin starts
+		float rimFollow = 1.5F;       // how far an opening's ring moves across onto the penis's line
+		float rimCatch = 1.0F;        // how far past his thickness his line may pass an opening's centre and still open it
 
 		void Load()
 		{
@@ -74,6 +76,8 @@ namespace
 			penisBaseExtra = std::max(0.0F, f("fPenisBaseExtra", penisBaseExtra));
 			rimSmoothing = std::max(0.0F, f("fRimSmoothing", rimSmoothing));
 			rimEdge = std::max(0.0F, f("fRimEdge", rimEdge));
+			rimFollow = std::max(0.0F, f("fRimFollow", rimFollow));
+			rimCatch = std::max(0.0F, f("fRimCatch", rimCatch));
 			REX::INFO("settings: openings driven {}, penis radius {}, tip length {}, tip beyond its bone {}, rim smoothing {}s",
 				driveOpenings, penisRadius, penisTipLength, penisTipExtra, rimSmoothing);
 			REX::INFO("settings: swap physics {}, auto-align {}, log samples {}, align key {:#x}, tolerance {}, {} steps of up to {}",
@@ -367,10 +371,10 @@ namespace
 		float       share{ 1.0F };  // of its edge's move: the hood (Clitoral1) barely lifts
 	};
 	constexpr Rim kRims[] = {
-		{ "Clitoral1", 0, 0.3F }, { "VaginaB1", 0 }, { "NPC L Pussy02", 0 }, { "NPC R Pussy02", 0 },
+		// GT's lip and anus bones are no longer driven (v0.21): their skin rides mostly on the rims now, and moved on
+		// their own they folded the skin between them and the rims
 		{ "SB VagIn_0", 0 }, { "SB VagIn_1", 0 }, { "SB VagIn_2", 0 }, { "SB VagIn_3", 0 }, { "SB VagIn_4", 0 }, { "SB VagIn_5", 0 },
 		{ "SB VagIn_6", 0 }, { "SB VagIn_7", 0 }, { "SB VagIn_8", 0 }, { "SB VagIn_9", 0 }, { "SB VagIn_10", 0 }, { "SB VagIn_11", 0 },
-		{ "NPC LT Anus2", 1 }, { "NPC RT Anus2", 1 }, { "NPC LB Anus2", 1 }, { "NPC RB Anus2", 1 },
 		// the visible rims: 12 bones round each hole, at the skin
 		{ "SB VagRim_0", 0 }, { "SB VagRim_1", 0 }, { "SB VagRim_2", 0 }, { "SB VagRim_3", 0 }, { "SB VagRim_4", 0 }, { "SB VagRim_5", 0 }, { "SB VagRim_6", 0 }, { "SB VagRim_7", 0 }, { "SB VagRim_8", 0 }, { "SB VagRim_9", 0 }, { "SB VagRim_10", 0 }, { "SB VagRim_11", 0 },
 		{ "SB AnusRim_0", 1 }, { "SB AnusRim_1", 1 }, { "SB AnusRim_2", 1 }, { "SB AnusRim_3", 1 }, { "SB AnusRim_4", 1 }, { "SB AnusRim_5", 1 }, { "SB AnusRim_6", 1 }, { "SB AnusRim_7", 1 }, { "SB AnusRim_8", 1 }, { "SB AnusRim_9", 1 }, { "SB AnusRim_10", 1 }, { "SB AnusRim_11", 1 },
@@ -438,6 +442,35 @@ namespace
 		const float follow = Settings::rimSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::rimSmoothing) : 1.0F;
 		const float radius = Settings::penisRadius * scale;
 		const float tipLength = Settings::penisTipLength * scale;
+		// Each opening as a whole: where the penis passes its centre, how thick it is there, and how far off the
+		// centre. The ring goes round the penis: its centre moves onto his line (up to fRimFollow) and it opens to his
+		// thickness there. v0.20 pushed each bone out from his line on its own, so a line a unit off the centre (as he
+		// swings through a stroke) pushed both sides of the ring the same way and it shut.
+		bool  active[2]{};
+		V     shift[2];
+		float grow[2]{};
+		for (int o = 0; o < 2; ++o) {
+			if (!penis || !open[o] || !haveCentre[o]) {
+				continue;
+			}
+			const V     rel = Sub(centre[o], b);
+			const float along = Dot(rel, u);
+			const float fromTip = length - along;
+			if (along <= -Settings::penisBaseExtra * scale || fromTip <= 0) {
+				continue;
+			}
+			const float r = fromTip >= tipLength ? radius : radius * std::sqrt(fromTip / tipLength);
+			const V     off = Sub(Mul(u, along), rel);          // the centre to his line, across it
+			const float dist = Len(off);
+			if (dist > r + Settings::rimCatch * scale) {
+				continue;
+			}
+			const float most = Settings::rimFollow * scale;
+			const float moved = std::min(dist, most);
+			active[o] = true;
+			shift[o] = dist > 0 ? Mul(off, moved / dist) : V(0, 0, 0);
+			grow[o] = r + (dist - moved);                       // what the ring must clear from its moved centre
+		}
 		for (auto& [name, d] : driven) {
 			auto* node = d.node.get();
 			auto* parent = node ? node->parent : nullptr;
@@ -445,35 +478,20 @@ namespace
 				continue;
 			}
 			V target = d.rest;
-			if (penis && open[d.opening]) {
+			if (active[d.opening]) {
 				// A bone can sit well out from the edge of the opening it carries (GT's lip bones are about 3 from the
-				// slit's middle, the slit itself closed), so it is the edge that is measured against the penis: the
-				// point on the bone's side of the opening, fRimEdge from its centre, at the bone's depth. The bone
-				// moves as that edge must.
-				const V w0 = ToWorld(parent, d.rest);
-				V       out(0, 0, 0), edge = w0;
-				if (haveCentre[d.opening]) {
-					V           off = Sub(w0, centre[d.opening]);
-					const float restDist = Len(Sub(off, Mul(u, Dot(off, u))));
-					out = Unit(Sub(off, Mul(u, Dot(off, u))));
-					edge = Sub(w0, Mul(out, std::max(0.0F, restDist - Settings::rimEdge * scale)));
-				}
-				const V     rel = Sub(edge, b);
-				const float along = Dot(rel, u);
-				const float fromTip = length - along;
-				if (along > -Settings::penisBaseExtra * scale && fromTip > 0) {
-					const float r = fromTip >= tipLength ? radius : radius * std::sqrt(fromTip / tipLength);
-					const V     perp = Sub(rel, Mul(u, along));
-					const float dist = Len(perp);
-					if (dist < r) {
-						// out from the axis; a touch of the way out from the opening's centre keeps an edge the axis
-						// runs through from flipping sides
-						const V dir = Unit(Add(perp, Mul(out, 0.05F)));
-						if (Len(dir) > 0) {
-							target = ToLocal(parent, Add(w0, Mul(dir, (r - dist) * d.share)));
-						}
-					}
-				}
+				// slit's middle, the slit itself closed): the edge, fRimEdge from the centre on the bone's side, is
+				// what must clear the penis, and the bone moves as far as it does
+				const V     w0 = ToWorld(parent, d.rest);
+				const V     off = Sub(w0, centre[d.opening]);
+				const float axial = Dot(off, u);
+				const V     across = Sub(off, Mul(u, axial));
+				const float restDist = Len(across);
+				const V     out = restDist > 1e-4F ? Mul(across, 1.0F / restDist) : V(0, 0, 0);
+				const float edge = std::min(restDist, Settings::rimEdge * scale);
+				const float widen = std::max(0.0F, grow[d.opening] - edge);
+				const V     placed = Add(Add(centre[d.opening], shift[d.opening]), Add(Mul(out, restDist + widen), Mul(u, axial)));
+				target = ToLocal(parent, Add(w0, Mul(Sub(placed, w0), d.share)));
 			}
 			d.now = Add(d.now, Mul(Sub(target, d.now), follow));
 			node->local.translate = d.now;

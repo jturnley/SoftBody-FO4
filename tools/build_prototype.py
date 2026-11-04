@@ -104,10 +104,10 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
         srgb = lambda c: np.round(np.clip(c, 0, 1) ** (1 / 2.2) * 255).astype(int).tolist()
         print("  clitoral hood: %d texels faded to the skin; hood tip now %s, skin at the rim %s (sRGB)" % (
             made_tex["hood_texels"], srgb(made_tex["hood_colour"]), srgb(made_tex["skin_colour"])))
-        print("  genitals: fit scale %.4f, %.1f deg, residual median %.2f max %.2f; cut %d CBBE triangles; "
+        print("  genitals: fit scale %.4f, %.1f deg, residual median %.2f max %.2f; cut %d CBBE triangles, %d CBBE vertices on the rims; "
               "%s %d vertices, %s %d vertices; %d genital bones" % (
                   report["fit_scale"], report["fit_rotation_deg"], report["fit_median"], report["fit_max"],
-                  report["cut_triangles"], genitals.VULVA, report["vulva_vertices_after_uv_split"],
+                  report["cut_triangles"], report["cbbe_rim_vertices"], genitals.VULVA, report["vulva_vertices_after_uv_split"],
                   genitals.GENITALS, report["genital_vertices"], len(bones)))
         print("  collision: %s" % ", ".join("%s %d triangles" % kv for kv in report["collision_triangles"].items()))
         print("  spring anchors: %d, GT's node tree off its skin binds by at most %.4f" % (
