@@ -11,8 +11,8 @@
 //     centred again.
 //  3. places the openings' rims round the penis (their bones kinematic in her physics files), every few ms.
 //  4. optionally logs her genital bones and the penis (what was SoftBodyProbe), for tuning.
-// Settings: Data\F4SE\Plugins\SoftBodyFO4.ini. Keys, with the game in front: F11 align now, Alt+F11 align to the
-// vagina, Alt+Shift+F11 to the anus (and that act's physics), Shift+F11 auto-align on or off, Ctrl+F11 back to the
+// Settings: Data\F4SE\Plugins\SoftBodyFO4.ini. Keys, with the game in front: F11 steps the alignment through auto,
+// the vagina, the anus (either with that act's physics) and off, aligning at once; Ctrl+F11 goes back to the
 // scene's own alignment.
 
 #include "PluginInterface.h"
@@ -58,7 +58,7 @@ namespace
 				return buf[0] ? std::strtof(buf, nullptr) : a_default;
 			};
 			swapPhysics = i("bSwapPhysics", 1) != 0;
-			autoAlign = i("bAutoAlign", 1) != 0;
+			autoAlign = i("bAutoAlign", 1) != 0;  // the mode F11 starts in: auto, or off
 			logSamples = i("bLogSamples", 0) != 0;
 			alignKey = i("iAlignKey", alignKey);
 			tolerance = f("fAlignTolerance", tolerance);
@@ -574,7 +574,7 @@ namespace
 	}
 
 	std::atomic<Act> currentAct{ Act::kNone };
-	// the user picked the opening (Alt+F11, Alt+Shift+F11): kept, and not re-detected, until the scene changes
+	// the user picked the opening (F11's vagina or anus mode): kept, and not re-detected, until the mode changes
 	std::atomic<bool> forcedAct{ false };
 
 	// her body's current physics file, by form ID
@@ -1022,6 +1022,86 @@ namespace
 		return pid == GetCurrentProcessId();
 	}
 
+	// F11 steps through the modes: auto (the scene's act, or the penis's), the vagina, the anus, off
+	enum class Mode
+	{
+		kAuto,
+		kVagina,
+		kAnus,
+		kOff
+	};
+	std::atomic<Mode> mode{ Mode::kAuto };
+	std::atomic<Act>  sceneAct{ Act::kNone };  // from 4Stim's Scenes interface, when it has one
+
+	const char* ModeName(Mode a_mode)
+	{
+		switch (a_mode) {
+		case Mode::kAuto: return "auto";
+		case Mode::kVagina: return "the vagina";
+		case Mode::kAnus: return "the anus";
+		default: return "off";
+		}
+	}
+
+	// her physics for an act, on the main thread
+	void ApplyActLater(Act a_act)
+	{
+		const auto threadID = followed.load();
+		if (auto* tasks = F4SE::GetTaskInterface()) {
+			tasks->AddTask([threadID, a_act]() {
+				if (auto* thread = threads ? threads->getThread(threadID) : nullptr) {
+					ApplyAct(thread, a_act);
+				}
+			});
+		}
+	}
+
+	// the mode taken up: at a key press, or a scene change (a_thread on the main thread, else null)
+	void EnterMode(Mode a_mode, FourStimAPI::Thread* a_thread)
+	{
+		auto apply = [&](Act a_act) {
+			if (a_thread) {
+				ApplyAct(a_thread, a_act);
+			} else {
+				ApplyActLater(a_act);
+			}
+		};
+		forcedAct = a_mode == Mode::kVagina || a_mode == Mode::kAnus;
+		switch (a_mode) {
+		case Mode::kVagina:
+		case Mode::kAnus:
+			{
+				const Act act = a_mode == Mode::kVagina ? Act::kVaginal : Act::kAnal;
+				currentAct = act;
+				apply(act);
+				StartAlign(TargetFor(act));
+				break;
+			}
+		case Mode::kAuto:
+			if (!scenes) {  // from where the penis goes, after a moment
+				currentAct = Act::kNone;
+				StartDetect(true);
+			} else {
+				currentAct = sceneAct.load();
+				apply(currentAct);
+				StartAlign(TargetFor(currentAct));
+			}
+			break;
+		case Mode::kOff:
+			StartAlign(nullptr);
+			if (!scenes) {  // her physics by act still, without aligning
+				currentAct = Act::kNone;
+				if (Settings::swapPhysics) {
+					StartDetect(false);
+				}
+			} else {
+				currentAct = sceneAct.load();
+				apply(currentAct);
+			}
+			break;
+		}
+	}
+
 	void Keys()
 	{
 		static bool wasDown = false;
@@ -1031,27 +1111,8 @@ namespace
 		if (!pressed || !GameInFront() || followed.load() < 0) {
 			return;
 		}
-		const bool shift = (GetAsyncKeyState(0x10) & 0x8000) != 0;
 		const bool ctrl = (GetAsyncKeyState(0x11) & 0x8000) != 0;
-		const bool alt = (GetAsyncKeyState(0x12) & 0x8000) != 0;
-		if (alt) {  // her choice of opening, not the scene's or the penis's: that act's physics, then align to it
-			const Act act = shift ? Act::kAnal : Act::kVaginal;
-			currentAct = act;
-			forcedAct = true;
-			const auto threadID = followed.load();
-			if (auto* tasks = F4SE::GetTaskInterface()) {
-				tasks->AddTask([threadID, act]() {
-					if (auto* thread = threads ? threads->getThread(threadID) : nullptr) {
-						ApplyAct(thread, act);
-					}
-				});
-			}
-			Notify(std::format("aligning to the {} (chosen)", TargetFor(act)->name));
-			StartAlign(TargetFor(act));
-		} else if (shift) {
-			Settings::autoAlign = !Settings::autoAlign;
-			Notify(std::format("auto-align {}", Settings::autoAlign ? "on" : "off"));
-		} else if (ctrl) {
+		if (ctrl) {
 			StartAlign(nullptr);
 			const auto threadID = followed.load();
 			const auto him = himPosition.load();
@@ -1061,15 +1122,12 @@ namespace
 				});
 				Notify("back to the scene's own alignment");
 			}
-		} else if (auto* target = scenes || forcedAct ? TargetFor(currentAct.load()) : nullptr) {
-			Notify(std::format("aligning to the {}", target->name));
-			StartAlign(target);
-		} else if (!scenes) {
-			Notify("aligning: watching where the penis goes");
-			StartDetect(true);
-		} else {
-			Notify("nothing to align: this scene has no vaginal or anal sex");
+			return;
 		}
+		const Mode next = static_cast<Mode>((static_cast<int>(mode.load()) + 1) % 4);
+		mode = next;
+		Notify(std::format("align: {}", ModeName(next)));
+		EnterMode(next, nullptr);
 	}
 
 	// ---------------------------------------------------------------- the timer
@@ -1135,20 +1193,15 @@ namespace
 			scene = id ? id : "";
 		}
 		Identify(a_thread, nullptr, nullptr);
-		forcedAct = false;
-		if (!scenes) {  // no act from 4Stim: from where the penis goes, after a moment
+		const Act act = scenes ? SceneAct(id) : Act::kNone;
+		sceneAct = act;
+		REX::INFO("thread {} in {}: {}, align {}", a_thread->getThreadID(), id ? id : "?",
+			scenes ? ActName(act) : "act from the penis", ModeName(mode.load()));
+		if (!scenes && mode.load() == Mode::kOff && !Settings::swapPhysics) {
 			currentAct = Act::kNone;
-			REX::INFO("thread {} in {}: act from the penis", a_thread->getThreadID(), id ? id : "?");
-			if (Settings::swapPhysics || Settings::autoAlign) {
-				StartDetect(Settings::autoAlign);
-			}
 			return;
 		}
-		const Act act = SceneAct(id);
-		currentAct = act;
-		REX::INFO("thread {} in {}: {}", a_thread->getThreadID(), id ? id : "?", ActName(act));
-		ApplyAct(a_thread, act);
-		StartAlign(Settings::autoAlign ? TargetFor(act) : nullptr);
+		EnterMode(mode.load(), a_thread);
 	}
 
 	struct ThreadStarted : FourStimAPI::ThreadEventListener
@@ -1237,6 +1290,7 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	F4SE::Init(a_f4se);
 	REX::INFO("SoftBodyFO4 loaded on Fallout 4 {}", a_f4se->RuntimeVersion().string());
 	Settings::Load();
+	mode = Settings::autoAlign ? Mode::kAuto : Mode::kOff;
 	auto* messaging = F4SE::GetMessagingInterface();
 	if (!messaging || !messaging->RegisterListener(OnMessage)) {
 		REX::ERROR("could not register the F4SE message listener");

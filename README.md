@@ -152,8 +152,9 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   measures again until it is within `fAlignTolerance`. 4Stim saves the offset with the scene, so
   a scene is aligned once. If the penis then runs at an angle to the canal (more than 6 degrees;
   missionary: about 20), it tries two steps of 4Stim's penis bend to learn its effect, sets the bend
-  that lines it up, and centres the entrance again. Keys (game in front): **F11** align now, **Alt+F11** align to the vagina, **Alt+Shift+F11** to the anus (either also sets that act's physics, for the rest of the scene), **Shift+F11** auto-align on/off,
-  **Ctrl+F11** back to the scene's own alignment.
+  that lines it up, and centres the entrance again. Keys (game in front): **F11** steps through four modes, aligning at once: *auto* (the scene's act,
+  or where the penis goes), *vagina*, *anus* (either also sets that act's physics) and *off*. The mode
+  holds across scene changes. **Ctrl+F11** goes back to the scene's own alignment. `bAutoAlign=0` starts in *off*.
 - **Openings round the penis.** Left to collision, the rims opened where the thrusting penis shoved
   their pads: along the slit, lagging behind, oval (v0.14: the entrance 7.3 front to back, 3.5 across).
   So the rims' bones (GT's four lip bones, the 12-bone vaginal entrance ring, GT's four anus-rim bones)

@@ -20,7 +20,7 @@ INSTALL = """### Install
 1. Install the zip with MO2. It must win conflicts with CBBE and any other SMP body; its `FemaleHands.nif` overrides other hands mods.
 2. In BodySlide, build **CBBE Body SoftBody** (group CBBE) with your preset (tick Build Morphs for LooksMenu).
 
-Needs F4SE, CBBE + BodySlide, FO4 Faster HDT-SMP and a female skeleton with SMP support; for the 4Stim features (physics by act, auto-alignment: F11 aligns, Alt+F11 vagina, Alt+Shift+F11 anus, Shift+F11 toggles), 4Stim and Address Library for F4SE Plugins. Prototype: see the README for what is tested."""
+Needs F4SE, CBBE + BodySlide, FO4 Faster HDT-SMP and a female skeleton with SMP support; for the 4Stim features (physics by act, auto-alignment: F11 cycles auto, vagina, anus, off), 4Stim and Address Library for F4SE Plugins. Prototype: see the README for what is tested."""
 
 
 def git(*args):
