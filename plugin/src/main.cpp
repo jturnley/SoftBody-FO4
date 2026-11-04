@@ -44,6 +44,7 @@ namespace
 		float penisTipLength = 1.5F;  // the rounded tip: the radius grows from 0 at its end to the shaft's over this
 		float penisTipExtra = 1.0F;   // the penis's end beyond its last bone (Penis_05_SMP)
 		float rimSmoothing = 0.02F;   // seconds: how quickly the rims follow
+		float rimEdge = 0.5F;         // an opening's edge at rest, from its centre: where a rim bone's skin starts
 
 		void Load()
 		{
@@ -69,6 +70,7 @@ namespace
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
 			penisTipExtra = f("fPenisTipExtra", penisTipExtra);
 			rimSmoothing = std::max(0.0F, f("fRimSmoothing", rimSmoothing));
+			rimEdge = std::max(0.0F, f("fRimEdge", rimEdge));
 			REX::INFO("settings: openings driven {}, penis radius {}, tip length {}, tip beyond its bone {}, rim smoothing {}s",
 				driveOpenings, penisRadius, penisTipLength, penisTipExtra, rimSmoothing);
 			REX::INFO("settings: swap physics {}, auto-align {}, log samples {}, align key {:#x}, tolerance {}, {} steps of up to {}",
@@ -345,10 +347,11 @@ namespace
 	struct Rim
 	{
 		const char* name;
-		int         opening;  // 0 the vagina, 1 the anus: its centre gives the way out when the axis runs through a bone
+		int         opening;  // 0 the vagina, 1 the anus: its centre gives the way out, and the edge's place
+		float       share{ 1.0F };  // of its edge's move: the hood (Clitoral1) barely lifts
 	};
 	constexpr Rim kRims[] = {
-		{ "Clitoral1", 0 }, { "VaginaB1", 0 }, { "NPC L Pussy02", 0 }, { "NPC R Pussy02", 0 },
+		{ "Clitoral1", 0, 0.3F }, { "VaginaB1", 0 }, { "NPC L Pussy02", 0 }, { "NPC R Pussy02", 0 },
 		{ "SB VagIn_0", 0 }, { "SB VagIn_1", 0 }, { "SB VagIn_2", 0 }, { "SB VagIn_3", 0 }, { "SB VagIn_4", 0 }, { "SB VagIn_5", 0 },
 		{ "SB VagIn_6", 0 }, { "SB VagIn_7", 0 }, { "SB VagIn_8", 0 }, { "SB VagIn_9", 0 }, { "SB VagIn_10", 0 }, { "SB VagIn_11", 0 },
 		{ "NPC LT Anus2", 1 }, { "NPC RT Anus2", 1 }, { "NPC LB Anus2", 1 }, { "NPC RB Anus2", 1 },
@@ -360,6 +363,7 @@ namespace
 		V                             rest;  // its own local position, as the NIF has it
 		V                             now;
 		int                           opening{ 0 };
+		float                         share{ 1.0F };
 	};
 	std::unordered_map<std::string, Driven> driven;  // under heldLock
 
@@ -372,7 +376,7 @@ namespace
 		}
 		auto& d = driven[a_rim.name];
 		if (d.node.get() != node) {
-			d = Driven{ RE::NiPointer<RE::NiAVObject>(node), node->local.translate, node->local.translate, a_rim.opening };
+			d = Driven{ RE::NiPointer<RE::NiAVObject>(node), node->local.translate, node->local.translate, a_rim.opening, a_rim.share };
 			REX::INFO("rim {}: rest ({:.3f}, {:.3f}, {:.3f})", a_rim.name, d.rest.x, d.rest.y, d.rest.z);
 		}
 	}
@@ -419,8 +423,19 @@ namespace
 			}
 			V target = d.rest;
 			if (penis) {
-				const V     w0 = ToWorld(parent, d.rest);
-				const V     rel = Sub(w0, b);
+				// A bone can sit well out from the edge of the opening it carries (GT's lip bones are about 3 from the
+				// slit's middle, the slit itself closed), so it is the edge that is measured against the penis: the
+				// point on the bone's side of the opening, fRimEdge from its centre, at the bone's depth. The bone
+				// moves as that edge must.
+				const V w0 = ToWorld(parent, d.rest);
+				V       out(0, 0, 0), edge = w0;
+				if (haveCentre[d.opening]) {
+					V           off = Sub(w0, centre[d.opening]);
+					const float restDist = Len(Sub(off, Mul(u, Dot(off, u))));
+					out = Unit(Sub(off, Mul(u, Dot(off, u))));
+					edge = Sub(w0, Mul(out, std::max(0.0F, restDist - Settings::rimEdge * scale)));
+				}
+				const V     rel = Sub(edge, b);
 				const float along = Dot(rel, u);
 				const float fromTip = length - along;
 				if (along > 0 && fromTip > 0) {
@@ -428,16 +443,11 @@ namespace
 					const V     perp = Sub(rel, Mul(u, along));
 					const float dist = Len(perp);
 					if (dist < r) {
-						// out from the axis; a touch of the way out from the opening's centre keeps a bone the axis runs
-						// through from flipping sides
-						V out(0, 0, 0);
-						if (haveCentre[d.opening]) {
-							out = Sub(w0, centre[d.opening]);
-							out = Unit(Sub(out, Mul(u, Dot(out, u))));
-						}
+						// out from the axis; a touch of the way out from the opening's centre keeps an edge the axis
+						// runs through from flipping sides
 						const V dir = Unit(Add(perp, Mul(out, 0.05F)));
 						if (Len(dir) > 0) {
-							target = ToLocal(parent, Add(w0, Mul(dir, r - dist)));
+							target = ToLocal(parent, Add(w0, Mul(dir, (r - dist) * d.share)));
 						}
 					}
 				}

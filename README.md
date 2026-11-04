@@ -160,7 +160,10 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   So the rims' bones (GT's four lip bones, the 12-bone vaginal entrance ring, GT's four anus-rim bones)
   are kinematic in her physics files, and the plugin pushes each straight out from the penis's axis to
   its radius, from where it rests, every 4 ms, wherever the shaft or its rounded tip passes within that
-  radius of it. The skin opens round the shaft and closes behind it; the canals inside stay SMP.
+  radius of it. A bone that sits out from the edge it carries (GT's lip bones, about 3 from the
+  slit's middle) is measured by that edge instead (`fRimEdge` from the opening's centre), so the lips
+  part as far as the slit must; the hood moves a third as much. The skin opens round the shaft and
+  closes behind it; the canals inside stay SMP.
   `bDriveOpenings`, `fPenisRadius` (1.8), `fPenisTipLength`, `fPenisTipExtra`, `fRimSmoothing` in the INI.
   The lips no longer jiggle or take a hand's push.
 - **Tuning log.** With `bLogSamples=1` it logs her genital bones and the penis every 25 ms to
