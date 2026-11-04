@@ -1,0 +1,840 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SoftBody FO4 prototype - CBBE body (shape "CBBE").
+
+  Stage 1: whole-region soft bodies. FO4 Faster HDT-SMP keeps skeleton bones
+  kinematic, so the body NIF moves each region's skin onto a physics-only child
+  bone "<bone>_SB" (same transform, same weights) - the TWB / A-Body layout.
+  Hands (see SoftBody-Hands.xml) push these regions; the regions spring back.
+  Each region's skin is spread over generated dent bones "<bone>_SBnn"
+  (children of "<bone>_SB"), so contact dents the skin locally.
+
+  This is the source; tools/build_prototype.py writes the game copy into
+  mod/meshes/SoftBodyFO4 with the dent bones filled in.
+
+  Dynamic:   LBreast_skin_SB RBreast_skin_SB LButtFat_skin_SB RButtFat_skin_SB Belly_skin_SB
+  Anchors:   their skeleton parents LBreast_skin ... Belly_skin (kinematic)
+
+  Constraint axes (bone local space, as documented by TWB):
+    linear x  = apart / together     angular x = tilt forward / back
+    linear y  = forward(-) / back(+) angular y = swing left / right
+    linear z  = up / down            angular z = twist
+-->
+<system>
+
+  <!-- Every skin bone not listed below stays animation-driven. -->
+  <bone-default>
+    <mass>0</mass>
+  </bone-default>
+
+  <bone-default name="breast">
+    <mass>1</mass>
+    <inertia x="1" y="1" z="1"/>
+    <linearDamping>0.4</linearDamping>
+    <angularDamping>0.4</angularDamping>
+    <gravity-factor>0.4</gravity-factor>
+    <friction>0.2</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0.2</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+
+  <bone-default name="butt">
+    <mass>3</mass>
+    <inertia x="2" y="2" z="2"/>
+    <linearDamping>0.6</linearDamping>
+    <angularDamping>0.6</angularDamping>
+    <gravity-factor>0.3</gravity-factor>
+    <friction>0.2</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0.2</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+
+  <bone-default name="belly">
+    <mass>3</mass>
+    <inertia x="2" y="2" z="2"/>
+    <linearDamping>0.8</linearDamping>
+    <angularDamping>0.8</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0.2</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0.2</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+
+  <generic-constraint-default name="breastSpring">
+    <frameInLerp>
+      <translationLerp>0</translationLerp>
+      <rotationLerp>0</rotationLerp>
+    </frameInLerp>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <linearLowerLimit x="-1.5" y="-1.5" z="-1.5"/>
+    <linearUpperLimit x="1.5" y="3" z="1.5"/>
+    <angularLowerLimit x="-0.2" y="-0.15" z="-0.1"/>
+    <angularUpperLimit x="0.2" y="0.15" z="0.1"/>
+    <linearStiffness x="300" y="250" z="300"/>
+    <angularStiffness x="150" y="150" z="150"/>
+    <linearDamping x="2" y="2" z="2"/>
+    <angularDamping x="2" y="2" z="2"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+
+  <generic-constraint-default name="buttSpring">
+    <frameInLerp>
+      <translationLerp>0</translationLerp>
+      <rotationLerp>0</rotationLerp>
+    </frameInLerp>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <linearLowerLimit x="-1" y="-1.5" z="-1"/>
+    <linearUpperLimit x="1" y="1.5" z="1"/>
+    <angularLowerLimit x="-0.15" y="-0.15" z="-0.1"/>
+    <angularUpperLimit x="0.15" y="0.15" z="0.1"/>
+    <linearStiffness x="600" y="500" z="600"/>
+    <angularStiffness x="300" y="300" z="300"/>
+    <linearDamping x="2" y="2" z="2"/>
+    <angularDamping x="2" y="2" z="2"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+
+  <generic-constraint-default name="bellySpring">
+    <frameInLerp>
+      <translationLerp>0</translationLerp>
+      <rotationLerp>0</rotationLerp>
+    </frameInLerp>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <linearLowerLimit x="-0.5" y="-1" z="-0.5"/>
+    <linearUpperLimit x="0.5" y="1.5" z="0.5"/>
+    <angularLowerLimit x="-0.05" y="-0.05" z="-0.05"/>
+    <angularUpperLimit x="0.05" y="0.05" z="0.05"/>
+    <linearStiffness x="400" y="400" z="400"/>
+    <angularStiffness x="50" y="50" z="50"/>
+    <linearDamping x="2" y="2" z="2"/>
+    <angularDamping x="2" y="2" z="2"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+
+  <!-- Dent bones: small, light, held to their region bone by a short stiff
+       spring, so a hand dents the skin around the contact. -->
+  <bone-default name="dent">
+    <!-- light enough that a dozen per breast don't outweigh the region bone -->
+    <mass>0.1</mass>
+    <inertia x="0.1" y="0.1" z="0.1"/>
+    <linearDamping>0.6</linearDamping>
+    <angularDamping>0.9</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0.4</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+
+  <generic-constraint-default name="dentSpring">
+    <frameInLerp>
+      <translationLerp>0</translationLerp>
+      <rotationLerp>0</rotationLerp>
+    </frameInLerp>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <linearLowerLimit x="-2" y="-2" z="-2"/>
+    <linearUpperLimit x="2" y="2" z="2"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="300" y="300" z="300"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="4" y="4" z="4"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+
+  <!-- Anchors (skeleton bones, kinematic, follow the animation) -->
+  <bone name="LBreast_skin"/>
+  <bone name="RBreast_skin"/>
+  <bone name="LButtFat_skin"/>
+  <bone name="RButtFat_skin"/>
+  <bone name="Belly_skin"/>
+
+  <!--
+    Soft regions (physics-only bones from the body NIF). Bone shapes never
+    collide in FSMP (bones are added to Bullet with group/mask 0), so contact
+    has to come from the per-triangle-shape below.
+  -->
+  <bone name="LBreast_skin_SB" template="breast">
+    <no-collide-with-bone>LBreast_skin</no-collide-with-bone>
+    <no-collide-with-bone>RBreast_skin_SB</no-collide-with-bone>
+  </bone>
+  <bone name="RBreast_skin_SB" template="breast">
+    <no-collide-with-bone>RBreast_skin</no-collide-with-bone>
+    <no-collide-with-bone>LBreast_skin_SB</no-collide-with-bone>
+  </bone>
+  <bone name="LButtFat_skin_SB" template="butt">
+    <no-collide-with-bone>LButtFat_skin</no-collide-with-bone>
+    <no-collide-with-bone>RButtFat_skin_SB</no-collide-with-bone>
+  </bone>
+  <bone name="RButtFat_skin_SB" template="butt">
+    <no-collide-with-bone>RButtFat_skin</no-collide-with-bone>
+    <no-collide-with-bone>LButtFat_skin_SB</no-collide-with-bone>
+  </bone>
+  <bone name="Belly_skin_SB" template="belly">
+    <no-collide-with-bone>Belly_skin</no-collide-with-bone>
+  </bone>
+
+  <!-- Dent bones "<region>_SBnn", generated by tools/build_prototype.py from
+       the body mesh. They must be declared before the mesh shape, or SMP
+       makes them kinematic. -->
+  <bone name="LBreast_skin_SB01" template="dent"/>
+  <bone name="LBreast_skin_SB02" template="dent"/>
+  <bone name="LBreast_skin_SB03" template="dent"/>
+  <bone name="LBreast_skin_SB04" template="dent"/>
+  <bone name="LBreast_skin_SB05" template="dent"/>
+  <bone name="LBreast_skin_SB06" template="dent"/>
+  <bone name="LBreast_skin_SB07" template="dent"/>
+  <bone name="LBreast_skin_SB08" template="dent"/>
+  <bone name="LBreast_skin_SB09" template="dent"/>
+  <bone name="LBreast_skin_SB10" template="dent"/>
+  <bone name="LBreast_skin_SB11" template="dent"/>
+  <bone name="LBreast_skin_SB12" template="dent"/>
+  <bone name="RBreast_skin_SB01" template="dent"/>
+  <bone name="RBreast_skin_SB02" template="dent"/>
+  <bone name="RBreast_skin_SB03" template="dent"/>
+  <bone name="RBreast_skin_SB04" template="dent"/>
+  <bone name="RBreast_skin_SB05" template="dent"/>
+  <bone name="RBreast_skin_SB06" template="dent"/>
+  <bone name="RBreast_skin_SB07" template="dent"/>
+  <bone name="RBreast_skin_SB08" template="dent"/>
+  <bone name="RBreast_skin_SB09" template="dent"/>
+  <bone name="RBreast_skin_SB10" template="dent"/>
+  <bone name="RBreast_skin_SB11" template="dent"/>
+  <bone name="RBreast_skin_SB12" template="dent"/>
+  <bone name="LButtFat_skin_SB01" template="dent"/>
+  <bone name="LButtFat_skin_SB02" template="dent"/>
+  <bone name="LButtFat_skin_SB03" template="dent"/>
+  <bone name="LButtFat_skin_SB04" template="dent"/>
+  <bone name="LButtFat_skin_SB05" template="dent"/>
+  <bone name="LButtFat_skin_SB06" template="dent"/>
+  <bone name="LButtFat_skin_SB07" template="dent"/>
+  <bone name="LButtFat_skin_SB08" template="dent"/>
+  <bone name="RButtFat_skin_SB01" template="dent"/>
+  <bone name="RButtFat_skin_SB02" template="dent"/>
+  <bone name="RButtFat_skin_SB03" template="dent"/>
+  <bone name="RButtFat_skin_SB04" template="dent"/>
+  <bone name="RButtFat_skin_SB05" template="dent"/>
+  <bone name="RButtFat_skin_SB06" template="dent"/>
+  <bone name="RButtFat_skin_SB07" template="dent"/>
+  <bone name="RButtFat_skin_SB08" template="dent"/>
+  <bone name="Belly_skin_SB01" template="dent"/>
+  <bone name="Belly_skin_SB02" template="dent"/>
+  <bone name="Belly_skin_SB03" template="dent"/>
+  <bone name="Belly_skin_SB04" template="dent"/>
+  <bone name="Belly_skin_SB05" template="dent"/>
+  <bone name="Belly_skin_SB06" template="dent"/>
+  <bone name="Belly_skin_SB07" template="dent"/>
+  <bone name="Belly_skin_SB08" template="dent"/>
+  <bone name="Belly_skin_SB09" template="dent"/>
+
+  <!--
+    Genitals: GT Softbody's springs (its FemaleCollisionHandVaginaAnal.xml, by
+    Goutou), ported value for value except travel: GT lets these bones move up
+    to 30 units, and a kinematic penis off the opening (4Stim swaps A-Body to
+    its rigid MaleBodyHard.xml in scenes) dragged her flesh out that far, so
+    every linear limit is capped: 5 on the lips and anus, 6 on the canal walls, 3 elsewhere (room for a penis
+    up to about twice A-Body's default; 4Stim also aligns it about 3 units off the canal's centre). Each moving genital bone hangs off one of
+    GT's Skyrim skeleton bones; the body NIF carries those as kinematic anchors,
+    turned as GT has them (a spring's limits run along its anchor's axes, after
+    frameInB), and GT's pelvis as "GT Pelvis". A lower limit above its upper
+    limit leaves that axis free (Bullet).
+      lips    Clitoral1, VaginaB1, NPC L/R Pussy02
+      canal   VaginaD{B,F,R,L}01-03 (three rings of four), VaginaDeep1/2
+      anus    NPC {LT,RT,LB,RB} Anus2
+    and SoftBody's own anal canal rings, SB Anus{T,L,B,R}1-3 (at the end).
+  -->
+  <bone-default name="gtClitoral">
+    <mass>0.1</mass>
+    <inertia x="8" y="8" z="8"/>
+    <linearDamping>0.7</linearDamping>
+    <angularDamping>0.3</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0.2</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+  <bone-default name="gtLip">
+    <mass>0.1</mass>
+    <inertia x="2" y="2" z="2"/>
+    <linearDamping>0.1</linearDamping>
+    <angularDamping>0.3</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0.5</friction>
+    <rollingFriction>0.5</rollingFriction>
+    <restitution>0.5</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+  <bone-default name="gtLipBack">
+    <mass>0.1</mass>
+    <inertia x="2" y="2" z="2"/>
+    <linearDamping>0.7</linearDamping>
+    <angularDamping>0.3</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0.5</friction>
+    <rollingFriction>0.5</rollingFriction>
+    <restitution>0.5</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+  <bone-default name="gtDeep1">
+    <mass>0.1</mass>
+    <inertia x="2" y="2" z="2"/>
+    <linearDamping>0.8</linearDamping>
+    <angularDamping>0.8</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0.2</friction>
+    <rollingFriction>0.2</rollingFriction>
+    <restitution>0.01</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+  <bone-default name="gtDeep2">
+    <mass>0.1</mass>
+    <inertia x="2" y="2" z="2"/>
+    <linearDamping>0.8</linearDamping>
+    <angularDamping>0.8</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0.6</friction>
+    <rollingFriction>1</rollingFriction>
+    <restitution>0.5</restitution>
+    <margin-multiplier>0.1</margin-multiplier>
+  </bone-default>
+  <bone-default name="gtCanal">
+    <mass>0.1</mass>
+    <inertia x="8" y="8" z="8"/>
+    <linearDamping>0.7</linearDamping>
+    <angularDamping>0.3</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0.02</restitution>
+    <margin-multiplier>2</margin-multiplier>
+  </bone-default>
+  <bone-default name="gtAnus">
+    <mass>0.1</mass>
+    <inertia x="2" y="2" z="2"/>
+    <linearDamping>0.7</linearDamping>
+    <angularDamping>0.3</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0.2</restitution>
+    <margin-multiplier>1</margin-multiplier>
+  </bone-default>
+  <bone-default name="sbAnalCanal">
+    <mass>0.1</mass>
+    <inertia x="8" y="8" z="8"/>
+    <linearDamping>0.7</linearDamping>
+    <angularDamping>0.3</angularDamping>
+    <gravity-factor>0</gravity-factor>
+    <friction>0</friction>
+    <rollingFriction>0</rollingFriction>
+    <restitution>0.02</restitution>
+    <margin-multiplier>2</margin-multiplier>
+  </bone-default>
+
+  <!-- anchors (kinematic: the default template) -->
+  <bone name="GT Pelvis"/>
+  <bone name="Clitoral"/>
+  <bone name="VaginaB"/>
+  <bone name="NPC L Pussy01"/>
+  <bone name="NPC R Pussy01"/>
+  <bone name="VaginaDeep"/>
+  <bone name="VaginaDB00"/>
+  <bone name="VaginaDF00"/>
+  <bone name="VaginaDR00"/>
+  <bone name="VaginaDL00"/>
+  <bone name="NPC LT Anus1"/>
+  <bone name="NPC RT Anus1"/>
+  <bone name="NPC LB Anus1"/>
+  <bone name="NPC RB Anus1"/>
+  <bone name="SB AnusT1 Base"/>
+  <bone name="SB AnusL1 Base"/>
+  <bone name="SB AnusB1 Base"/>
+  <bone name="SB AnusR1 Base"/>
+  <bone name="SB AnusT2 Base"/>
+  <bone name="SB AnusL2 Base"/>
+  <bone name="SB AnusB2 Base"/>
+  <bone name="SB AnusR2 Base"/>
+  <bone name="SB AnusT3 Base"/>
+  <bone name="SB AnusL3 Base"/>
+  <bone name="SB AnusB3 Base"/>
+  <bone name="SB AnusR3 Base"/>
+
+  <bone name="Clitoral1" template="gtClitoral"/>
+  <bone name="VaginaB1" template="gtLipBack"/>
+  <bone name="NPC L Pussy02" template="gtLip"/>
+  <bone name="NPC R Pussy02" template="gtLip"/>
+  <bone name="VaginaDeep1" template="gtDeep1"/>
+  <bone name="VaginaDeep2" template="gtDeep2"/>
+  <bone name="VaginaDB01" template="gtCanal"/>
+  <bone name="VaginaDF01" template="gtCanal"/>
+  <bone name="VaginaDR01" template="gtCanal"/>
+  <bone name="VaginaDL01" template="gtCanal"/>
+  <bone name="VaginaDB02" template="gtCanal"/>
+  <bone name="VaginaDF02" template="gtCanal"/>
+  <bone name="VaginaDR02" template="gtCanal"/>
+  <bone name="VaginaDL02" template="gtCanal"/>
+  <bone name="VaginaDB03" template="gtCanal"/>
+  <bone name="VaginaDF03" template="gtCanal"/>
+  <bone name="VaginaDR03" template="gtCanal"/>
+  <bone name="VaginaDL03" template="gtCanal"/>
+  <bone name="NPC LT Anus2" template="gtAnus"/>
+  <bone name="NPC RT Anus2" template="gtAnus"/>
+  <bone name="NPC LB Anus2" template="gtAnus"/>
+  <bone name="NPC RB Anus2" template="gtAnus"/>
+  <bone name="SB AnusT1" template="sbAnalCanal"/>
+  <bone name="SB AnusL1" template="sbAnalCanal"/>
+  <bone name="SB AnusB1" template="sbAnalCanal"/>
+  <bone name="SB AnusR1" template="sbAnalCanal"/>
+  <bone name="SB AnusT2" template="sbAnalCanal"/>
+  <bone name="SB AnusL2" template="sbAnalCanal"/>
+  <bone name="SB AnusB2" template="sbAnalCanal"/>
+  <bone name="SB AnusR2" template="sbAnalCanal"/>
+  <bone name="SB AnusT3" template="sbAnalCanal"/>
+  <bone name="SB AnusL3" template="sbAnalCanal"/>
+  <bone name="SB AnusB3" template="sbAnalCanal"/>
+  <bone name="SB AnusR3" template="sbAnalCanal"/>
+
+  <!--
+    Collision surface: the body mesh itself. Kinematic bone influences are
+    dropped (threshold 1) so the shape is effectively just the soft regions,
+    which keeps the triangle count down and stops the body pushing itself.
+
+    FO4 renames a single-shape armor's geometry to "<ARMA>[sex]/<ARMO>" when it
+    attaches it; the body NIF carries a hidden second shape
+    (SoftBodyFO4NameAnchor) so "CBBE" keeps its name on every actor.
+  -->
+  <per-triangle-shape name="CBBE">
+    <margin>0.3</margin>
+    <penetration>0.5</penetration>
+    <shared>public</shared>
+    <tag>SB_Body</tag>
+    <can-collide-with-tag>SB_Hands</can-collide-with-tag>
+    <weight-threshold bone="LBreast_skin_SB">0.1</weight-threshold>
+    <weight-threshold bone="RBreast_skin_SB">0.1</weight-threshold>
+    <weight-threshold bone="LButtFat_skin_SB">0.1</weight-threshold>
+    <weight-threshold bone="RButtFat_skin_SB">0.1</weight-threshold>
+    <weight-threshold bone="Belly_skin_SB">0.1</weight-threshold>
+    <weight-threshold bone="Chest">1</weight-threshold>
+    <weight-threshold bone="Chest_skin">1</weight-threshold>
+    <weight-threshold bone="Chest_Rear_Skin">1</weight-threshold>
+    <weight-threshold bone="Chest_Upper_skin">1</weight-threshold>
+    <weight-threshold bone="L_RibHelper">1</weight-threshold>
+    <weight-threshold bone="R_RibHelper">1</weight-threshold>
+    <weight-threshold bone="UpperBelly_skin">1</weight-threshold>
+    <weight-threshold bone="SPINE1">1</weight-threshold>
+    <weight-threshold bone="SPINE2">1</weight-threshold>
+    <weight-threshold bone="Spine1_skin">1</weight-threshold>
+    <weight-threshold bone="Spine1_Rear_skin">1</weight-threshold>
+    <weight-threshold bone="Spine2_skin">1</weight-threshold>
+    <weight-threshold bone="Spine2_Rear_skin">1</weight-threshold>
+    <weight-threshold bone="Pelvis_skin">1</weight-threshold>
+    <weight-threshold bone="Pelvis_Rear_skin">1</weight-threshold>
+    <weight-threshold bone="Neck_skin">1</weight-threshold>
+    <weight-threshold bone="Neck_Low_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_Collarbone_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_ShoulderFat_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_UpperArm_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_UpperFat_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_UpperTwist1_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_UpperTwist2_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_ForeArm1">1</weight-threshold>
+    <weight-threshold bone="LArm_ForeArm1_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_ForeArm2_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_ForeArm3_skin">1</weight-threshold>
+    <weight-threshold bone="LArm_Hand">1</weight-threshold>
+    <weight-threshold bone="RArm_Collarbone_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_ShoulderFat_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_UpperArm_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_UpperFat_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_UpperTwist1_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_UpperTwist2_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_ForeArm1">1</weight-threshold>
+    <weight-threshold bone="RArm_ForeArm1_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_ForeArm2_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_ForeArm3_skin">1</weight-threshold>
+    <weight-threshold bone="RArm_Hand">1</weight-threshold>
+    <weight-threshold bone="LLeg_Thigh_skin">1</weight-threshold>
+    <weight-threshold bone="LLeg_Thigh_Low_skin">1</weight-threshold>
+    <weight-threshold bone="LLeg_Thigh_Fat_skin">1</weight-threshold>
+    <weight-threshold bone="LLeg_Calf_skin">1</weight-threshold>
+    <weight-threshold bone="LLeg_Calf_Low_skin">1</weight-threshold>
+    <weight-threshold bone="LLeg_Foot">1</weight-threshold>
+    <weight-threshold bone="LLeg_Toe1">1</weight-threshold>
+    <weight-threshold bone="RLeg_Thigh_skin">1</weight-threshold>
+    <weight-threshold bone="RLeg_Thigh_Low_skin">1</weight-threshold>
+    <weight-threshold bone="RLeg_Thigh_Fat_skin">1</weight-threshold>
+    <weight-threshold bone="RLeg_Calf_skin">1</weight-threshold>
+    <weight-threshold bone="RLeg_Calf_Low_skin">1</weight-threshold>
+    <weight-threshold bone="RLeg_Foot">1</weight-threshold>
+    <weight-threshold bone="RLeg_Toe1">1</weight-threshold>
+  </per-triangle-shape>
+
+  <!--
+    The openings. The transplanted genitals' render meshes (SoftBodyVulva,
+    SoftBodyGenitals, ~10,000 triangles) are not collision shapes; these are
+    GT Softbody's own collision pads (hidden shapes in the body NIF, no
+    shader): small pads round the opening, the canal and the anus, each wholly
+    on its genital bone. Per-vertex shapes, colliding with everything but each
+    other; a penis is held in the channel between them and pushes them apart.
+    Generated by tools/build_prototype.py.
+  -->
+  <per-vertex-shape name="SoftBodyVaginaOut">
+    <margin>0.35</margin>
+    <penetration>0.8</penetration>
+    <shared>public</shared>
+    <tag>SB_Vagina</tag>
+    <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
+    <no-collide-with-tag>SB_Anus</no-collide-with-tag>
+    <no-collide-with-tag>Balls</no-collide-with-tag>
+    <no-collide-with-tag>Penis</no-collide-with-tag>
+  </per-vertex-shape>
+  <per-vertex-shape name="SoftBodyVaginaDeep">
+    <margin>0.15</margin>
+    <penetration>0.8</penetration>
+    <shared>public</shared>
+    <tag>SB_Vagina</tag>
+    <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
+    <no-collide-with-tag>SB_Anus</no-collide-with-tag>
+    <no-collide-with-tag>Balls</no-collide-with-tag>
+    <no-collide-with-tag>Penis</no-collide-with-tag>
+  </per-vertex-shape>
+  <per-vertex-shape name="SoftBodyAnus">
+    <margin>0.3</margin>
+    <penetration>0.8</penetration>
+    <shared>public</shared>
+    <tag>SB_Anus</tag>
+    <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
+    <no-collide-with-tag>SB_Anus</no-collide-with-tag>
+    <no-collide-with-tag>Balls</no-collide-with-tag>
+  </per-vertex-shape>
+  <per-vertex-shape name="SoftBodyAnalCanal">
+    <margin>0.5</margin>
+    <penetration>0.8</penetration>
+    <shared>public</shared>
+    <tag>SB_Anus</tag>
+    <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
+    <no-collide-with-tag>SB_Anus</no-collide-with-tag>
+    <no-collide-with-tag>Balls</no-collide-with-tag>
+  </per-vertex-shape>
+
+  <generic-constraint bodyA="LBreast_skin_SB" bodyB="LBreast_skin" template="breastSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB" bodyB="RBreast_skin" template="breastSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB" bodyB="LButtFat_skin" template="buttSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB" bodyB="RButtFat_skin" template="buttSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB" bodyB="Belly_skin" template="bellySpring"/>
+
+  <generic-constraint bodyA="LBreast_skin_SB01" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB02" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB03" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB04" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB05" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB06" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB07" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB08" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB09" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB10" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB11" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB12" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB01" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB02" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB03" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB04" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB05" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB06" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB07" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB08" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB09" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB10" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB11" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB12" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB02" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB03" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB04" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB05" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB06" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB07" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB08" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB02" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB03" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB04" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB05" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB06" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB07" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB08" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB01" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB02" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB03" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB04" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB05" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB06" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB07" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB08" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB09" bodyB="Belly_skin_SB" template="dentSpring"/>
+
+  <!-- Genital springs (GT Softbody). Linear only: every angular limit is 0. -->
+  <generic-constraint-default name="gtSpring">
+    <frameInB>
+      <basis x="0" y="0" z="0" w="1"/>
+      <origin x="0" y="0" z="0"/>
+    </frameInB>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <enableAngularSprings>0</enableAngularSprings>
+    <enableLinearSprings>1</enableLinearSprings>
+    <linearStiffnessLimited>0</linearStiffnessLimited>
+    <angularStiffnessLimited>0</angularStiffnessLimited>
+    <linearLowerLimit x="0" y="0" z="0"/>
+    <linearUpperLimit x="0" y="0" z="0"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="0" y="0" z="0"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="0" y="0" z="0"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+
+  <!-- the hood pulls back, the rear lip and the labia part -->
+  <generic-constraint bodyA="Clitoral1" bodyB="Clitoral" template="gtSpring">
+    <frameInB><basis x="-0.25" y="0" z="0" w="0.5"/><origin x="0" y="0" z="0"/></frameInB>
+    <linearLowerLimit x="0" y="-5" z="0"/>
+    <linearStiffness x="0" y="40" z="0"/>
+    <linearDamping x="0" y="10" z="0"/>
+  </generic-constraint>
+  <generic-constraint bodyA="VaginaB1" bodyB="VaginaB" template="gtSpring">
+    <frameInB><basis x="-0.25" y="0" z="0" w="0.5"/><origin x="0" y="0" z="0"/></frameInB>
+    <linearUpperLimit x="0" y="5" z="0"/>
+    <linearStiffness x="0" y="40" z="0"/>
+    <linearDamping x="0" y="10" z="0"/>
+  </generic-constraint>
+  <generic-constraint bodyA="NPC L Pussy02" bodyB="NPC L Pussy01" template="gtSpring">
+    <linearUpperLimit x="5" y="0" z="0"/>
+    <linearStiffness x="40" y="0" z="0"/>
+    <linearDamping x="10" y="0" z="0"/>
+  </generic-constraint>
+  <generic-constraint bodyA="NPC R Pussy02" bodyB="NPC R Pussy01" template="gtSpring">
+    <linearLowerLimit x="-5" y="0" z="0"/>
+    <linearStiffness x="40" y="0" z="0"/>
+    <linearDamping x="10" y="0" z="0"/>
+  </generic-constraint>
+
+  <!-- the deep end -->
+  <generic-constraint bodyA="VaginaDeep1" bodyB="VaginaDeep" template="gtSpring">
+    <frameInB><basis x="-0.1" y="0" z="0" w="1"/><origin x="0" y="0" z="0"/></frameInB>
+    <linearUpperLimit x="0" y="3" z="0"/>
+    <linearStiffness x="0" y="20" z="20"/>
+    <linearDamping x="0" y="5" z="5"/>
+  </generic-constraint>
+  <generic-constraint bodyA="VaginaDeep2" bodyB="VaginaDeep1" template="gtSpring">
+    <linearLowerLimit x="0" y="-3" z="0"/>
+    <linearStiffness x="600" y="60" z="600"/>
+    <linearDamping x="10" y="8" z="10"/>
+  </generic-constraint>
+
+  <!-- the canal: each ring bone on its root, linked down the wall, the mouth held to the pelvis and the top to the
+       deep end -->
+  <generic-constraint-default name="gtCanalRoot">
+    <frameInB>
+      <basis x="0" y="0" z="0" w="1"/>
+      <origin x="0" y="0" z="0"/>
+    </frameInB>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <enableAngularSprings>0</enableAngularSprings>
+    <enableLinearSprings>1</enableLinearSprings>
+    <linearStiffnessLimited>0</linearStiffnessLimited>
+    <angularStiffnessLimited>0</angularStiffnessLimited>
+    <linearLowerLimit x="0" y="-6" z="-6"/>
+    <linearUpperLimit x="0" y="0" z="0"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="0" y="100" z="0"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="3" y="3" z="3"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+  <generic-constraint-default name="gtCanalLink1">
+    <frameInB>
+      <basis x="0" y="0" z="0" w="1"/>
+      <origin x="0" y="0" z="0"/>
+    </frameInB>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <enableAngularSprings>0</enableAngularSprings>
+    <enableLinearSprings>1</enableLinearSprings>
+    <linearStiffnessLimited>0</linearStiffnessLimited>
+    <angularStiffnessLimited>0</angularStiffnessLimited>
+    <linearLowerLimit x="1" y="-0.7" z="0"/>
+    <linearUpperLimit x="0" y="0.7" z="3"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="0" y="10" z="10"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="3" y="3" z="3"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+  <generic-constraint-default name="gtCanalLink2">
+    <frameInB>
+      <basis x="0" y="0" z="0" w="1"/>
+      <origin x="0" y="0" z="0"/>
+    </frameInB>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <enableAngularSprings>0</enableAngularSprings>
+    <enableLinearSprings>1</enableLinearSprings>
+    <linearStiffnessLimited>0</linearStiffnessLimited>
+    <angularStiffnessLimited>0</angularStiffnessLimited>
+    <linearLowerLimit x="1" y="1" z="0"/>
+    <linearUpperLimit x="0" y="0" z="3"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="0" y="10" z="10"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="3" y="3" z="3"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+  <generic-constraint-default name="gtCanalMouth">
+    <frameInB>
+      <basis x="0" y="0" z="0" w="1"/>
+      <origin x="0" y="0" z="0"/>
+    </frameInB>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <enableAngularSprings>0</enableAngularSprings>
+    <enableLinearSprings>1</enableLinearSprings>
+    <linearStiffnessLimited>0</linearStiffnessLimited>
+    <angularStiffnessLimited>0</angularStiffnessLimited>
+    <linearLowerLimit x="1" y="1" z="-1"/>
+    <linearUpperLimit x="0" y="0" z="0"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="0" y="0" z="10"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="3" y="3" z="3"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+  <generic-constraint-default name="gtCanalTop">
+    <frameInB>
+      <basis x="0" y="0" z="0" w="1"/>
+      <origin x="0" y="0" z="0"/>
+    </frameInB>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <enableAngularSprings>0</enableAngularSprings>
+    <enableLinearSprings>1</enableLinearSprings>
+    <linearStiffnessLimited>0</linearStiffnessLimited>
+    <angularStiffnessLimited>0</angularStiffnessLimited>
+    <linearLowerLimit x="1" y="-2" z="1"/>
+    <linearUpperLimit x="0" y="1" z="0"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="0" y="0" z="0"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="0" y="0" z="0"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+  <generic-constraint bodyA="VaginaDB01" bodyB="VaginaDB00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDF01" bodyB="VaginaDF00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDR01" bodyB="VaginaDR00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDL01" bodyB="VaginaDL00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDB02" bodyB="VaginaDB00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDF02" bodyB="VaginaDF00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDR02" bodyB="VaginaDR00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDL02" bodyB="VaginaDL00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDB03" bodyB="VaginaDB00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDF03" bodyB="VaginaDF00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDR03" bodyB="VaginaDR00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDL03" bodyB="VaginaDL00" template="gtCanalRoot"/>
+  <generic-constraint bodyA="VaginaDB02" bodyB="VaginaDB01" template="gtCanalLink1"/>
+  <generic-constraint bodyA="VaginaDF02" bodyB="VaginaDF01" template="gtCanalLink1"/>
+  <generic-constraint bodyA="VaginaDR02" bodyB="VaginaDR01" template="gtCanalLink1"/>
+  <generic-constraint bodyA="VaginaDL02" bodyB="VaginaDL01" template="gtCanalLink1"/>
+  <generic-constraint bodyA="VaginaDB03" bodyB="VaginaDB02" template="gtCanalLink2"/>
+  <generic-constraint bodyA="VaginaDF03" bodyB="VaginaDF02" template="gtCanalLink2"/>
+  <generic-constraint bodyA="VaginaDR03" bodyB="VaginaDR02" template="gtCanalLink2"/>
+  <generic-constraint bodyA="VaginaDL03" bodyB="VaginaDL02" template="gtCanalLink2"/>
+  <generic-constraint bodyA="VaginaDB03" bodyB="GT Pelvis" template="gtCanalMouth"/>
+  <generic-constraint bodyA="VaginaDF03" bodyB="GT Pelvis" template="gtCanalMouth"/>
+  <generic-constraint bodyA="VaginaDR03" bodyB="GT Pelvis" template="gtCanalMouth"/>
+  <generic-constraint bodyA="VaginaDL03" bodyB="GT Pelvis" template="gtCanalMouth"/>
+  <generic-constraint bodyA="VaginaDB01" bodyB="VaginaDeep1" template="gtCanalTop"/>
+  <generic-constraint bodyA="VaginaDF01" bodyB="VaginaDeep1" template="gtCanalTop"/>
+  <generic-constraint bodyA="VaginaDR01" bodyB="VaginaDeep1" template="gtCanalTop"/>
+  <generic-constraint bodyA="VaginaDL01" bodyB="VaginaDeep1" template="gtCanalTop"/>
+
+  <!-- the anus: each quarter opens outward -->
+  <generic-constraint bodyA="NPC RT Anus2" bodyB="NPC RT Anus1" template="gtSpring">
+    <linearLowerLimit x="-5" y="0" z="0"/>
+    <linearStiffness x="5" y="0" z="0"/>
+    <linearDamping x="1" y="0" z="0"/>
+  </generic-constraint>
+  <generic-constraint bodyA="NPC LT Anus2" bodyB="NPC LT Anus1" template="gtSpring">
+    <frameInB><basis x="0" y="0.1" z="0" w="-0.3"/><origin x="0" y="0" z="0"/></frameInB>
+    <linearUpperLimit x="5" y="0" z="0"/>
+    <linearStiffness x="10" y="0" z="0"/>
+    <linearDamping x="1" y="0" z="0"/>
+  </generic-constraint>
+  <generic-constraint bodyA="NPC RB Anus2" bodyB="NPC RB Anus1" template="gtSpring">
+    <linearUpperLimit x="0" y="5" z="0"/>
+    <linearStiffness x="0" y="10" z="0"/>
+    <linearDamping x="0" y="1" z="0"/>
+  </generic-constraint>
+  <generic-constraint bodyA="NPC LB Anus2" bodyB="NPC LB Anus1" template="gtSpring">
+    <linearLowerLimit x="0" y="-5" z="0"/>
+    <linearStiffness x="0" y="10" z="0"/>
+    <linearDamping x="0" y="1" z="0"/>
+  </generic-constraint>
+
+  <!-- the anal canal (SoftBody's own, not GT's): three rings of four bones, at 2, 4 and 6 deep, each held on its
+       base by a spring that lets it go only straight outward (its base's x), up to 4 -->
+  <generic-constraint-default name="sbAnalWall">
+    <frameInB>
+      <basis x="0" y="0" z="0" w="1"/>
+      <origin x="0" y="0" z="0"/>
+    </frameInB>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <enableAngularSprings>0</enableAngularSprings>
+    <enableLinearSprings>1</enableLinearSprings>
+    <linearStiffnessLimited>0</linearStiffnessLimited>
+    <angularStiffnessLimited>0</angularStiffnessLimited>
+    <linearLowerLimit x="0" y="0" z="0"/>
+    <linearUpperLimit x="4" y="0" z="0"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="15" y="0" z="0"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="2" y="0" z="0"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+  <generic-constraint bodyA="SB AnusT1" bodyB="SB AnusT1 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusL1" bodyB="SB AnusL1 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusB1" bodyB="SB AnusB1 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusR1" bodyB="SB AnusR1 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusT2" bodyB="SB AnusT2 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusL2" bodyB="SB AnusL2 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusB2" bodyB="SB AnusB2 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusR2" bodyB="SB AnusR2 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusT3" bodyB="SB AnusT3 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusL3" bodyB="SB AnusL3 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusB3" bodyB="SB AnusB3 Base" template="sbAnalWall"/>
+  <generic-constraint bodyA="SB AnusR3" bodyB="SB AnusR3 Base" template="sbAnalWall"/>
+
+</system>

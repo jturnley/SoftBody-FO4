@@ -74,7 +74,7 @@ Status (2026-11-01):
 - Confirmed in game: jiggle and hand-to-body push on the player and NPCs, local
   dents, the transplanted genitals (undressing works), and vaginal and anal
   collision with A-Body in 4Stim scenes (v0.3).
-- v0.6, measured in game with `probe/` (doggy, vaginal): the physics opens the
+- v0.6, measured in game with the plugin's log (doggy, vaginal): the physics opens the
   canal to about the penis's width (0.3 to 3-4 units across) and the labia from
   6 to 10. The skin around the openings now follows the lip bones (v0.1-v0.5
   barely moved it), and the entrance looked right in a first test. Team
@@ -102,6 +102,8 @@ Status (2026-11-01):
 - a female skeleton with SMP support (tested with DFS and Skeletal
   Adjustments for CBBE)
 - optional: A-Body (male), whose `VirtualPenis` collides with the openings
+- optional: 4Stim, for the plugin's per-act physics and auto-alignment (Address
+  Library for F4SE Plugins)
 
 ## Install / test
 
@@ -118,22 +120,26 @@ Status (2026-11-01):
    `F4SE\Plugins\FO4FasterHdtSMP\configs.xml` and restart to see the collision
    shapes. `logLevel` 3+ there gives more detail in the F4SE log.
 
-## Opening logger (temporary)
+## The plugin (4Stim scenes)
 
-`src/debug/SoftBodyOpeningLog.psc` logs the openings during a 4Stim scene, for
-tuning. It needs Garden of Eden Papyrus Script Extender and 4Stim, and isn't in
-the release zips. Compile it from its own folder with the CK's
-PapyrusCompiler.exe (import the game's base sources, Garden of Eden's and
-4Stim's) and put the `.pex` in `Scripts\`. Then in the console, before or
-during a scene:
+`F4SE\Plugins\SoftBodyFO4.dll` (source in `plugin/`, built with xmake against 4Strands'
+commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts do, for 4Stim:
 
-```
-cgf "SoftBodyOpeningLog.Run"
-```
+- **Physics by act.** For vaginal sex her body gets `SoftBody-CBBE-Vaginal.xml`, for anal
+  `-Anal.xml`, otherwise the full `SoftBody-CBBE.xml` (swapped with FO4 FSMP's `DynamicHDT`). In
+  each variant the opening not in use lets A-Body's penis (tag `Penis`) through, so it can't catch
+  the penis or be dragged about by it. `build_prototype.py` writes the variants.
+- **Auto-alignment.** GT lets a bendable penis be steered into the opening; 4Stim's is rigid, so
+  the plugin corrects his 4Stim alignment offset instead. It measures, over a couple of seconds of
+  the loop, where the penis line crosses the opening in use (vaginal or anal sex), moves him, and
+  measures again until it is within `fAlignTolerance`. 4Stim saves the offset with the scene, so
+  a scene is aligned once. Keys (game in front): **F10** align now, **Shift+F10** auto-align on/off,
+  **Ctrl+F10** back to the scene's own alignment.
+- **Tuning log.** With `bLogSamples=1` it logs her genital bones and the penis every 25 ms to
+  `Documents\My Games\Fallout4\F4SE\SoftBodyFO4.log` (what `probe/` did).
 
-About twice a second, it writes the opening widths, each genital bone's distance
-from its anchor, and the penis tip's distances to the openings to
-`Data\F4SE\SoftBodyOpenings.ini` (MO2: `overwrite\F4SE`).
+Settings: `F4SE\Plugins\SoftBodyFO4.ini`. Needs Address Library for F4SE Plugins; without 4Stim
+it does nothing.
 
 ## What to report back
 

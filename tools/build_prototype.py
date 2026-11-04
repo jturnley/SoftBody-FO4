@@ -41,6 +41,11 @@ COLLISION_SHAPES = {"SoftBodyVaginaOut": ("SB_Vagina", 0.35, 0.8), "SoftBodyVagi
 # ... and not with A-Body's balls ("Balls"): in doggy they hit the pads and were thrown up; A-Body's own anus shapes
 # skip them too
 NO_COLLIDE_WITH = ("SB_Vagina", "SB_Anus", "Balls")
+# Per-act variants of the body XML, as GT Softbody switches its collision by the scene's act: the SoftBodyFO4 plugin
+# swaps the body to one of these for a vaginal-only or anal-only scene, so the opening not in use lets the penis
+# (A-Body's "Penis" tag) through instead of catching or being dragged by it. {file suffix: pad tags that skip it}
+ACT_VARIANTS = {"-Vaginal": ("SB_Anus",), "-Anal": ("SB_Vagina",)}
+PENIS_TAG = "Penis"
 # The game's own Data (for the skin material the genitals' material is made from)
 GAME_DATA = sys.argv[4] if len(sys.argv) > 4 else r"E:\FO4-MO2\Fallout 4\Data"
 
@@ -120,9 +125,10 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
     return made, meshes
 
 
-def collision_xml(collision):
+def collision_xml(collision, skip=()):
     """per-vertex-shapes for the openings. Any body bones a pad is weighted to get a weight threshold of 1, so only
-    the genital bones' share collides (the pads are built wholly on genital bones, so there are normally none)."""
+    the genital bones' share collides (the pads are built wholly on genital bones, so there are normally none).
+    skip: pad tags that let the penis through (ACT_VARIANTS)"""
     lines = []
     for name, body_bones in collision.items():
         tag, margin, penetration = COLLISION_SHAPES[name]
@@ -131,15 +137,16 @@ def collision_xml(collision):
                   '    <penetration>%g</penetration>' % penetration,
                   '    <shared>public</shared>',
                   '    <tag>%s</tag>' % tag]
-        lines += ['    <no-collide-with-tag>%s</no-collide-with-tag>' % t for t in NO_COLLIDE_WITH]
+        lines += ['    <no-collide-with-tag>%s</no-collide-with-tag>' % t
+                  for t in NO_COLLIDE_WITH + ((PENIS_TAG,) if tag in skip else ())]
         lines += ['    <weight-threshold bone="%s">1</weight-threshold>' % b for b in body_bones]
         lines += ['  </per-vertex-shape>']
     return lines
 
 
-def write_xml(rel, dents=None, collision=None):
+def write_xml(rel, dents=None, collision=None, skip=(), suffix=""):
     """Copy a physics XML from src/ to the mod, filling in the dent and collision markers.
-    collision: {shape: [its body (non-genital) bones]}"""
+    collision: {shape: [its body (non-genital) bones]}; skip, suffix: an ACT_VARIANTS variant"""
     text = open(os.path.join(ROOT, "src", os.path.basename(rel)), encoding="utf-8").read()
     if dents:
         bones = []
@@ -149,11 +156,11 @@ def write_xml(rel, dents=None, collision=None):
                 bones.append('  <bone name="%s" template="dent"/>' % name)
                 constraints.append('  <generic-constraint bodyA="%s" bodyB="%s%s" template="dentSpring"/>' % (name, region, PHYSICS_SUFFIX))
         markers = [("<!-- @DENT_BONES@ -->", bones), ("<!-- @DENT_CONSTRAINTS@ -->", constraints),
-                   ("<!-- @COLLISION_SHAPES@ -->", collision_xml(collision or {}))]
+                   ("<!-- @COLLISION_SHAPES@ -->", collision_xml(collision or {}, skip))]
         for marker, lines in markers:
             assert marker in text, (rel, marker)
             text = text.replace("  " + marker, "\n".join(lines))
-    dst = os.path.join(OUT, rel)
+    dst = os.path.join(OUT, rel[:-4] + suffix + rel[-4:])
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     open(dst, "w", encoding="utf-8").write(text)
 
@@ -239,8 +246,12 @@ def main():
     genital_bones = genital_meshes.pop("bones") if genital_meshes else ()
     collision = {name: m["body_bones"] for name, m in (genital_meshes or {}).items() if m["hidden"]}
     write_xml(BODY_XML, dents, collision)
+    for suffix, skip in ACT_VARIANTS.items():
+        write_xml(BODY_XML, dents, collision, skip, suffix)
     write_xml(HANDS_XML)
     check_xml(BODY_XML, "CBBE", genital_bones)
+    for suffix in ACT_VARIANTS:
+        check_xml(BODY_XML[:-4] + suffix + ".xml", "CBBE", genital_bones)
     check_xml(HANDS_XML, "BaseFemaleHands3rd:0")
     print("BodySlide")
     write_slider_set(genitals.slider_data(genital_meshes, os.path.join(CBBE, r"Tools\BodySlide\ShapeData\CBBE\CBBEBody.osd"))
