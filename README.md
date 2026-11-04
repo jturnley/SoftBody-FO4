@@ -152,7 +152,7 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   measures again until it is within `fAlignTolerance`. 4Stim saves the offset with the scene, so
   a scene is aligned once. If the penis then runs at an angle to the canal (more than 6 degrees;
   missionary: about 20), it tries two steps of 4Stim's penis bend to learn its effect, sets the bend
-  that lines it up, and centres the entrance again. Keys (game in front): **F11** align now, **Shift+F11** auto-align on/off,
+  that lines it up, and centres the entrance again. Keys (game in front): **F11** align now, **Alt+F11** align to the vagina, **Alt+Shift+F11** to the anus (either also sets that act's physics, for the rest of the scene), **Shift+F11** auto-align on/off,
   **Ctrl+F11** back to the scene's own alignment.
 - **Tuning log.** With `bLogSamples=1` it logs her genital bones and the penis every 25 ms to
   `Documents\My Games\Fallout4\F4SE\SoftBodyFO4.log` (what `probe/` did).

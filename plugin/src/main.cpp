@@ -10,8 +10,9 @@
 //     about 20 degrees), 4Stim's penis bend is tried a step or two to learn its effect, set to match, and the entrance
 //     centred again.
 //  3. optionally logs her genital bones and the penis (what was SoftBodyProbe), for tuning.
-// Settings: Data\F4SE\Plugins\SoftBodyFO4.ini. Keys, with the game in front: F11 align now, Shift+F11 auto-align on
-// or off, Ctrl+F11 back to the scene's own alignment.
+// Settings: Data\F4SE\Plugins\SoftBodyFO4.ini. Keys, with the game in front: F11 align now, Alt+F11 align to the
+// vagina, Alt+Shift+F11 to the anus (and that act's physics), Shift+F11 auto-align on or off, Ctrl+F11 back to the
+// scene's own alignment.
 
 #include "PluginInterface.h"
 
@@ -427,6 +428,8 @@ namespace
 	}
 
 	std::atomic<Act> currentAct{ Act::kNone };
+	// the user picked the opening (Alt+F11, Alt+Shift+F11): kept, and not re-detected, until the scene changes
+	std::atomic<bool> forcedAct{ false };
 
 	// her body's current physics file, by form ID
 	std::unordered_map<std::uint32_t, std::string> physics;
@@ -884,7 +887,22 @@ namespace
 		}
 		const bool shift = (GetAsyncKeyState(0x10) & 0x8000) != 0;
 		const bool ctrl = (GetAsyncKeyState(0x11) & 0x8000) != 0;
-		if (shift) {
+		const bool alt = (GetAsyncKeyState(0x12) & 0x8000) != 0;
+		if (alt) {  // her choice of opening, not the scene's or the penis's: that act's physics, then align to it
+			const Act act = shift ? Act::kAnal : Act::kVaginal;
+			currentAct = act;
+			forcedAct = true;
+			const auto threadID = followed.load();
+			if (auto* tasks = F4SE::GetTaskInterface()) {
+				tasks->AddTask([threadID, act]() {
+					if (auto* thread = threads ? threads->getThread(threadID) : nullptr) {
+						ApplyAct(thread, act);
+					}
+				});
+			}
+			Notify(std::format("aligning to the {} (chosen)", TargetFor(act)->name));
+			StartAlign(TargetFor(act));
+		} else if (shift) {
 			Settings::autoAlign = !Settings::autoAlign;
 			Notify(std::format("auto-align {}", Settings::autoAlign ? "on" : "off"));
 		} else if (ctrl) {
@@ -897,7 +915,7 @@ namespace
 				});
 				Notify("back to the scene's own alignment");
 			}
-		} else if (auto* target = scenes ? TargetFor(currentAct.load()) : nullptr) {
+		} else if (auto* target = scenes || forcedAct ? TargetFor(currentAct.load()) : nullptr) {
 			Notify(std::format("aligning to the {}", target->name));
 			StartAlign(target);
 		} else if (!scenes) {
@@ -952,6 +970,7 @@ namespace
 			scene = id ? id : "";
 		}
 		Identify(a_thread, nullptr, nullptr);
+		forcedAct = false;
 		if (!scenes) {  // no act from 4Stim: from where the penis goes, after a moment
 			currentAct = Act::kNone;
 			REX::INFO("thread {} in {}: act from the penis", a_thread->getThreadID(), id ? id : "?");
