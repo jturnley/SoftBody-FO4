@@ -163,6 +163,12 @@ namespace
 		{ "SB AnusT1", "SB AnusT1 Base" }, { "SB AnusB1", "SB AnusB1 Base" }, { "SB AnusL1", "SB AnusL1 Base" }, { "SB AnusR1", "SB AnusR1 Base" },
 		{ "SB AnusT2", "SB AnusT2 Base" }, { "SB AnusB2", "SB AnusB2 Base" }, { "SB AnusL2", "SB AnusL2 Base" }, { "SB AnusR2", "SB AnusR2 Base" },
 		{ "SB AnusT3", "SB AnusT3 Base" }, { "SB AnusB3", "SB AnusB3 Base" }, { "SB AnusL3", "SB AnusL3 Base" }, { "SB AnusR3", "SB AnusR3 Base" },
+		// the vaginal canal's rings: front, left, back, right of each
+		{ "SB Vag1_0", "SB Vag1_0 Base" }, 		{ "SB Vag1_2", "SB Vag1_2 Base" }, 		{ "SB Vag1_4", "SB Vag1_4 Base" }, 		{ "SB Vag1_6", "SB Vag1_6 Base" },
+		{ "SB Vag2_0", "SB Vag2_0 Base" }, 		{ "SB Vag2_2", "SB Vag2_2 Base" }, 		{ "SB Vag2_4", "SB Vag2_4 Base" }, 		{ "SB Vag2_6", "SB Vag2_6 Base" },
+		{ "SB Vag3_0", "SB Vag3_0 Base" }, 		{ "SB Vag3_2", "SB Vag3_2 Base" }, 		{ "SB Vag3_4", "SB Vag3_4 Base" }, 		{ "SB Vag3_6", "SB Vag3_6 Base" },
+		{ "SB Vag4_0", "SB Vag4_0 Base" }, 		{ "SB Vag4_2", "SB Vag4_2 Base" }, 		{ "SB Vag4_4", "SB Vag4_4 Base" }, 		{ "SB Vag4_6", "SB Vag4_6 Base" },
+		{ "SB Vag5_0", "SB Vag5_0 Base" }, 		{ "SB Vag5_2", "SB Vag5_2 Base" }, 		{ "SB Vag5_4", "SB Vag5_4 Base" }, 		{ "SB Vag5_6", "SB Vag5_6 Base" },
 	};
 
 	struct Width
@@ -181,6 +187,11 @@ namespace
 		{ "anal1_TB", "SB AnusT1", "SB AnusB1" }, { "anal1_LR", "SB AnusL1", "SB AnusR1" },
 		{ "anal2_TB", "SB AnusT2", "SB AnusB2" }, { "anal2_LR", "SB AnusL2", "SB AnusR2" },
 		{ "anal3_TB", "SB AnusT3", "SB AnusB3" }, { "anal3_LR", "SB AnusL3", "SB AnusR3" },
+		{ "vag1_FB", "SB Vag1_0", "SB Vag1_4" }, { "vag1_LR", "SB Vag1_2", "SB Vag1_6" },
+		{ "vag2_FB", "SB Vag2_0", "SB Vag2_4" }, { "vag2_LR", "SB Vag2_2", "SB Vag2_6" },
+		{ "vag3_FB", "SB Vag3_0", "SB Vag3_4" }, { "vag3_LR", "SB Vag3_2", "SB Vag3_6" },
+		{ "vag4_FB", "SB Vag4_0", "SB Vag4_4" }, { "vag4_LR", "SB Vag4_2", "SB Vag4_6" },
+		{ "vag5_FB", "SB Vag5_0", "SB Vag5_4" }, { "vag5_LR", "SB Vag5_2", "SB Vag5_6" },
 	};
 
 	// A-Body's penis chain: tip, middle, base (the _SMP bones are the simulated ones)
@@ -195,7 +206,7 @@ namespace
 		std::array<const char*, 4> deep;
 	};
 	constexpr Opening kVagina{ "vagina", { "Clitoral", "VaginaB", "NPC L Pussy01", "NPC R Pussy01" },
-		{ "VaginaDeep", "VaginaDeep", "VaginaDeep", "VaginaDeep" } };
+		{ "SB Vag2_0 Base", "SB Vag2_2 Base", "SB Vag2_4 Base", "SB Vag2_6 Base" } };
 	constexpr Opening kAnus{ "anus", { "NPC LT Anus1", "NPC RT Anus1", "NPC LB Anus1", "NPC RB Anus1" },
 		{ "SB AnusT2 Base", "SB AnusB2 Base", "SB AnusL2 Base", "SB AnusR2 Base" } };
 

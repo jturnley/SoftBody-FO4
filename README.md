@@ -53,7 +53,12 @@ of its HVA collision NIF (one per genital bone) become the hidden shapes `SoftBo
 `SoftBodyVaginaDeep` and `SoftBodyAnus`. The anal canal is SoftBody's own past its entrance: GT's is a
 pocket 2.5 deep that only its anus ring moved, so it is stretched into a tube 8 deep with three rings
 of four bones (`SB Anus{T,L,B,R}1-3`, at 2, 4 and 6 deep, each sprung to go straight outward up to
-4) and a hidden pad tube at each ring (`SoftBodyAnalCanal`). The pads follow the recipe of a TWB body whose lip and anus
+4) and a hidden pad tube at each ring (`SoftBodyAnalCanal`). So is the vaginal canal past its entrance:
+GT's pocket hangs on two bones that only slide along it (its ring bones carry almost none of the
+mesh), so it becomes a tube 10 deep from the slit, aimed at GT's deepest bone, with five rings of
+eight bones (`SB Vag1-5_0-7`, 3.6 to 9.2 deep) and pads (`SoftBodyVaginalCanal`). The skin round
+both openings rides on the lip and anus bones over the whole vulva patch, easing out to the seam,
+instead of a narrow band at the rim. The pads follow the recipe of a TWB body whose lip and anus
 proxies do collide in FO4: per-vertex shapes (spheres), weighted wholly to their genital bones,
 colliding with everything except each other, hidden by having no shader. GT's per-triangle pads
 (v0.1–v0.2) built in SMP but never collided with A-Body's penis, which is itself per-triangle in
@@ -82,6 +87,9 @@ Status (2026-11-01):
 - v0.7, measured in game (doggy, anal): the anus ring opens from about 1 to 3-4
   across, about the shaft's width, but the visible canal was a short narrow
   pocket the penis passed through. v0.8 replaces it with the deeper tube above.
+- v0.11: the vaginal canal tube and the wider skin stretch (above), after a look
+  at how another FO4 body is built (a deeper canal, rings of eight, broad stretch
+  weights; nothing taken from it).
 - v0.4: the genitals keep their own texture. v0.1-v0.3 shipped their material
   with the skin material's SkinTint flag and root template, so in game FO4
   dressed them in the actor's skin texture. Without the flag they don't take

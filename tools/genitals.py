@@ -41,8 +41,10 @@ WEIGHT_FADE = 1.5        # the vulva's weights go from CBBE's (outer seam) to fi
 OVER_DEPTH = 1.5        # GT triangles further than this from the cut CBBE surface are not "over" it
 EASE = 0.8              # the patch's outer band this wide is eased onto CBBE's surface
 SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's real seams jump much further)
-OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1 ...
-OPENING_FADE = 1.5      # ... fading out over this distance from them
+OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1,
+# fading smoothly to none at the patch's outer seam (v0.1-v0.10: within 1.5 of the edge), so an opening stretches the
+# skin round it over the whole patch rather than a narrow band at the rim. Skin GT left off the genital bones takes
+# the mix of its nearest point on the edge.
 ANUS_PULL = 0.85        # the anal canal's share on the anus bones goes this much of the way to 1
 # The anal canal. GT's is a pocket 2.5 deep and 1 across, moved only by the anus ring; a penis goes 7 deep. Past
 # ANAL_KEEP (its depth from the anus ring, which stays as GT has it) it is stretched into a tube ANAL_DEPTH deep and
@@ -62,10 +64,27 @@ ANAL_PAD_HALF = 0.9          # each ring's pad tube runs this far either side of
 ANAL_PAD_RADIUS = 1.2
 ANAL_PADS = "SoftBodyAnalCanal"
 ANAL_BLEND = 1.0             # from the anus ring (depth 0) the canal's weights go from GT's to the rings' over this
+# The vaginal canal. Past its entrance GT's is a pocket about 6.5 deep from the slit, hanging almost wholly on
+# VaginaDeep1/2, which only slide along it; its ring bones (VaginaD*) carry next to none of the mesh, so nothing
+# opened round a penis, which goes about 8 deep. The pocket (points VAG_DEEP_SHARE or more on the VaginaDeep bones)
+# becomes a tube VAG_DEPTH deep from the slit and VAG_RADIUS round, along the line from the slit to GT's deepest bone
+# (nearly straight up, a little back; the pocket's own long axis leans toward the belly, as it is wide) turned
+# VAG_TILT degrees further back, with rings of VAG_SIDES bones of our own at VAG_RINGS and a pad tube at each
+# (VAG_PADS), as the anal canal has.
+VAG_DEEP_SHARE = 0.5
+VAG_DEPTH = 10.0
+VAG_RADIUS = 0.5
+VAG_TILT = 0.0
+VAG_RINGS = (3.6, 5.0, 6.4, 7.8, 9.2)
+VAG_SIDES = 8                # every 45 degrees, from the front
+VAG_PAD_HALF = 0.7
+VAG_PAD_RADIUS = 1.2
+VAG_PADS = "SoftBodyVaginalCanal"
+VAG_BLEND = 1.0              # from where the pocket starts, its weights go from GT's to the rings' over this
 # GT's genital bones (ported) and the anal canal's own; every other bone's share of a vertex is taken from CBBE's
 # surface instead
 GENITAL_PREFIXES = ("NPC L Pussy", "NPC R Pussy", "Vagina", "Clitoral", "NPC LT Anus", "NPC RT Anus",
-                    "NPC LB Anus", "NPC RB Anus", "Pussy", "SB Anus")
+                    "NPC LB Anus", "NPC RB Anus", "Pussy", "SB Anus", "SB Vag")
 # GT's collision for the openings (its HVA collision NIF): small closed pads, one per genital bone, round the opening,
 # the canal and the anus; a penis is held in the channel between them. Hidden shapes here, collided per vertex.
 COLLISION = {"body_VaginaOut": "SoftBodyVaginaOut", "body_VaginaDeep": "SoftBodyVaginaDeep", "body_anus": "SoftBodyAnus"}
@@ -457,9 +476,52 @@ def lengthen_anal_canal(P, mouth, ax):
     return out, c_keep
 
 
+def rotation_between(a, b):
+    """the rotation taking unit vector a to unit vector b"""
+    v, c = np.cross(a, b), float(a @ b)
+    if np.linalg.norm(v) < 1e-9:
+        return np.eye(3)
+    k = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    return np.eye(3) + k + k @ k / (1 + c)
+
+
+def vaginal_tube(P, mouth, ax, front):
+    """GT's vaginal pocket (positions P, all past its start) made a tube: from where it starts (its centre there, S),
+    VAG_DEPTH - start long along GT's line turned VAG_TILT degrees away from `front`, VAG_RADIUS round, closing at the
+    end as GT's does. Returns the new positions, S, the tube's axis and the start's depth from the mouth."""
+    d = (P - mouth) @ ax
+    perp = P - mouth - np.outer(d, ax)
+    start, dmax = d.min(), d.max()
+    mids, cen, rad = [], [], []
+    edges = np.linspace(start, dmax, 13)
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        sel = (d >= lo) & (d <= hi)
+        if sel.sum() >= 3:
+            c = perp[sel].mean(0)
+            mids.append(d[sel].mean()); cen.append(c); rad.append(np.linalg.norm(perp[sel] - c, axis=1).mean())
+    mids, cen, rad = np.array(mids), np.array(cen), np.array(rad)
+    c_at = lambda x: np.stack([np.interp(x, mids, cen[:, i]) for i in range(3)], -1)
+    r_at = lambda x: np.interp(x, mids, rad)
+    S0 = mouth + start * ax + c_at(start)
+    side = np.cross(ax, front)
+    side /= np.linalg.norm(side)
+    S = S0 - ((S0 - mouth) @ side) * side         # on her midline: the pocket's first slice is lopsided ...
+    back = front - (front @ ax) * ax
+    back = -back / np.linalg.norm(back)
+    t = math.radians(VAG_TILT)
+    ax2 = math.cos(t) * ax + math.sin(t) * back
+    turn = rotation_between(ax, ax2)
+    f = (d - start) / (dmax - start)
+    along = f * (VAG_DEPTH - start)
+    target = np.interp(f, [0, 0.12, 0.85, 1], [r_at(start), VAG_RADIUS, VAG_RADIUS, VAG_RADIUS * rad[-1] / rad.max()])
+    ease = np.interp(f, [0, 0.12], [0, 1])       # ... eased in, so where it meets the entrance doesn't shear
+    out = S0 + np.outer(ease, S - S0) + np.outer(along, ax2) + ((perp - c_at(d)) * (target / r_at(d))[:, None]) @ turn.T
+    return out, S, ax2, float(start)
+
+
 def ring_weights(p, mouth, ax, up, left, centre, rings):
     """rings: [(depth, [(bone, angle)])], deepening. The two rings either side of p's depth share it linearly, and
-    each ring's share goes to the two bones either side of p's angle round the canal (bones 90 degrees apart)"""
+    each ring's share goes to the two bones either side of p's angle round the canal (bones evenly spaced)"""
     d = (p - mouth) @ ax
     r = p - mouth - d * ax - centre
     theta = math.degrees(math.atan2(r @ left, r @ up))
@@ -474,8 +536,9 @@ def ring_weights(p, mouth, ax, up, left, centre, rings):
         mix = [(i, 1 - f), (i + 1, f)]
     w = {}
     for i, share in mix:
+        spacing = 360.0 / len(rings[i][1])
         for bone, a in rings[i][1]:
-            x = max(0.0, 1 - abs((theta - a + 180) % 360 - 180) / 90)
+            x = max(0.0, 1 - abs((theta - a + 180) % 360 - 180) / spacing)
             if x * share > 0:
                 w[bone] = w.get(bone, 0) + x * share
     return w
@@ -572,7 +635,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     edge_dist = d.copy()
     # and from the openings (the slit and anus edges), where the skin should follow the lip bones (OPENING_PULL)
     inner_v = [pfirst[i] for l in loops if l is not outer for i in l]
-    opening_dist, _ = cKDTree(patch_P[inner_v]).query(patch_P)
+    opening_dist, opening_near = cKDTree(patch_P[inner_v]).query(patch_P)
     ease = np.clip(1 - d / EASE, 0, 1)
     ease = ease * ease * (3 - 2 * ease)
     blend_normals = {}
@@ -674,6 +737,35 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
             ring.append((name, a))
         anal_rings.append((depth, ring))
 
+    # the vaginal pocket made a tube (VAG_*), with rings of our own bones
+    vag_w_gt = np.array([sum(x for b, x in w.items() if b.startswith("VaginaDeep")) for w in vagina.weights])
+    pocket = np.nonzero(vag_w_gt >= VAG_DEEP_SHARE)[0]
+    if snap[pocket].any():
+        raise ValueError("the vaginal pocket reaches the rim")
+    vag_mouth = np.mean([T(vagina.bone_position(b)) for b in ("VaginaB1", "Clitoral1")], 0)
+    sel = gen_P[pocket]
+    vag_ax = T(vagina.bone_position("VaginaDeep2")) - vag_mouth
+    vag_ax /= np.linalg.norm(vag_ax)
+    front = vag_mouth - mouth                       # from the anus toward the vulva
+    gen_P[pocket], vag_S, vag_ax2, vag_start = vaginal_tube(sel, vag_mouth, vag_ax, front)
+    vag_up = front - (front @ vag_ax2) * vag_ax2
+    vag_up /= np.linalg.norm(vag_up)
+    vag_left = np.cross(vag_ax2, vag_up)
+    vag_rings, vag_bones = [], {}
+    for i, depth in enumerate(VAG_RINGS):
+        ring = []
+        for k in range(VAG_SIDES):
+            a = 360.0 * k / VAG_SIDES
+            out = across(a, vag_up, vag_left)
+            frame = np.column_stack([out, np.cross(vag_ax2, out), vag_ax2])
+            name = "SB Vag%d_%d" % (i + 1, k)
+            vag_bones[name] = (vag_S + (depth - vag_start) * vag_ax2 + VAG_RADIUS * out, frame)
+            vag_bones[name + " Base"] = vag_bones[name]
+            ring.append((name, a))
+        vag_rings.append((depth - vag_start, ring))
+    in_pocket = np.zeros(len(gen_P), bool)
+    in_pocket[pocket] = True
+
     def surface(points):
         """UVs, body weights and the source (CBBE vertices, barycentrics) of the nearest CBBE surface point"""
         res = closest_on_triangles(points, full.P, full.tris, ctree, cent)
@@ -710,10 +802,19 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                     w[bone] = w.get(bone, 0) + x * (1 - g) * share
         w.update(gw)
         # near the openings, more of the skin rides on GT's lip and anus bones than GT gives it: GT lets those bones
-        # travel up to 25 units, so its 5-30% shares moved the skin a lot; with SoftBody's 3-unit cap the entrance
-        # barely opened while the bones behind it did. The genital share is pulled toward 1 by OPENING_PULL at the
-        # edge, fading out over OPENING_FADE; GT's mix between its genital bones is kept
-        vul_w.append(top4(pull_toward(w, gw, OPENING_PULL * smooth_fade(opening_dist[k], OPENING_FADE))))
+        # travel up to 25 units, so its 5-30% shares moved the skin a lot; with SoftBody's caps the entrance barely
+        # opened while the bones behind it did. The genital share is pulled toward 1 by OPENING_PULL at the edge,
+        # easing to none at the outer seam; GT's mix between its genital bones is kept, and skin GT left off them
+        # takes its nearest edge point's mix
+        reach = opening_dist[k] / max(opening_dist[k] + edge_dist[k], 1e-6)
+        pull = OPENING_PULL * smooth_fade(reach, 1.0)
+        mix = gw if g > 0.05 else {b: x for b, x in body.weights[pverts[inner_v[opening_near[k]]]].items() if is_genital(b)}
+        mt = sum(mix.values())
+        if pull > 0 and mt > 0:
+            w = {b: x * (1 - pull) for b, x in w.items()}
+            for b, x in mix.items():
+                w[b] = w.get(b, 0) + pull * x / mt
+        vul_w.append(top4(w))
     _, gen_body_w, gen_src = surface(gen_P)
     # The parts that must open with the penis ride on their bones like the outer skin does (GT leaves them mostly on
     # the pelvis, its bones travelling far enough to drag them anyway): the labia minora, vestibule and clitoris (2Vagina
@@ -742,11 +843,15 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                 w = {**w, nearest: 1e-3}
                 gw = {nearest: 1e-3}
         w = top4(pull_toward(w, gw, pull))
-        if k >= n_vagina:
-            s = 1 - smooth_fade((gen_P[k] - mouth) @ ax, ANAL_BLEND) if (gen_P[k] - mouth) @ ax > 0 else 0.0
-            if s > 0:
-                rw = ring_weights(gen_P[k], mouth, ax, up, left, anal_centre, anal_rings)
-                w = top4({b: (1 - s) * w.get(b, 0) + s * rw.get(b, 0) for b in set(w) | set(rw)})
+        blend, rw = 0.0, None
+        if k >= n_vagina and (gen_P[k] - mouth) @ ax > 0:
+            blend = 1 - smooth_fade((gen_P[k] - mouth) @ ax, ANAL_BLEND)
+            rw = ring_weights(gen_P[k], mouth, ax, up, left, anal_centre, anal_rings)
+        elif in_pocket[k]:
+            blend = 1 - smooth_fade((gen_P[k] - vag_S) @ vag_ax2, VAG_BLEND)
+            rw = ring_weights(gen_P[k], vag_S, vag_ax2, vag_up, vag_left, np.zeros(3), vag_rings)
+        if blend > 0:
+            w = top4({b: (1 - blend) * w.get(b, 0) + blend * rw.get(b, 0) for b in set(w) | set(rw)})
         gen_w.append(w)
 
     # 5. genital bones, placed and turned by the fit (a skin bind's rotation is the bone's world rotation transposed)
@@ -758,6 +863,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
             if is_genital(b):
                 bones[b] = bone_frame(shape, b)
     bones.update(anal_bones)
+    bones.update(vag_bones)
     used = {b for w in vul_w + gen_w for b in w}
     report = dict(fit_scale=s, fit_rotation_deg=math.degrees(math.acos(max(-1, min(1, (np.trace(R) - 1) / 2)))),
                   fit_median=fit_med, fit_max=fit_max, cut_triangles=len(drop), hole_edge=len(hole_v),
@@ -823,6 +929,21 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         meshes[ANAL_PADS] = dict(P=P, UV=np.zeros((len(P), 2)), tris=tris, weights=w, src=src, fixed_normals={},
                                  hidden=True)
         report["collision_triangles"][ANAL_PADS] = len(tris)
+        # the vaginal canal's: the same, round the tube
+        P, tris, w = [], [], []
+        for depth, ring in vag_rings:
+            p, t, angles = tube(vag_S, vag_ax2, vag_up, vag_left, np.zeros(3),
+                                (depth - VAG_PAD_HALF, depth, depth + VAG_PAD_HALF), VAG_PAD_RADIUS)
+            tris.append(t + sum(len(x) for x in P))
+            P.append(p)
+            for _ in range(3):
+                for a in angles:
+                    w.append({min(ring, key=lambda ba: abs((a - ba[1] + 180) % 360 - 180))[0]: 1.0})
+        P, tris = np.vstack(P), np.vstack(tris)
+        _, _, src = surface(P)
+        meshes[VAG_PADS] = dict(P=P, UV=np.zeros((len(P), 2)), tris=tris, weights=w, src=src, fixed_normals={},
+                                hidden=True)
+        report["collision_triangles"][VAG_PADS] = len(tris)
 
     # 7. the springs' anchors, from GT's node tree; its nodes must sit where its skin binds put the moving bones
     if skeleton_path:
