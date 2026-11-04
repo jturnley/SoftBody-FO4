@@ -97,25 +97,28 @@ VAG_FLOOR_REACH = (0.7, 1.6)
 # easing out between VAG_BACK_REACH of the channel and toward the slit's own edge, which never moves (nor do the ring
 # weights reach it: they ease out within VAG_RIM_EASE of it).
 VAG_BACK = 1.2
-# The visible rims. Opened on GT's few lip and anus bones they showed as diamonds; each opening now has a ring of
-# RIM_SIDES bones of our own at its skin (SB VagRim_*, SB AnusRim_*), which the SoftBodyFO4 plugin moves round the
-# penis. A hole RIM_PENIS across must open in skin that meets CBBE only 1.7 units from the vagina's middle at the sides
-# (1.2 from the anus's), so the skin round it, CBBE's body included, rides on the ring as far as *_RIM_REACH: as much as
-# keeps its area when the hole opens from the rim's radius to RIM_PENIS (sqrt(rho^2 + R^2 - r^2) - rho of the ring's
-# travel), easing to none between the reach's two distances, and between RIM_OUTWARD's two distances out from the
-# opening's plane (the buttocks' and labia's rise). v0.19 opened the vulva alone and its seam with CBBE tore; v0.20 held
-# the seam and the skin between stretched. For the vagina the share gives way to the canal's rings where those take
-# over (on_rings) and fades past VAG_RIM_GATE in. Skin within reach of both openings (the perineum) shares itself
-# between them; only the one in use opens. A thigh bone gives RIM_THIGH of its share (the rims hang from the pelvis, so
-# the skin they take stops following the leg).
-RIM_SIDES = 12
+# The visible rims. Opened on GT's few lip and anus bones they showed as diamonds; each opening now has two rings of
+# RIM_SIDES bones of our own round its hole (SB VagRim_* at the edge, SB VagRimO_* further out; SB AnusRim_*,
+# SB AnusRimO_*), which the SoftBodyFO4 plugin moves round the penis: the inner ring to his thickness, the outer to
+# where it keeps the skin between them its area, so it always stays outside the inner one. Skin inside the inner ring
+# rides on it, between the two on both (by distance), and past the outer ring on the outer by as much as keeps its
+# area as the hole opens to RIM_PENIS, easing to none between *_RIM_REACH's two distances and between RIM_OUTWARD's
+# two distances out from the opening's plane (the buttocks' and labia's rise). CBBE's body round the openings takes
+# the same weights (the vulva meets it only 1.7 units from the vagina's middle at the sides, so opening the vulva
+# alone tore its seam (v0.19) or stretched the skin between (v0.20)). For the vagina the share gives way to the
+# canal's rings where those take over (on_rings) and fades past VAG_RIM_GATE in. Skin within reach of both openings
+# (the perineum) shares itself between them; only the one in use opens. A thigh bone gives RIM_THIGH of its share
+# (the rims hang from the pelvis, so the skin they take stops following the leg).
+RIM_SIDES = 24
 RIM_PENIS = 2.0              # the plugin's fPenisRadius
 VAG_RIM_DEPTH = 0.0          # along the canal from the slit, as VAG_ENTRANCE
 VAG_RIM_RADIUS = 0.5
+VAG_RIM_OUTER = 1.6          # the outer ring's radius (SB VagRimO_*)
 VAG_RIM_REACH = (3.0, 4.5)
 VAG_RIM_GATE = (0.6, 1.4)
 ANAL_RIM_DEPTH = -0.3        # along the anal canal from the anus bones' ring (the pucker sits a little outside it)
 ANAL_RIM_RADIUS = 0.35
+ANAL_RIM_OUTER = 1.2
 ANAL_RIM_REACH = (2.5, 4.0)
 RIM_OUTWARD = (2.0, 3.5)
 RIM_THIGH = 0.5
@@ -855,6 +858,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         return ring
     vrim_c = vag_S + (VAG_RIM_DEPTH - vag_start) * vag_ax2 + vag_centre(VAG_RIM_DEPTH)
     vrim = rim_ring("SB VagRim", vrim_c, vag_ax2, vag_up, vag_left, VAG_RIM_RADIUS)
+    vrim_o = rim_ring("SB VagRimO", vrim_c, vag_ax2, vag_up, vag_left, VAG_RIM_OUTER)
     # the anus rim round the hole itself: the middle of the canal's points at the rim's depth
     adepth = (gen_P[n_vagina:] - mouth) @ ax
     at_rim = gen_P[n_vagina:][np.abs(adepth - ANAL_RIM_DEPTH) < 0.3]
@@ -862,46 +866,50 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         raise ValueError("no anal canal points at the rim's depth")
     arim_c = at_rim.mean(0) + (ANAL_RIM_DEPTH - (at_rim.mean(0) - mouth) @ ax) * ax
     arim = rim_ring("SB AnusRim", arim_c, ax, up, left, ANAL_RIM_RADIUS)
-    def reach(p, c, axis, r0, lo, hi):
-        """p's share of a ring at c (radius r0) opening to RIM_PENIS, and p's depth in along the axis"""
+    arim_o = rim_ring("SB AnusRimO", arim_c, ax, up, left, ANAL_RIM_OUTER)
+    def reach(p, c, axis, r0, r1, lo, hi):
+        """p's shares of an opening's inner ring (radius r0) and outer ring (r1) at c, and p's depth in along the axis"""
         off = p - c
         d = off @ axis
         rho = np.linalg.norm(off - d * axis)
-        keep = 1.0 if rho <= r0 else (math.sqrt(rho * rho + RIM_PENIS ** 2 - r0 * r0) - rho) / (RIM_PENIS - r0)
+        if rho <= r0:
+            inner, outer = 1.0, 0.0
+        elif rho <= r1:
+            inner = (r1 - rho) / (r1 - r0)
+            outer = 1.0 - inner
+        else:
+            travel = lambda x: math.sqrt(x * x + RIM_PENIS ** 2 - r0 * r0) - x
+            inner, outer = 0.0, min(1.0, travel(rho) / travel(r1)) * smoothstep((hi - rho) / (hi - lo))
         out = smoothstep((RIM_OUTWARD[1] + d) / (RIM_OUTWARD[1] - RIM_OUTWARD[0]))
-        return min(1.0, keep) * smoothstep((hi - rho) / (hi - lo)) * out, d
+        return inner * out, outer * out, d
     def donates(bone):
         return RIM_THIGH if "Thigh" in bone else 1.0
+    def gate(d):
+        return smoothstep((VAG_RIM_GATE[1] - d) / (VAG_RIM_GATE[1] - VAG_RIM_GATE[0]))
     def rim_blend(p, w, canal=0.0):
         """w with p's rim shares blended in (canal: how much of p the vaginal canal's rings already carry)"""
-        fv, dv = reach(p, vrim_c, vag_ax2, VAG_RIM_RADIUS, *VAG_RIM_REACH)
-        fv *= smoothstep((VAG_RIM_GATE[1] - dv) / (VAG_RIM_GATE[1] - VAG_RIM_GATE[0])) * (1 - canal)
-        fa, da = reach(p, arim_c, ax, ANAL_RIM_RADIUS, *ANAL_RIM_REACH)
-        fa *= smoothstep((VAG_RIM_GATE[1] - da) / (VAG_RIM_GATE[1] - VAG_RIM_GATE[0]))
-        total = fv + fa
+        vi, vo, dv = reach(p, vrim_c, vag_ax2, VAG_RIM_RADIUS, VAG_RIM_OUTER, *VAG_RIM_REACH)
+        g = gate(dv) * (1 - canal)
+        ai, ao, da = reach(p, arim_c, ax, ANAL_RIM_RADIUS, ANAL_RIM_OUTER, *ANAL_RIM_REACH)
+        h = gate(da)
+        shares = [vi * g, vo * g, ai * h, ao * h]
+        total = sum(shares)
         if total <= 1e-3:
             return w
         if total > 1:
-            fv, fa = fv / total, fa / total
-        f = fv + fa
-        given = {b: x * f * donates(b) for b, x in w.items()}
-        rest = {b: x - given[b] for b, x in w.items()}
+            shares = [x / total for x in shares]
+            total = 1.0
+        given = {b: x * total * donates(b) for b, x in w.items()}
         taken = sum(given.values())
         if taken <= 1e-3:
             return w
-        # room for two ring bones: the rest keeps its two largest (CBBE's crotch carries up to four)
-        top = sorted(rest.items(), key=lambda kv: -kv[1])[:2]
-        kept = sum(x for _, x in top)
-        out = {b: x * (1 - taken) / kept for b, x in top} if kept > 1e-6 else {}
-        ring_w = {}
-        for share, c, axis, u_, l_, ring in ((fv, vrim_c, vag_ax2, vag_up, vag_left, vrim), (fa, arim_c, ax, up, left, arim)):
+        out = {b: x - given[b] for b, x in w.items()}
+        for share, c, axis, u_, l_, ring in zip(shares, (vrim_c, vrim_c, arim_c, arim_c), (vag_ax2, vag_ax2, ax, ax),
+                                                (vag_up, vag_up, up, up), (vag_left, vag_left, left, left),
+                                                (vrim, vrim_o, arim, arim_o)):
             if share > 0:
                 for b, x in ring_weights(p, c, axis, u_, l_, np.zeros(3), [(0.0, ring)]).items():
-                    ring_w[b] = ring_w.get(b, 0) + share / f * x
-        top_ring = sorted(ring_w.items(), key=lambda kv: -kv[1])[:2]
-        rt = sum(x for _, x in top_ring)
-        for b, x in top_ring:
-            out[b] = out.get(b, 0) + taken * x / rt
+                    out[b] = out.get(b, 0) + taken * share / total * x
         return top4(out)
     # the anal canal's first ring is the rim's (in place of GT's four anus bones)
     anal_rings[0] = (ANAL_RIM_DEPTH, arim)
@@ -1016,7 +1024,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     cbbe.rim_weights = {}
     for v in near:
         w = rim_blend(cbbe.P[v], cbbe.W[v])
-        if any(b.startswith(("SB VagRim_", "SB AnusRim_")) for b in w):
+        if any(b.startswith(("SB VagRim", "SB AnusRim")) for b in w):
             cbbe.rim_weights[int(v)] = w
     used = {b for w in vul_w + gen_w for b in w}
     report = dict(fit_scale=s, fit_rotation_deg=math.degrees(math.acos(max(-1, min(1, (np.trace(R) - 1) / 2)))),

@@ -40,7 +40,12 @@ namespace
 		float maxStep = 6.0F;  // the most he is moved in one step
 		// the openings' rims, placed round the penis (game units, at his scale 1)
 		bool  driveOpenings = true;
-		float penisRadius = 2.0F;     // the shaft's (A-Body's: 2.2 at the root, 1.8 two thirds along)
+		float penisRadius = 2.2F;     // the shaft's at its root (A-Body's: 2.2)
+		float penisRadiusTip = 1.8F;  // and at its head end (A-Body's: 1.8 two thirds along)
+		float rimMargin = 0.15F;      // how far clear of him the hole opens
+		bool  bendPenis = true;       // turn his penis at its root to point through the opening in use
+		float bendMax = 20.0F;        // degrees, at most
+		float bendSmoothing = 0.1F;   // seconds: how quickly the bend follows
 		float penisTipLength = 1.5F;  // the rounded tip: the radius grows from 0 at its end to the shaft's over this
 		float penisTipExtra = 0.75F;  // the penis's end beyond its last bone (Penis_05_SMP; A-Body's: 0.73)
 		float penisBaseExtra = 4.0F;  // the shaft carried on behind its first bone (Penis_01_SMP), into his body, so
@@ -71,6 +76,11 @@ namespace
 			maxStep = f("fAlignMaxStep", maxStep);
 			driveOpenings = i("bDriveOpenings", 1) != 0;
 			penisRadius = f("fPenisRadius", penisRadius);
+			penisRadiusTip = f("fPenisRadiusTip", penisRadiusTip);
+			rimMargin = f("fRimMargin", rimMargin);
+			bendPenis = i("bBendPenis", 1) != 0;
+			bendMax = std::clamp(f("fBendMax", bendMax), 0.0F, 45.0F);
+			bendSmoothing = std::max(0.0F, f("fBendSmoothing", bendSmoothing));
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
 			penisTipExtra = f("fPenisTipExtra", penisTipExtra);
 			penisBaseExtra = std::max(0.0F, f("fPenisBaseExtra", penisBaseExtra));
@@ -88,6 +98,7 @@ namespace
 	// ---------------------------------------------------------------- small vector maths
 
 	float Dot(const V& a, const V& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+	V     Cross(const V& a, const V& b) { return V(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x); }
 	V     Mul(const V& a, float s) { return V(a.x * s, a.y * s, a.z * s); }
 	V     Add(const V& a, const V& b) { return V(a.x + b.x, a.y + b.y, a.z + b.z); }
 	V     Sub(const V& a, const V& b) { return V(a.x - b.x, a.y - b.y, a.z - b.z); }
@@ -226,8 +237,10 @@ namespace
 		{ "anal1_TB", "SB AnusT1", "SB AnusB1" }, { "anal1_LR", "SB AnusL1", "SB AnusR1" },
 		{ "anal2_TB", "SB AnusT2", "SB AnusB2" }, { "anal2_LR", "SB AnusL2", "SB AnusR2" },
 		{ "anal3_TB", "SB AnusT3", "SB AnusB3" }, { "anal3_LR", "SB AnusL3", "SB AnusR3" },
-		{ "vagRim_FB", "SB VagRim_0", "SB VagRim_6" }, { "vagRim_LR", "SB VagRim_3", "SB VagRim_9" },
-		{ "anusRim_TB", "SB AnusRim_0", "SB AnusRim_6" }, { "anusRim_LR", "SB AnusRim_3", "SB AnusRim_9" },
+		{ "vagRim_FB", "SB VagRim_0", "SB VagRim_12" }, { "vagRim_LR", "SB VagRim_6", "SB VagRim_18" },
+		{ "anusRim_TB", "SB AnusRim_0", "SB AnusRim_12" }, { "anusRim_LR", "SB AnusRim_6", "SB AnusRim_18" },
+		{ "vagRimO_FB", "SB VagRimO_0", "SB VagRimO_12" }, { "vagRimO_LR", "SB VagRimO_6", "SB VagRimO_18" },
+		{ "anusRimO_TB", "SB AnusRimO_0", "SB AnusRimO_12" }, { "anusRimO_LR", "SB AnusRimO_6", "SB AnusRimO_18" },
 		{ "vagIn_FB", "SB VagIn_0", "SB VagIn_6" }, { "vagIn_LR", "SB VagIn_3", "SB VagIn_9" },
 		{ "vag1_FB", "SB Vag1_0", "SB Vag1_6" }, { "vag1_LR", "SB Vag1_3", "SB Vag1_9" },
 		{ "vag2_FB", "SB Vag2_0", "SB Vag2_6" }, { "vag2_LR", "SB Vag2_3", "SB Vag2_9" },
@@ -238,6 +251,8 @@ namespace
 
 	// A-Body's penis chain: tip, middle, base (the _SMP bones are the simulated ones)
 	constexpr const char* kPenis[] = { "Penis_05_SMP", "Penis_03_SMP", "Penis_01_SMP" };
+	// where the plugin bends him: the root of A-Body's penis chain, above the animated Penis_00
+	constexpr const char* kBendNode = "Penis_00_Offset";
 
 	// The openings, from her kinematic anchors (they hang still off her pelvis): the centre of the rim, and a point
 	// down the canal for its axis
@@ -248,9 +263,9 @@ namespace
 		std::array<const char*, 4> deep;
 	};
 	// each: its visible rim's ring (the vagina's at the back of the slit, where a real entrance is) and a canal ring
-	constexpr Opening kVagina{ "vagina", { "SB VagRim_0 Base", "SB VagRim_3 Base", "SB VagRim_6 Base", "SB VagRim_9 Base" },
+	constexpr Opening kVagina{ "vagina", { "SB VagRim_0 Base", "SB VagRim_6 Base", "SB VagRim_12 Base", "SB VagRim_18 Base" },
 		{ "SB Vag2_0 Base", "SB Vag2_3 Base", "SB Vag2_6 Base", "SB Vag2_9 Base" } };
-	constexpr Opening kAnus{ "anus", { "SB AnusRim_0 Base", "SB AnusRim_3 Base", "SB AnusRim_6 Base", "SB AnusRim_9 Base" },
+	constexpr Opening kAnus{ "anus", { "SB AnusRim_0 Base", "SB AnusRim_6 Base", "SB AnusRim_12 Base", "SB AnusRim_18 Base" },
 		{ "SB AnusT2 Base", "SB AnusB2 Base", "SB AnusL2 Base", "SB AnusR2 Base" } };
 
 	// her body's physics files, as the NIF names them (relative to Data)
@@ -366,19 +381,27 @@ namespace
 	// The skin on them opens round the shaft and closes behind it. Nothing else of hers is moved.
 	struct Rim
 	{
-		const char* name;
+		std::string name;
 		int         opening;  // 0 the vagina, 1 the anus: its centre gives the way out, and the edge's place
-		float       share{ 1.0F };  // of its edge's move: the hood (Clitoral1) barely lifts
+		bool        outer{ false };  // an outer ring's: kept outside the inner, where the skin between keeps its area
 	};
-	constexpr Rim kRims[] = {
-		// GT's lip and anus bones are no longer driven (v0.21): their skin rides mostly on the rims now, and moved on
-		// their own they folded the skin between them and the rims
-		{ "SB VagIn_0", 0 }, { "SB VagIn_1", 0 }, { "SB VagIn_2", 0 }, { "SB VagIn_3", 0 }, { "SB VagIn_4", 0 }, { "SB VagIn_5", 0 },
-		{ "SB VagIn_6", 0 }, { "SB VagIn_7", 0 }, { "SB VagIn_8", 0 }, { "SB VagIn_9", 0 }, { "SB VagIn_10", 0 }, { "SB VagIn_11", 0 },
-		// the visible rims: 12 bones round each hole, at the skin
-		{ "SB VagRim_0", 0 }, { "SB VagRim_1", 0 }, { "SB VagRim_2", 0 }, { "SB VagRim_3", 0 }, { "SB VagRim_4", 0 }, { "SB VagRim_5", 0 }, { "SB VagRim_6", 0 }, { "SB VagRim_7", 0 }, { "SB VagRim_8", 0 }, { "SB VagRim_9", 0 }, { "SB VagRim_10", 0 }, { "SB VagRim_11", 0 },
-		{ "SB AnusRim_0", 1 }, { "SB AnusRim_1", 1 }, { "SB AnusRim_2", 1 }, { "SB AnusRim_3", 1 }, { "SB AnusRim_4", 1 }, { "SB AnusRim_5", 1 }, { "SB AnusRim_6", 1 }, { "SB AnusRim_7", 1 }, { "SB AnusRim_8", 1 }, { "SB AnusRim_9", 1 }, { "SB AnusRim_10", 1 }, { "SB AnusRim_11", 1 },
-	};
+	// GT's lip and anus bones are no longer driven (v0.21): moved on their own they folded the skin round the rims.
+	// Each visible hole has two rings of 24 (v0.22; 12 showed as a polygon), and the vagina its entrance ring of 12.
+	const std::vector<Rim>& Rims()
+	{
+		static const std::vector<Rim> rims = [] {
+			std::vector<Rim> r;
+			for (int k = 0; k < 12; ++k) r.push_back({ std::format("SB VagIn_{}", k), 0 });
+			for (int k = 0; k < 24; ++k) {
+				r.push_back({ std::format("SB VagRim_{}", k), 0 });
+				r.push_back({ std::format("SB VagRimO_{}", k), 0, true });
+				r.push_back({ std::format("SB AnusRim_{}", k), 1 });
+				r.push_back({ std::format("SB AnusRimO_{}", k), 1, true });
+			}
+			return r;
+		}();
+		return rims;
+	}
 
 	struct Driven
 	{
@@ -386,22 +409,147 @@ namespace
 		V                             rest;  // its own local position, as the NIF has it
 		V                             now;
 		int                           opening{ 0 };
-		float                         share{ 1.0F };
+		bool                          outer{ false };
+		bool                          edge{ false };  // a visible hole's inner ring: its rest radius is the hole's
 	};
 	std::unordered_map<std::string, Driven> driven;  // under heldLock
 
 	// on the main thread, from Resolve: a rim bone's rest is taken once, when it is first seen
 	void HoldRim(RE::NiAVObject* a_her, const Rim& a_rim)
 	{
-		auto* node = Find(a_her, a_rim.name);
+		auto* node = Find(a_her, a_rim.name.c_str());
 		if (!node) {
 			return;
 		}
 		auto& d = driven[a_rim.name];
 		if (d.node.get() != node) {
-			d = Driven{ RE::NiPointer<RE::NiAVObject>(node), node->local.translate, node->local.translate, a_rim.opening, a_rim.share };
-			REX::INFO("rim {}: rest ({:.3f}, {:.3f}, {:.3f})", a_rim.name, d.rest.x, d.rest.y, d.rest.z);
+			d = Driven{ RE::NiPointer<RE::NiAVObject>(node), node->local.translate, node->local.translate, a_rim.opening,
+				a_rim.outer, !a_rim.outer && a_rim.name.find("Rim_") != std::string::npos };
+			if (a_rim.name.ends_with("_0")) {
+				REX::INFO("rim {}: rest ({:.3f}, {:.3f}, {:.3f})", a_rim.name, d.rest.x, d.rest.y, d.rest.z);
+			}
 		}
+	}
+
+	// ---------------------------------------------------------------- his penis, turned at its root through the opening
+	// The aligner places him once a scene; through a stroke the animation swings his penis 10-20 degrees, so his line
+	// passes up to a unit off the opening's centre. Here, every few milliseconds, his penis is turned at its root
+	// (kBendNode, which nothing animates) so his line runs through the centre of the opening in use, by at most
+	// fBendMax. FO4 keeps a node's rotation as the map from its parent's frame to its own (see ToLocal), so turning
+	// the node by Q (in its parent's frame) takes local.rotate * Q^T.
+	struct Bend
+	{
+		RE::NiPointer<RE::NiAVObject> node;
+		RE::NiMatrix3                 base;     // its rotation as the game (or 4Stim) last left it
+		RE::NiMatrix3                 written;  // what was last written
+		V                             turn;     // the turn applied, in its parent's frame: axis times angle (radians)
+		std::uint32_t                 rebased{ 0 };
+	} bend;
+
+	RE::NiMatrix3 AxisAngle(const V& a_turn)
+	{
+		RE::NiMatrix3 m;
+		const float   angle = Len(a_turn);
+		const V       k = angle > 1e-7F ? Mul(a_turn, 1.0F / angle) : V(1, 0, 0);
+		const float   c = std::cos(angle), s = std::sin(angle), t = 1 - c;
+		const float   a[3] = { k.x, k.y, k.z };
+		for (int i = 0; i < 3; ++i) {
+			for (int j = 0; j < 3; ++j) {
+				m.entry[i][j] = t * a[i] * a[j] + (i == j ? c : 0.0F);
+			}
+		}
+		m.entry[0][1] -= s * k.z; m.entry[0][2] += s * k.y;
+		m.entry[1][0] += s * k.z; m.entry[1][2] -= s * k.x;
+		m.entry[2][0] -= s * k.y; m.entry[2][1] += s * k.x;
+		return m;
+	}
+
+	bool Same(const RE::NiMatrix3& a, const RE::NiMatrix3& b)
+	{
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+				if (std::abs(a.entry[i][j] - b.entry[i][j]) > 1e-5F) return false;
+		return true;
+	}
+
+	// a times b transposed
+	RE::NiMatrix3 TimesTransposed(const RE::NiMatrix3& a, const RE::NiMatrix3& b)
+	{
+		RE::NiMatrix3 m;
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+				m.entry[i][j] = a.entry[i][0] * b.entry[j][0] + a.entry[i][1] * b.entry[j][1] + a.entry[i][2] * b.entry[j][2];
+		return m;
+	}
+
+	// a world direction in a node's own frame (no scale)
+	V DirIn(const RE::NiAVObject* a_node, const V& a_world)
+	{
+		const auto& e = a_node->world.rotate.entry;
+		return V(e[0][0] * a_world.x + e[0][1] * a_world.y + e[0][2] * a_world.z,
+			e[1][0] * a_world.x + e[1][1] * a_world.y + e[1][2] * a_world.z,
+			e[2][0] * a_world.x + e[2][1] * a_world.y + e[2][2] * a_world.z);
+	}
+
+	void ReleaseBend()
+	{
+		if (auto* node = bend.node.get(); node && Same(node->local.rotate, bend.written)) {
+			node->local.rotate = bend.base;
+		}
+		bend = Bend{};
+	}
+
+	// under heldLock, from DriveRims
+	void BendPenis(float a_dt, bool a_penis, const V& a_base, const V& a_u, float a_length, const V* a_centre,
+		const bool* a_haveCentre, Act a_act)
+	{
+		auto* node = Settings::bendPenis ? Held("him", kBendNode) : nullptr;
+		auto* parent = node ? node->parent : nullptr;
+		if (!parent) {
+			return;
+		}
+		if (bend.node.get() != node) {
+			ReleaseBend();
+			bend.node = RE::NiPointer<RE::NiAVObject>(node);
+			bend.base = bend.written = node->local.rotate;
+			REX::INFO("bend: turning him at {}", kBendNode);
+		} else if (!Same(node->local.rotate, bend.written)) {
+			bend.base = node->local.rotate;  // the game or 4Stim set it since: turn from there
+			if (++bend.rebased % 500 == 1) {
+				REX::INFO("bend: {} was set by something else ({} times)", kBendNode, bend.rebased);
+			}
+		}
+		// what the turn should become: by how much more it must turn to put his line through the centre
+		V    want = bend.turn;
+		bool aiming = false;
+		const int o = a_act == Act::kVaginal ? 0 : a_act == Act::kAnal ? 1 : -1;
+		if (a_penis && o >= 0 && a_haveCentre[o]) {
+			const V     pivot = node->world.translate;
+			const V     rel = Sub(a_centre[o], a_base);
+			const float along = Dot(rel, a_u);
+			const V     q = Add(a_base, Mul(a_u, along));      // his line's nearest to the centre
+			const V     now = Sub(q, pivot), to = Sub(a_centre[o], pivot);
+			const float scale = node->world.scale;
+			if (along > -Settings::penisBaseExtra * scale && along < a_length + 6.0F * scale && Len(now) > 1.0F && Len(to) > 1.0F) {
+				const V     axis = Cross(Unit(now), Unit(to));
+				const float s = std::min(1.0F, Len(axis));
+				if (s > 1e-5F) {
+					want = Add(bend.turn, DirIn(parent, Mul(Unit(axis), std::asin(s))));
+					aiming = true;
+				}
+			}
+		}
+		if (!aiming) {
+			want = V(0, 0, 0);
+		}
+		const float most = Settings::bendMax * 0.0174533F;
+		if (Len(want) > most) {
+			want = Mul(want, most / Len(want));
+		}
+		const float follow = Settings::bendSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::bendSmoothing) : 1.0F;
+		bend.turn = Add(bend.turn, Mul(Sub(want, bend.turn), follow));
+		bend.written = TimesTransposed(bend.base, AxisAngle(bend.turn));
+		node->local.rotate = bend.written;
 	}
 
 	// off the main thread, every few milliseconds, under heldLock
@@ -440,36 +588,52 @@ namespace
 		const Act act = currentAct.load();
 		const bool open[2] = { act != Act::kAnal, act != Act::kVaginal };
 		const float follow = Settings::rimSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::rimSmoothing) : 1.0F;
-		const float radius = Settings::penisRadius * scale;
 		const float tipLength = Settings::penisTipLength * scale;
-		// Each opening as a whole: where the penis passes its centre, how thick it is there, and how far off the
-		// centre. The ring goes round the penis: its centre moves onto his line (up to fRimFollow) and it opens to his
-		// thickness there. v0.20 pushed each bone out from his line on its own, so a line a unit off the centre (as he
+		const float shaft = Len(Sub(tip ? tip->world.translate : b, b));
+		// his thickness at a point `along` his line from the base bone: thinning from the root to the head (A-Body's
+		// measures 2.2 at the root, 1.8 two-thirds along), rounded off over the tip
+		auto thickness = [&](float a_along) {
+			const float f = shaft > 0 ? std::clamp(a_along / shaft, 0.0F, 1.0F) : 0.0F;
+			const float r = (Settings::penisRadius + (Settings::penisRadiusTip - Settings::penisRadius) * f) * scale;
+			const float fromTip = length - a_along;
+			return fromTip >= tipLength ? r : r * std::sqrt(std::max(0.0F, fromTip) / tipLength);
+		};
+		// Each opening as a whole: where the penis passes its centre, how thick he is there, and how far off the
+		// centre. Its rings go round him: their centre moves onto his line (up to fRimFollow) and they open to his
+		// thickness. v0.20 pushed each bone out from his line on its own, so a line a unit off the centre (as he
 		// swings through a stroke) pushed both sides of the ring the same way and it shut.
 		bool  active[2]{};
 		V     shift[2];
 		float grow[2]{};
+		float edgeRest[2]{};  // the hole's radius at rest (its inner ring's)
+		int   edgeCount[2]{};
+		for (auto& [name, d] : driven) {
+			if (d.edge && d.node && d.node->parent && haveCentre[d.opening]) {
+				const V off = Sub(ToWorld(d.node->parent, d.rest), centre[d.opening]);
+				edgeRest[d.opening] += Len(Sub(off, Mul(u, Dot(off, u))));
+				++edgeCount[d.opening];
+			}
+		}
 		for (int o = 0; o < 2; ++o) {
+			edgeRest[o] = edgeCount[o] ? edgeRest[o] / edgeCount[o] : Settings::rimEdge * scale;
 			if (!penis || !open[o] || !haveCentre[o]) {
 				continue;
 			}
 			const V     rel = Sub(centre[o], b);
 			const float along = Dot(rel, u);
-			const float fromTip = length - along;
-			if (along <= -Settings::penisBaseExtra * scale || fromTip <= 0) {
+			if (along <= -Settings::penisBaseExtra * scale || along >= length) {
 				continue;
 			}
-			const float r = fromTip >= tipLength ? radius : radius * std::sqrt(fromTip / tipLength);
+			const float r = thickness(along) + Settings::rimMargin * scale;
 			const V     off = Sub(Mul(u, along), rel);          // the centre to his line, across it
 			const float dist = Len(off);
 			if (dist > r + Settings::rimCatch * scale) {
 				continue;
 			}
-			const float most = Settings::rimFollow * scale;
-			const float moved = std::min(dist, most);
+			const float moved = std::min(dist, Settings::rimFollow * scale);
 			active[o] = true;
 			shift[o] = dist > 0 ? Mul(off, moved / dist) : V(0, 0, 0);
-			grow[o] = r + (dist - moved);                       // what the ring must clear from its moved centre
+			grow[o] = r + (dist - moved);                       // what the hole must clear from its moved centre
 		}
 		for (auto& [name, d] : driven) {
 			auto* node = d.node.get();
@@ -479,23 +643,29 @@ namespace
 			}
 			V target = d.rest;
 			if (active[d.opening]) {
-				// A bone can sit well out from the edge of the opening it carries (GT's lip bones are about 3 from the
-				// slit's middle, the slit itself closed): the edge, fRimEdge from the centre on the bone's side, is
-				// what must clear the penis, and the bone moves as far as it does
 				const V     w0 = ToWorld(parent, d.rest);
 				const V     off = Sub(w0, centre[d.opening]);
 				const float axial = Dot(off, u);
 				const V     across = Sub(off, Mul(u, axial));
 				const float restDist = Len(across);
 				const V     out = restDist > 1e-4F ? Mul(across, 1.0F / restDist) : V(0, 0, 0);
-				const float edge = std::min(restDist, Settings::rimEdge * scale);
-				const float widen = std::max(0.0F, grow[d.opening] - edge);
-				const V     placed = Add(Add(centre[d.opening], shift[d.opening]), Add(Mul(out, restDist + widen), Mul(u, axial)));
-				target = ToLocal(parent, Add(w0, Mul(Sub(placed, w0), d.share)));
+				const float g = grow[d.opening];
+				float       dist;
+				if (d.outer) {
+					// where the skin between it and the hole keeps its area: always outside the inner ring
+					const float r0 = edgeRest[d.opening];
+					dist = std::sqrt(restDist * restDist + std::max(0.0F, g * g - r0 * r0));
+				} else {
+					// the edge, fRimEdge from the centre on the bone's side, is what must clear him
+					dist = restDist + std::max(0.0F, g - std::min(restDist, Settings::rimEdge * scale));
+				}
+				const V placed = Add(Add(centre[d.opening], shift[d.opening]), Add(Mul(out, dist), Mul(u, axial)));
+				target = ToLocal(parent, placed);
 			}
 			d.now = Add(d.now, Mul(Sub(target, d.now), follow));
 			node->local.translate = d.now;
 		}
+		BendPenis(a_dt, penis, b, u, length, centre, haveCentre, act);
 	}
 
 	// On the main thread: find her and him in the thread and hold their nodes
@@ -530,8 +700,9 @@ namespace
 			for (const auto* name : kPenis) {
 				hold("him", him, name);
 			}
+			hold("him", him, kBendNode);
 			if (her) {
-				for (const auto& r : kRims) {
+				for (const auto& r : Rims()) {
 					HoldRim(her, r);
 				}
 			}
@@ -554,6 +725,7 @@ namespace
 			}
 		}
 		driven.clear();
+		ReleaseBend();
 	}
 
 	// Off the main thread, at whatever point of the frame the timer wakes: as the SMP wireframe sees the bones, after
@@ -993,7 +1165,7 @@ namespace
 			return;
 		}
 		if (off <= Settings::tolerance || a.step >= Settings::maxSteps) {
-			if (a.stage == Stage::kPosition && angle > kAngleTolerance && alignment) {
+			if (a.stage == Stage::kPosition && angle > kAngleTolerance && alignment && !Settings::bendPenis) {  // else BendPenis turns him
 				a.angleDir = Unit(g);
 				a.angleBefore = angle;
 				a.stage = Stage::kBendProbe;

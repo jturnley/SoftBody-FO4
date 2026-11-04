@@ -150,7 +150,7 @@ CANAL_PREFIXES = ("SB Anus", "SB Vag")
 # in every XML, their springs dropped. GT's lips and anus rim, SoftBody's vaginal entrance ring and both visible rims.
 DRIVEN_BONES = ("Clitoral1", "VaginaB1", "NPC L Pussy02", "NPC R Pussy02",
                 "NPC LT Anus2", "NPC RT Anus2", "NPC LB Anus2", "NPC RB Anus2")
-DRIVEN_PREFIXES = ("SB VagIn_", "SB VagRim_", "SB AnusRim_")
+DRIVEN_PREFIXES = ("SB VagIn_", "SB VagRim_", "SB VagRimO_", "SB AnusRim_", "SB AnusRimO_")
 
 
 def driven(bone):
