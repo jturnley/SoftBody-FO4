@@ -56,7 +56,8 @@ of four bones (`SB Anus{T,L,B,R}1-3`, at 2, 4 and 6 deep, each sprung to go stra
 4) and a hidden pad tube at each ring (`SoftBodyAnalCanal`). So is the vaginal canal past its entrance:
 GT's pocket hangs on two bones that only slide along it (its ring bones carry almost none of the
 mesh), so it becomes a tube 10 deep from the slit, aimed at GT's deepest bone, with five rings of
-twelve bones (`SB Vag1-5_0-11`, 3.6 to 9.2 deep) and pads (`SoftBodyVaginalCanal`). A ring of
+twelve bones (`SB Vag1-5_0-11`, 3.6 to 9.2 deep), leaning 12 degrees toward her front past the
+entrance (between a missionary and a doggy penis's line), and pads (`SoftBodyVaginalCanal`). A ring of
 twelve more (`SB VagIn_0-11`) sits in GT's narrow entrance channel, 1.2 in, so the entrance closes
 round a shaft as a collar does. As real entrances do, it sits at the back of the slit (GT's was near
 its middle): the channel and the top of the canal are moved 1.2 back, easing out deeper in and into
@@ -149,7 +150,9 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   the plugin corrects his 4Stim alignment offset instead. It measures, over a couple of seconds of
   the loop, where the penis line crosses the opening in use (vaginal or anal sex), moves him, and
   measures again until it is within `fAlignTolerance`. 4Stim saves the offset with the scene, so
-  a scene is aligned once. Keys (game in front): **F11** align now, **Shift+F11** auto-align on/off,
+  a scene is aligned once. If the penis then runs at an angle to the canal (more than 6 degrees;
+  missionary: about 20), it tries two steps of 4Stim's penis bend to learn its effect, sets the bend
+  that lines it up, and centres the entrance again. Keys (game in front): **F11** align now, **Shift+F11** auto-align on/off,
   **Ctrl+F11** back to the scene's own alignment.
 - **Tuning log.** With `bLogSamples=1` it logs her genital bones and the penis every 25 ms to
   `Documents\My Games\Fallout4\F4SE\SoftBodyFO4.log` (what `probe/` did).

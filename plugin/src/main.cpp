@@ -6,7 +6,9 @@
 //  2. aligns the penis with the opening in use. GT gets there with a bendable penis that her collision steers in;
 //     4Stim's penis is rigid, so his 4Stim alignment offset is corrected instead (4Stim saves it with the scene):
 //     where the penis line crosses the opening is measured over a couple of seconds of the loop, he is moved, and it
-//     is measured again, until it is within the tolerance.
+//     is measured again, until it is within the tolerance. Then, if the penis runs at an angle to the canal (missionary:
+//     about 20 degrees), 4Stim's penis bend is tried a step or two to learn its effect, set to match, and the entrance
+//     centred again.
 //  3. optionally logs her genital bones and the penis (what was SoftBodyProbe), for tuning.
 // Settings: Data\F4SE\Plugins\SoftBodyFO4.ini. Keys, with the game in front: F11 align now, Shift+F11 auto-align on
 // or off, Ctrl+F11 back to the scene's own alignment.
@@ -519,6 +521,21 @@ namespace
 		return Dot(Sub(ToLocal(pelvis, tip->world.translate), rim), Unit(Sub(deep, rim)));
 	}
 
+	// The penis's direction across the canal (the sine of its angle to it, as a vector). Called with heldLock held.
+	std::optional<V> AngleError(const V& a_axis)
+	{
+		auto* pelvis = Held("her", "Pelvis_skin");
+		auto* tip = Held("him", kPenis[0]);
+		auto* base = Held("him", kPenis[2]);
+		if (!pelvis || !tip || !base) {
+			return std::nullopt;
+		}
+		const V u = Unit(Sub(ToLocal(pelvis, tip->world.translate), ToLocal(pelvis, base->world.translate)));
+		return Sub(u, Mul(a_axis, Dot(u, a_axis)));
+	}
+
+	constexpr float kAngleTolerance = 6.0F;  // degrees
+
 	enum class Phase
 	{
 		kOff,
@@ -531,8 +548,17 @@ namespace
 	struct Seen
 	{
 		std::vector<V>     errors;
+		std::vector<V>     angles;
 		std::vector<float> depths;
 		V                  axis;
+	};
+
+	// the alignment's stages: centre the entrance; try a bend; set the bend; centre again
+	enum class Stage
+	{
+		kPosition,
+		kBendProbe,
+		kRecentre
 	};
 
 	struct Aligner
@@ -550,6 +576,12 @@ namespace
 		bool              haveJ{ false };
 		M3                J;  // his offset (x, y, z) -> the crossing's move in her pelvis frame
 		float             first{ 0.0F };
+		std::vector<V>    angles;
+		Stage             stage{ Stage::kPosition };
+		float             bendStart{ 0.0F };
+		float             bendProbe{ 0.0F };
+		V                 angleDir;            // the way the penis was off the canal's line, before the bend
+		float             angleBefore{ 0.0F };  // degrees, along angleDir
 		bool              detect{ false };      // working out the act from the penis first
 		bool              alignAfter{ false };  // ... then aligning to it
 		Seen              seenVagina, seenAnus;
@@ -616,6 +648,9 @@ namespace
 						seen->errors.push_back(*e);
 						seen->depths.push_back(*d);
 						seen->axis = ax;
+						if (auto g = AngleError(ax)) {
+							seen->angles.push_back(*g);
+						}
 					}
 				}
 				if (auto* pelvis = Held("her", "Pelvis_skin")) {
@@ -629,6 +664,9 @@ namespace
 				if (auto e = CrossError(*a.target, &ax)) {
 					a.errors.push_back(*e);
 					a.axis = ax;
+					if (auto g = AngleError(ax)) {
+						a.angles.push_back(*g);
+					}
 					if (auto* pelvis = Held("her", "Pelvis_skin")) {
 						const auto& r = pelvis->world.rotate;
 						for (int i = 0; i < 3; ++i)
@@ -641,6 +679,7 @@ namespace
 		if (a.phase == Phase::kSettle) {
 			a.phase = Phase::kMeasure;
 			a.errors.clear();
+			a.angles.clear();
 			a.until = Clock::now() + kMeasure;
 			return;
 		}
@@ -655,7 +694,7 @@ namespace
 				std::nth_element(d.begin(), d.begin() + d.size() / 2, d.end());
 				a_depth = d[d.size() / 2];
 				a_off = Len(Median(a_seen.errors));
-				return a_depth > -1.0F && a_off < 3.5F;
+				return a_depth > -1.0F && a_off < 6.0F;
 			};
 			float      offV = 0, depthV = 0, offA = 0, depthA = 0;
 			const bool v = judge(a.seenVagina, offV, depthV);
@@ -681,6 +720,7 @@ namespace
 			// this measurement is the alignment's first
 			Seen& seen = act == Act::kVaginal ? a.seenVagina : a.seenAnus;
 			a.errors = std::move(seen.errors);
+			a.angles = std::move(seen.angles);
 			a.axis = seen.axis;
 		}
 		if (a.errors.size() < 20) {
@@ -710,14 +750,71 @@ namespace
 					for (int j = 0; j < 3; ++j) a.J.m[i][j] += m[i] * d[j] / dd;
 			}
 		}
-		if (off <= Settings::tolerance) {
-			Notify(a.step == 0 ? std::format("{} already aligned ({:.1f} off)", a.target->name, off) :
-			                     std::format("aligned to the {}: {:.1f} off, was {:.1f}", a.target->name, off, a.first));
-			a.phase = Phase::kOff;
+		const V     g = a.angles.size() >= 20 ? Median(a.angles) : V(0, 0, 0);
+		const float angle = static_cast<float>(std::asin(std::min(1.0F, Len(g))) * 180.0 / 3.14159265);
+		REX::INFO("align {}: penis {:.0f} degrees off the canal's line", a.target->name, angle);
+		auto setBend = [&](float a_bend, bool a_probe) {
+			a.phase = Phase::kApply;
+			a.haveLast = false;  // the next measurement shows the bend, not a move of his: no Broyden on it
+			const auto threadID = followed.load();
+			const auto him = himPosition.load();
+			auto*      tasks = F4SE::GetTaskInterface();
+			if (!tasks || !alignment || him < 0) {
+				a.phase = Phase::kOff;
+				return;
+			}
+			tasks->AddTask([threadID, him, a_bend, a_probe]() {
+				FourStimAPI::AlignmentOffset o;
+				const bool ok = alignment->getOffset(threadID, static_cast<std::uint32_t>(him), &o);
+				const float was = o.bend;
+				// a probe goes two steps from where the bend is, away from the nearer end
+				o.bend = a_probe ? (was <= 7.0F ? was + 2.0F : was - 2.0F) : a_bend;
+				const bool set = ok && alignment->setOffset(threadID, static_cast<std::uint32_t>(him), &o);
+				REX::INFO("align: bend {} -> {}{}", was, o.bend, set ? "" : " - failed");
+				std::scoped_lock lock{ alignLock };
+				if (aligner.phase == Phase::kApply) {
+					if (a_probe) {
+						aligner.bendStart = was;
+						aligner.bendProbe = o.bend;
+					}
+					aligner.phase = set ? Phase::kSettle : Phase::kOff;
+					aligner.until = Clock::now() + kSettle;
+				}
+			});
+		};
+		if (a.stage == Stage::kBendProbe) {
+			// what two steps of bend did to the angle, along the way it was off
+			const float now = static_cast<float>(std::asin(std::clamp(Dot(g, a.angleDir), -1.0F, 1.0F)) * 180.0 / 3.14159265);
+			const float perStep = (now - a.angleBefore) / (a.bendProbe - a.bendStart);
+			if (std::abs(perStep) < 0.5F) {
+				REX::INFO("align: bend moved the angle {:.1f} degrees a step; put back", perStep);
+				a.stage = Stage::kRecentre;
+				a.step = 0;
+				setBend(a.bendStart, false);
+				return;
+			}
+			const float want = std::clamp(std::round(a.bendProbe - now / perStep), -9.0F, 9.0F);
+			REX::INFO("align: {:.1f} degrees a bend step; bend {} for the canal's line", perStep, want);
+			a.stage = Stage::kRecentre;
+			a.step = 0;
+			a.haveLast = false;
+			setBend(want, false);
 			return;
 		}
-		if (a.step >= Settings::maxSteps) {
-			Notify(std::format("couldn't align closer than {:.1f} to the {} (was {:.1f})", off, a.target->name, a.first));
+		if (off <= Settings::tolerance || a.step >= Settings::maxSteps) {
+			if (a.stage == Stage::kPosition && angle > kAngleTolerance && alignment) {
+				a.angleDir = Unit(g);
+				a.angleBefore = angle;
+				a.stage = Stage::kBendProbe;
+				setBend(0.0F, true);
+				return;
+			}
+			if (off <= Settings::tolerance) {
+				Notify(a.step == 0 && a.stage == Stage::kPosition ? std::format("{} already aligned ({:.1f} off, {:.0f} degrees)", a.target->name, off, angle) :
+				                                                    std::format("aligned to the {}: {:.1f} off (was {:.1f}), {:.0f} degrees", a.target->name, off, a.first, angle));
+			} else {
+				Notify(std::format("couldn't align closer than {:.1f} to the {} (was {:.1f}), {:.0f} degrees", off, a.target->name, a.first, angle));
+			}
 			a.phase = Phase::kOff;
 			return;
 		}

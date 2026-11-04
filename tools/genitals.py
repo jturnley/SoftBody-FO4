@@ -68,12 +68,14 @@ ANAL_BLEND = 1.0             # from the anus ring (depth 0) the canal's weights 
 # opened round a penis, which goes about 8 deep. The pocket (points VAG_DEEP_SHARE or more on the VaginaDeep bones)
 # becomes a tube VAG_DEPTH deep from the slit and VAG_RADIUS round, along the line from the slit to GT's deepest bone
 # (nearly straight up, a little back; the pocket's own long axis leans toward the belly, as it is wide) turned
-# VAG_TILT degrees further back, with rings of VAG_SIDES bones of our own at VAG_RINGS and a pad tube at each
-# (VAG_PADS), as the anal canal has.
+# VAG_TILT degrees back (negative: toward her front), with rings of VAG_SIDES bones of our own at VAG_RINGS and a pad
+# tube at each (VAG_PADS), as the anal canal has. In game (v0.13) a missionary penis ran 21 degrees toward her front
+# of that line and an idle doggy one 6, so the canal leans 12 toward her front, between them; the plugin bends the
+# penis for the rest.
 VAG_DEEP_SHARE = 0.5
 VAG_DEPTH = 10.0
 VAG_RADIUS = 0.5
-VAG_TILT = 0.0
+VAG_TILT = -12.0
 VAG_RINGS = (3.6, 5.0, 6.4, 7.8, 9.2)
 VAG_SIDES = 12               # every 30 degrees, from the front
 VAG_PAD_HALF = 0.7
@@ -779,8 +781,9 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     in_pocket[pocket] = True
     # the vagina's own points: depth along the tube's line (from the slit) and distance from it
     vidx = np.arange(n_vagina)
-    vdepth = (gen_P[vidx] - vag_S) @ vag_ax2 + vag_start
-    voff = gen_P[vidx] - vag_S - np.outer((gen_P[vidx] - vag_S) @ vag_ax2, vag_ax2)
+    # (the channel runs along GT's line, untilted: the tilt turns the pocket about where it starts)
+    vdepth = (gen_P[vidx] - vag_S) @ vag_ax + vag_start
+    voff = gen_P[vidx] - vag_S - np.outer((gen_P[vidx] - vag_S) @ vag_ax, vag_ax)
     vdist = np.linalg.norm(voff, axis=1)
     # moved toward the back: the channel and pocket wholly near the entrance, easing out deeper in; the vestibule
     # round them easing out away from the channel and toward the slit's edge
@@ -792,7 +795,10 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     move = np.where(in_pocket[vidx], 1.0, smoothstep((hi - vdist) / (hi - lo))) * back_at(vdepth) * rim_fade
     gen_P[vidx] += np.outer(move, back_by)
     vag_S = vag_S + back_by * back_at(vag_start)
-    vag_centre = lambda depth: back_by * (back_at(depth) - back_at(vag_start))   # the tube's centre off its line
+    # the tube's centre off its (tilted) line: the back shift easing out deeper in, and short of the pocket, GT's
+    # untilted line, which the channel follows
+    vag_centre = lambda depth: (back_by * (back_at(depth) - back_at(vag_start))
+                                + min(depth - vag_start, 0.0) * (vag_ax - vag_ax2))
     # the rings: the entrance, then the canal's
     vag_rings, vag_bones = [], {}
     for i, depth in enumerate((VAG_ENTRANCE,) + VAG_RINGS):
