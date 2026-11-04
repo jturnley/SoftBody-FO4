@@ -183,10 +183,19 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   `bDriveOpenings`, `fPenisRadius`, `fPenisRadiusTip`, `fPenisTipLength`, `fPenisTipExtra`,
   `fPenisBaseExtra`, `fRimSmoothing`, `fRimFollow`, `fRimCatch`, `fRimMargin` in the INI. The lips no
   longer jiggle or take a hand's push.
-- **The penis bent through the opening.** Every 4 ms the plugin turns his penis at its root
-  (`Penis_00_Offset`, which nothing animates) so his line runs through the centre of the opening in
-  use, by at most `fBendMax` (20°), following over `fBendSmoothing`. With it on (`bBendPenis=1`) the
-  aligner no longer tries 4Stim's bend steps.
+- **The penis bent through the opening.** Every 4 ms the plugin bends his penis so his line runs
+  through the centre of the opening in use, by at most `fBendMax` (20°), following over
+  `fBendSmoothing`. The bend is split evenly between his shaft's first two joints, `Penis_02_Offset`
+  (at the base of his tracked line) and `Penis_03_Offset`. v0.22 turned him at his root
+  (`Penis_00_Offset`). That tore the skin where his shaft meets his body into sheets, because that
+  skin is weighted partly to the shaft and partly to `Penis_Offset_SMP`. At 15°, 222 edges of
+  A-Body's mesh stretched more than 3×; split across the two shaft joints, no edge stretches past
+  1.5× even at 20°. Each opening follows the piece of his curved shaft that passes it.
+  With the bend on (`bBendPenis=1`), the aligner no longer tries 4Stim's bend steps.
+- **The anus's throat opens with its rim.** Up to v0.22 the anal canal took over from GT's anus
+  weights over its first unit of depth. That left the throat on GT's anus bones, which are no longer
+  driven, so it stayed shut while the skin round it opened. The canal now rides on its rings from the
+  mouth in, and the first of those rings is the driven rim.
 - **At most 131 bones a shape.** v0.22's CBBE (199 bones) and genitals (162) crashed the game as the
   body was drawn; v0.21's largest, 131, did not. So CBBE and the vulva's seam with it ride on the outer
   rings only, and a mesh over the cap is drawn as several shapes (the genitals as `SoftBodyGenitals`

@@ -252,7 +252,6 @@ namespace
 	// A-Body's penis chain: tip, middle, base (the _SMP bones are the simulated ones)
 	constexpr const char* kPenis[] = { "Penis_05_SMP", "Penis_03_SMP", "Penis_01_SMP" };
 	// where the plugin bends him: the root of A-Body's penis chain, above the animated Penis_00
-	constexpr const char* kBendNode = "Penis_00_Offset";
 
 	// The openings, from her kinematic anchors (they hang still off her pelvis): the centre of the rim, and a point
 	// down the canal for its axis
@@ -434,19 +433,29 @@ namespace
 		}
 	}
 
-	// ---------------------------------------------------------------- his penis, turned at its root through the opening
+	// ---------------------------------------------------------------- his penis, turned along its shaft through the opening
 	// The aligner places him once a scene; through a stroke the animation swings his penis 10-20 degrees, so his line
-	// passes up to a unit off the opening's centre. Here, every few milliseconds, his penis is turned at its root
-	// (kBendNode, which nothing animates) so his line runs through the centre of the opening in use, by at most
-	// fBendMax. FO4 keeps a node's rotation as the map from its parent's frame to its own (see ToLocal), so turning
-	// the node by Q (in its parent's frame) takes local.rotate * Q^T.
-	struct Bend
+	// passes up to a unit off the opening's centre. Here, every few milliseconds, his penis is turned so his line runs
+	// through the centre of the opening in use, by at most fBendMax. v0.22 turned him at his root (Penis_00_Offset): the
+	// skin where his shaft meets his body, weighted between the turned bones and Penis_Offset_SMP, tore into sheets (at
+	// 15 degrees, A-Body's mesh had 222 edges stretched over 3x). The turn is now shared by the shaft's first two joints,
+	// Penis_02_Offset (at Penis_01_SMP, his line's base) and Penis_03_Offset, which A-Body's weights blend smoothly
+	// across (1.5x at most at 20 degrees). FO4 keeps a node's rotation as the map from its parent's frame to its own
+	// (see ToLocal), so turning a node by Q (in its parent's frame) takes local.rotate * Q^T.
+	struct BendJoint
 	{
+		const char*                   name;
+		float                         share;
 		RE::NiPointer<RE::NiAVObject> node;
 		RE::NiMatrix3                 base;     // its rotation as the game (or 4Stim) last left it
 		RE::NiMatrix3                 written;  // what was last written
-		V                             turn;     // the turn applied, in its parent's frame: axis times angle (radians)
 		std::uint32_t                 rebased{ 0 };
+	};
+	struct Bend
+	{
+		BendJoint joints[2]{ { "Penis_02_Offset", 0.5F }, { "Penis_03_Offset", 0.5F } };
+		V         turn;  // the whole turn, in the first joint's parent's frame: axis times angle (radians)
+		bool      started{ false };
 	} bend;
 
 	RE::NiMatrix3 AxisAngle(const V& a_turn)
@@ -494,50 +503,78 @@ namespace
 			e[2][0] * a_world.x + e[2][1] * a_world.y + e[2][2] * a_world.z);
 	}
 
+	// a direction in a node's own frame, in the world (DirIn's inverse)
+	V DirOut(const RE::NiAVObject* a_node, const V& a_local)
+	{
+		const auto& e = a_node->world.rotate.entry;
+		return V(e[0][0] * a_local.x + e[1][0] * a_local.y + e[2][0] * a_local.z,
+			e[0][1] * a_local.x + e[1][1] * a_local.y + e[2][1] * a_local.z,
+			e[0][2] * a_local.x + e[1][2] * a_local.y + e[2][2] * a_local.z);
+	}
+
 	void ReleaseBend()
 	{
-		if (auto* node = bend.node.get(); node && Same(node->local.rotate, bend.written)) {
-			node->local.rotate = bend.base;
+		for (auto& j : bend.joints) {
+			if (auto* node = j.node.get(); node && Same(node->local.rotate, j.written)) {
+				node->local.rotate = j.base;
+			}
+			j.node.reset();
+			j.rebased = 0;
 		}
-		bend = Bend{};
+		bend.turn = V(0, 0, 0);
+		bend.started = false;
 	}
 
 	// under heldLock, from DriveRims
 	void BendPenis(float a_dt, bool a_penis, const V& a_base, const V& a_u, float a_length, const V* a_centre,
 		const bool* a_haveCentre, Act a_act)
 	{
-		auto* node = Settings::bendPenis ? Held("him", kBendNode) : nullptr;
-		auto* parent = node ? node->parent : nullptr;
-		if (!parent) {
-			return;
-		}
-		if (bend.node.get() != node) {
-			ReleaseBend();
-			bend.node = RE::NiPointer<RE::NiAVObject>(node);
-			bend.base = bend.written = node->local.rotate;
-			REX::INFO("bend: turning him at {}", kBendNode);
-		} else if (!Same(node->local.rotate, bend.written)) {
-			bend.base = node->local.rotate;  // the game or 4Stim set it since: turn from there
-			if (++bend.rebased % 500 == 1) {
-				REX::INFO("bend: {} was set by something else ({} times)", kBendNode, bend.rebased);
+		RE::NiAVObject* nodes[2]{};
+		for (int i = 0; i < 2; ++i) {
+			nodes[i] = Settings::bendPenis ? Held("him", bend.joints[i].name) : nullptr;
+			if (!nodes[i] || !nodes[i]->parent) {
+				if (bend.started) {
+					ReleaseBend();
+				}
+				return;
 			}
 		}
+		if (bend.joints[0].node.get() != nodes[0] || bend.joints[1].node.get() != nodes[1]) {
+			ReleaseBend();
+			for (int i = 0; i < 2; ++i) {
+				auto& j = bend.joints[i];
+				j.node = RE::NiPointer<RE::NiAVObject>(nodes[i]);
+				j.base = j.written = nodes[i]->local.rotate;
+			}
+			bend.started = true;
+			REX::INFO("bend: turning him at {} and {}", bend.joints[0].name, bend.joints[1].name);
+		} else {
+			for (auto& j : bend.joints) {
+				if (!Same(j.node->local.rotate, j.written)) {
+					j.base = j.node->local.rotate;  // the game or 4Stim set it since: turn from there
+					if (++j.rebased % 500 == 1) {
+						REX::INFO("bend: {} was set by something else ({} times)", j.name, j.rebased);
+					}
+				}
+			}
+		}
+		auto* frame = nodes[0]->parent;  // the turn is kept in this frame, which moves with him
 		// what the turn should become: by how much more it must turn to put his line through the centre
 		V    want = bend.turn;
 		bool aiming = false;
 		const int o = a_act == Act::kVaginal ? 0 : a_act == Act::kAnal ? 1 : -1;
 		if (a_penis && o >= 0 && a_haveCentre[o]) {
-			const V     pivot = node->world.translate;
+			const V     pivot = nodes[0]->world.translate;
 			const V     rel = Sub(a_centre[o], a_base);
 			const float along = Dot(rel, a_u);
 			const V     q = Add(a_base, Mul(a_u, along));      // his line's nearest to the centre
 			const V     now = Sub(q, pivot), to = Sub(a_centre[o], pivot);
-			const float scale = node->world.scale;
+			const float scale = nodes[0]->world.scale;
 			if (along > -Settings::penisBaseExtra * scale && along < a_length + 6.0F * scale && Len(now) > 1.0F && Len(to) > 1.0F) {
 				const V     axis = Cross(Unit(now), Unit(to));
 				const float s = std::min(1.0F, Len(axis));
 				if (s > 1e-5F) {
-					want = Add(bend.turn, DirIn(parent, Mul(Unit(axis), std::asin(s))));
+					want = Add(bend.turn, DirIn(frame, Mul(Unit(axis), std::asin(s))));
 					aiming = true;
 				}
 			}
@@ -551,25 +588,36 @@ namespace
 		}
 		const float follow = Settings::bendSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::bendSmoothing) : 1.0F;
 		bend.turn = Add(bend.turn, Mul(Sub(want, bend.turn), follow));
-		bend.written = TimesTransposed(bend.base, AxisAngle(bend.turn));
-		node->local.rotate = bend.written;
+		const V world = DirOut(frame, bend.turn);
+		for (int i = 0; i < 2; ++i) {
+			auto& j = bend.joints[i];
+			j.written = TimesTransposed(j.base, AxisAngle(Mul(DirIn(nodes[i]->parent, world), j.share)));
+			nodes[i]->local.rotate = j.written;
+		}
 	}
 
 	// off the main thread, every few milliseconds, under heldLock
 	void DriveRims(float a_dt)
 	{
 		auto*      tip = Held("him", kPenis[0]);
+		auto*      mid = Held("him", kPenis[1]);
 		auto*      base = Held("him", kPenis[2]);
 		const bool penis = Settings::driveOpenings && tip && base;
-		V          b(0, 0, 0), u(0, 0, 0);
-		float      length = 0, scale = 1;
+		V          b(0, 0, 0), u(0, 0, 0), m(0, 0, 0);
+		float      length = 0, scale = 1, first = 0;
 		if (penis) {
 			b = base->world.translate;
 			const V t = tip->world.translate;
 			u = Unit(Sub(t, b));
 			scale = tip->world.scale;
-			length = Len(Sub(t, b)) + Settings::penisTipExtra * scale;
+			m = mid ? mid->world.translate : Add(b, Mul(Sub(t, b), 0.5F));
+			first = Len(Sub(m, b));
+			length = first + Len(Sub(t, m)) + Settings::penisTipExtra * scale;
 		}
+		// the bend curves his shaft (two joints), so each opening goes by the piece of it that passes it: base to
+		// middle bone, or middle to tip. segStart/segU: that piece; segAlong: how far along him it starts
+		V     segStart[2], segU[2];
+		float segAlong[2]{};
 		// each opening's centre, from its kinematic rim anchors
 		V    centre[2];
 		bool haveCentre[2]{};
@@ -585,6 +633,18 @@ namespace
 			}
 			haveCentre[o] = n == 4;
 			centre[o] = Mul(c, 0.25F);
+			segStart[o] = b;
+			segU[o] = u;
+			if (penis && first > 1e-3F && Len(Sub(tip->world.translate, m)) > 1e-3F) {
+				const V u1 = Mul(Sub(m, b), 1.0F / first);
+				if (Dot(Sub(centre[o], b), u1) <= first) {
+					segU[o] = u1;
+				} else {
+					segStart[o] = m;
+					segU[o] = Unit(Sub(tip->world.translate, m));
+					segAlong[o] = first;
+				}
+			}
 		}
 		// only the opening in use opens: the perineum is short, so a penis in one passes within reach of the other's
 		// rim (v0.19: an anal penis opened the vagina's under it)
@@ -592,7 +652,7 @@ namespace
 		const bool open[2] = { act != Act::kAnal, act != Act::kVaginal };
 		const float follow = Settings::rimSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::rimSmoothing) : 1.0F;
 		const float tipLength = Settings::penisTipLength * scale;
-		const float shaft = Len(Sub(tip ? tip->world.translate : b, b));
+		const float shaft = length - Settings::penisTipExtra * scale;
 		// his thickness at a point `along` his line from the base bone: thinning from the root to the head (A-Body's
 		// measures 2.2 at the root, 1.8 two-thirds along), rounded off over the tip
 		auto thickness = [&](float a_along) {
@@ -612,8 +672,9 @@ namespace
 		int   edgeCount[2]{};
 		for (auto& [name, d] : driven) {
 			if (d.edge && d.node && d.node->parent && haveCentre[d.opening]) {
-				const V off = Sub(ToWorld(d.node->parent, d.rest), centre[d.opening]);
-				edgeRest[d.opening] += Len(Sub(off, Mul(u, Dot(off, u))));
+				const V& su = segU[d.opening];
+				const V  off = Sub(ToWorld(d.node->parent, d.rest), centre[d.opening]);
+				edgeRest[d.opening] += Len(Sub(off, Mul(su, Dot(off, su))));
 				++edgeCount[d.opening];
 			}
 		}
@@ -622,13 +683,14 @@ namespace
 			if (!penis || !open[o] || !haveCentre[o]) {
 				continue;
 			}
-			const V     rel = Sub(centre[o], b);
-			const float along = Dot(rel, u);
+			const V     rel = Sub(centre[o], segStart[o]);
+			const float onSeg = Dot(rel, segU[o]);
+			const float along = segAlong[o] + onSeg;
 			if (along <= -Settings::penisBaseExtra * scale || along >= length) {
 				continue;
 			}
 			const float r = thickness(along) + Settings::rimMargin * scale;
-			const V     off = Sub(Mul(u, along), rel);          // the centre to his line, across it
+			const V     off = Sub(Mul(segU[o], onSeg), rel);    // the centre to his line, across it
 			const float dist = Len(off);
 			if (dist > r + Settings::rimCatch * scale) {
 				continue;
@@ -646,10 +708,11 @@ namespace
 			}
 			V target = d.rest;
 			if (active[d.opening]) {
+				const V&    su = segU[d.opening];
 				const V     w0 = ToWorld(parent, d.rest);
 				const V     off = Sub(w0, centre[d.opening]);
-				const float axial = Dot(off, u);
-				const V     across = Sub(off, Mul(u, axial));
+				const float axial = Dot(off, su);
+				const V     across = Sub(off, Mul(su, axial));
 				const float restDist = Len(across);
 				const V     out = restDist > 1e-4F ? Mul(across, 1.0F / restDist) : V(0, 0, 0);
 				const float g = grow[d.opening];
@@ -662,7 +725,7 @@ namespace
 					// the edge, fRimEdge from the centre on the bone's side, is what must clear him
 					dist = restDist + std::max(0.0F, g - std::min(restDist, Settings::rimEdge * scale));
 				}
-				const V placed = Add(Add(centre[d.opening], shift[d.opening]), Add(Mul(out, dist), Mul(u, axial)));
+				const V placed = Add(Add(centre[d.opening], shift[d.opening]), Add(Mul(out, dist), Mul(su, axial)));
 				target = ToLocal(parent, placed);
 			}
 			d.now = Add(d.now, Mul(Sub(target, d.now), follow));
@@ -703,7 +766,9 @@ namespace
 			for (const auto* name : kPenis) {
 				hold("him", him, name);
 			}
-			hold("him", him, kBendNode);
+			for (const auto& j : bend.joints) {
+				hold("him", him, j.name);
+			}
 			if (her) {
 				for (const auto& r : Rims()) {
 					HoldRim(her, r);

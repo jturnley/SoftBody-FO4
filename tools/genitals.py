@@ -62,7 +62,8 @@ ANAL_PAD_HALF = 0.9          # each ring's pad tube runs this far either side of
 # the shaft, hidden.
 ANAL_PAD_RADIUS = 1.2
 ANAL_PADS = "SoftBodyAnalCanal"
-ANAL_BLEND = 1.0             # from the anus ring (depth 0) the canal's weights go from GT's to the rings' over this
+ANAL_BLEND = 0.0             # from the anus ring (depth 0) the canal's weights go from GT's to the rings' over this
+                             # (0: at once; v0.22's 1.0 left the anus's throat on GT's undriven anus bones, shut)
 # The vaginal canal. Past its entrance GT's is a pocket about 6.5 deep from the slit, hanging almost wholly on
 # VaginaDeep1/2, which only slide along it; its ring bones (VaginaD*) carry next to none of the mesh, so nothing
 # opened round a penis, which goes about 8 deep. The pocket (points VAG_DEEP_SHARE or more on the VaginaDeep bones)
@@ -998,7 +999,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         w = top4(pull_toward(w, gw, pull))
         blend, rw = 0.0, None
         if k >= n_vagina and (gen_P[k] - mouth) @ ax > 0:
-            blend = 1 - smooth_fade((gen_P[k] - mouth) @ ax, ANAL_BLEND)
+            blend = 1 - smooth_fade((gen_P[k] - mouth) @ ax, ANAL_BLEND) if ANAL_BLEND > 0 else 1.0
             rw = ring_weights(gen_P[k], mouth, ax, up, left, anal_centre, anal_rings)
         elif k < n_vagina and on_rings[k] > 0:
             blend = on_rings[k]
