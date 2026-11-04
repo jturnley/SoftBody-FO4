@@ -110,6 +110,7 @@ VAG_BACK = 1.2
 # (the perineum) shares itself between them; only the one in use opens. A thigh bone gives RIM_THIGH of its share
 # (the rims hang from the pelvis, so the skin they take stops following the leg).
 RIM_SIDES = 24
+RIM_OUTER_SIDES = 12         # the outer rings' (a shape's bones are capped: see MAX_SHAPE_BONES)
 RIM_PENIS = 2.0              # the plugin's fPenisRadius
 VAG_RIM_DEPTH = 0.0          # along the canal from the slit, as VAG_ENTRANCE
 VAG_RIM_RADIUS = 0.5
@@ -846,10 +847,10 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
 
     # the visible rims' rings, and how much of a point rides on each (see RIM_SIDES)
     rim_bones = {}
-    def rim_ring(prefix, centre, axis, up_v, left_v, radius):
+    def rim_ring(prefix, centre, axis, up_v, left_v, radius, sides=RIM_SIDES):
         ring = []
-        for k in range(RIM_SIDES):
-            a = 360.0 * k / RIM_SIDES
+        for k in range(sides):
+            a = 360.0 * k / sides
             out = across(a, up_v, left_v)
             name = "%s_%d" % (prefix, k)
             rim_bones[name] = (centre + radius * out, np.column_stack([out, np.cross(axis, out), axis]))
@@ -858,7 +859,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         return ring
     vrim_c = vag_S + (VAG_RIM_DEPTH - vag_start) * vag_ax2 + vag_centre(VAG_RIM_DEPTH)
     vrim = rim_ring("SB VagRim", vrim_c, vag_ax2, vag_up, vag_left, VAG_RIM_RADIUS)
-    vrim_o = rim_ring("SB VagRimO", vrim_c, vag_ax2, vag_up, vag_left, VAG_RIM_OUTER)
+    vrim_o = rim_ring("SB VagRimO", vrim_c, vag_ax2, vag_up, vag_left, VAG_RIM_OUTER, RIM_OUTER_SIDES)
     # the anus rim round the hole itself: the middle of the canal's points at the rim's depth
     adepth = (gen_P[n_vagina:] - mouth) @ ax
     at_rim = gen_P[n_vagina:][np.abs(adepth - ANAL_RIM_DEPTH) < 0.3]
@@ -866,9 +867,10 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         raise ValueError("no anal canal points at the rim's depth")
     arim_c = at_rim.mean(0) + (ANAL_RIM_DEPTH - (at_rim.mean(0) - mouth) @ ax) * ax
     arim = rim_ring("SB AnusRim", arim_c, ax, up, left, ANAL_RIM_RADIUS)
-    arim_o = rim_ring("SB AnusRimO", arim_c, ax, up, left, ANAL_RIM_OUTER)
-    def reach(p, c, axis, r0, r1, lo, hi):
-        """p's shares of an opening's inner ring (radius r0) and outer ring (r1) at c, and p's depth in along the axis"""
+    arim_o = rim_ring("SB AnusRimO", arim_c, ax, up, left, ANAL_RIM_OUTER, RIM_OUTER_SIDES)
+    def reach(p, c, axis, r0, r1, lo, hi, inner_ok=True):
+        """p's shares of an opening's inner ring (radius r0) and outer ring (r1) at c, and p's depth in along the axis
+        (inner_ok False: the outer ring takes the inner's share too)"""
         off = p - c
         d = off @ axis
         rho = np.linalg.norm(off - d * axis)
@@ -881,16 +883,20 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
             travel = lambda x: math.sqrt(x * x + RIM_PENIS ** 2 - r0 * r0) - x
             inner, outer = 0.0, min(1.0, travel(rho) / travel(r1)) * smoothstep((hi - rho) / (hi - lo))
         out = smoothstep((RIM_OUTWARD[1] + d) / (RIM_OUTWARD[1] - RIM_OUTWARD[0]))
+        if not inner_ok:
+            inner, outer = 0.0, inner + outer
         return inner * out, outer * out, d
     def donates(bone):
         return RIM_THIGH if "Thigh" in bone else 1.0
     def gate(d):
         return smoothstep((VAG_RIM_GATE[1] - d) / (VAG_RIM_GATE[1] - VAG_RIM_GATE[0]))
-    def rim_blend(p, w, canal=0.0):
-        """w with p's rim shares blended in (canal: how much of p the vaginal canal's rings already carry)"""
-        vi, vo, dv = reach(p, vrim_c, vag_ax2, VAG_RIM_RADIUS, VAG_RIM_OUTER, *VAG_RIM_REACH)
+    def rim_blend(p, w, canal=0.0, inner_ok=True):
+        """w with p's rim shares blended in (canal: how much of p the vaginal canal's rings already carry; inner_ok
+        False for CBBE's body and the vulva's seam with it, which ride on the outer rings alone, so CBBE's shape keeps
+        to MAX_SHAPE_BONES)"""
+        vi, vo, dv = reach(p, vrim_c, vag_ax2, VAG_RIM_RADIUS, VAG_RIM_OUTER, *VAG_RIM_REACH, inner_ok)
         g = gate(dv) * (1 - canal)
-        ai, ao, da = reach(p, arim_c, ax, ANAL_RIM_RADIUS, ANAL_RIM_OUTER, *ANAL_RIM_REACH)
+        ai, ao, da = reach(p, arim_c, ax, ANAL_RIM_RADIUS, ANAL_RIM_OUTER, *ANAL_RIM_REACH, inner_ok)
         h = gate(da)
         shares = [vi * g, vo * g, ai * h, ao * h]
         total = sum(shares)
@@ -936,7 +942,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     vul_w = []
     for k in range(len(vulva_P)):
         if k >= len(patch_P):
-            vul_w.append(rim_blend(vulva_P[k], cbbe.W[hole_v[k - len(patch_P)]]))   # the seam: CBBE's own (below)
+            vul_w.append(rim_blend(vulva_P[k], cbbe.W[hole_v[k - len(patch_P)]], inner_ok=False))   # the seam: CBBE's own (below)
             continue
         gw = {b: w for b, w in gt_body_w[k].items() if is_genital(b)}
         g = sum(gw.values())
@@ -1023,7 +1029,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                       (np.linalg.norm(cbbe.P - arim_c, axis=1) < ANAL_RIM_REACH[1] + RIM_OUTWARD[1]))[0]
     cbbe.rim_weights = {}
     for v in near:
-        w = rim_blend(cbbe.P[v], cbbe.W[v])
+        w = rim_blend(cbbe.P[v], cbbe.W[v], inner_ok=False)
         if any(b.startswith(("SB VagRim", "SB AnusRim")) for b in w):
             cbbe.rim_weights[int(v)] = w
     used = {b for w in vul_w + gen_w for b in w}
@@ -1259,6 +1265,55 @@ def own_shader(nif, template, material=None, textures=None):
     return len(nif.blocks) - 1
 
 
+# The most bones one shape may be skinned to. v0.22's CBBE (199) and genitals (162) crashed the renderer as the body
+# was drawn; v0.21's most, 131, did not.
+MAX_SHAPE_BONES = 131
+
+
+def split_for_bones(meshes):
+    """[(shape name, mesh, the mesh's own name)]: a mesh skinned to more than MAX_SHAPE_BONES bones is drawn as several
+    shapes, its connected pieces gathered while they fit (the first keeps its name, the rest add 2, 3, ...). Each split
+    mesh gets "parts": [(shape name, its vertices)], for the slider data."""
+    out = []
+    for name, m in meshes.items():
+        if len({b for w in m["weights"] for b in w}) <= MAX_SHAPE_BONES:
+            out.append((name, m, name))
+            continue
+        from scipy.sparse import coo_matrix
+        from scipy.sparse.csgraph import connected_components
+        ids = weld(m["P"])
+        T = ids[m["tris"]]
+        e = np.concatenate([T[:, [0, 1]], T[:, [1, 2]]])
+        n = int(ids.max()) + 1
+        _, lab = connected_components(coo_matrix((np.ones(len(e)), (e[:, 0], e[:, 1])), shape=(n, n)), directed=False)
+        piece = lab[ids]
+        order = sorted(set(piece), key=lambda c: -(piece == c).sum())
+        groups = []                          # [(pieces, bones)]
+        for c in order:
+            bones = {b for v in np.nonzero(piece == c)[0] for b in m["weights"][v]}
+            for g in groups:
+                if len(g[1] | bones) <= MAX_SHAPE_BONES:
+                    g[0].append(c)
+                    g[1].update(bones)
+                    break
+            else:
+                if len(bones) > MAX_SHAPE_BONES:
+                    raise ValueError("%s: one piece of it is skinned to %d bones" % (name, len(bones)))
+                groups.append(([c], set(bones)))
+        m["parts"] = []
+        for k, (cs, _) in enumerate(groups):
+            vidx = np.nonzero(np.isin(piece, cs))[0]
+            remap = -np.ones(len(m["P"]), int)
+            remap[vidx] = np.arange(len(vidx))
+            tris = remap[m["tris"][np.isin(piece[m["tris"][:, 0]], cs)]]
+            sub = dict(P=m["P"][vidx], N=m["N"][vidx], U=m["U"][vidx], V=m["V"][vidx], UV=m["UV"][vidx], tris=tris,
+                       weights=[m["weights"][v] for v in vidx], hidden=m.get("hidden", False))
+            part = name if k == 0 else "%s%d" % (name, k + 1)
+            m["parts"].append((part, vidx))
+            out.append((part, sub, name))
+    return out
+
+
 def add_to_nif(nif, cbbe, meshes, bones, root=0, materials=None):
     """Commit the cut CBBE, add the genital bones under Pelvis_skin and the new shapes (hidden ones without a shader).
     materials: {shape: (material path, [texture paths])} for shapes that do not use the body's skin."""
@@ -1303,11 +1358,12 @@ def add_to_nif(nif, cbbe, meshes, bones, root=0, materials=None):
     shape_flags = nif.net(skin.index)[3].u32()
     if "BSTriShape" not in nif.block_types:
         nif.block_types.append("BSTriShape")
-    for name, m in meshes.items():
+    for m in meshes.values():
         tangents(m)
+    for name, m, base in split_for_bones(meshes):
         # hidden (collision only) shapes have no shader, so they are never drawn: as a body whose hidden collision
         # proxies work in FO4 has them (an app-culled shape, as before, built in SMP but did not collide)
-        shape_shader = -1 if m.get("hidden") else own_shader(nif, shader, *(materials or {}).get(name, ()))
+        shape_shader = -1 if m.get("hidden") else own_shader(nif, shader, *(materials or {}).get(base, ()))
         used = sorted({b for w in m["weights"] for b in w})
         index = {b: i for i, b in enumerate(used)}
         verts = bytearray()

@@ -239,8 +239,8 @@ namespace
 		{ "anal3_TB", "SB AnusT3", "SB AnusB3" }, { "anal3_LR", "SB AnusL3", "SB AnusR3" },
 		{ "vagRim_FB", "SB VagRim_0", "SB VagRim_12" }, { "vagRim_LR", "SB VagRim_6", "SB VagRim_18" },
 		{ "anusRim_TB", "SB AnusRim_0", "SB AnusRim_12" }, { "anusRim_LR", "SB AnusRim_6", "SB AnusRim_18" },
-		{ "vagRimO_FB", "SB VagRimO_0", "SB VagRimO_12" }, { "vagRimO_LR", "SB VagRimO_6", "SB VagRimO_18" },
-		{ "anusRimO_TB", "SB AnusRimO_0", "SB AnusRimO_12" }, { "anusRimO_LR", "SB AnusRimO_6", "SB AnusRimO_18" },
+		{ "vagRimO_FB", "SB VagRimO_0", "SB VagRimO_6" }, { "vagRimO_LR", "SB VagRimO_3", "SB VagRimO_9" },
+		{ "anusRimO_TB", "SB AnusRimO_0", "SB AnusRimO_6" }, { "anusRimO_LR", "SB AnusRimO_3", "SB AnusRimO_9" },
 		{ "vagIn_FB", "SB VagIn_0", "SB VagIn_6" }, { "vagIn_LR", "SB VagIn_3", "SB VagIn_9" },
 		{ "vag1_FB", "SB Vag1_0", "SB Vag1_6" }, { "vag1_LR", "SB Vag1_3", "SB Vag1_9" },
 		{ "vag2_FB", "SB Vag2_0", "SB Vag2_6" }, { "vag2_LR", "SB Vag2_3", "SB Vag2_9" },
@@ -386,7 +386,8 @@ namespace
 		bool        outer{ false };  // an outer ring's: kept outside the inner, where the skin between keeps its area
 	};
 	// GT's lip and anus bones are no longer driven (v0.21): moved on their own they folded the skin round the rims.
-	// Each visible hole has two rings of 24 (v0.22; 12 showed as a polygon), and the vagina its entrance ring of 12.
+	// Each visible hole has an inner ring of 24 (12 showed as a polygon) and an outer ring of 12 (a shape's bones are
+	// capped: see the mesh builder's MAX_SHAPE_BONES), and the vagina its entrance ring of 12.
 	const std::vector<Rim>& Rims()
 	{
 		static const std::vector<Rim> rims = [] {
@@ -394,8 +395,10 @@ namespace
 			for (int k = 0; k < 12; ++k) r.push_back({ std::format("SB VagIn_{}", k), 0 });
 			for (int k = 0; k < 24; ++k) {
 				r.push_back({ std::format("SB VagRim_{}", k), 0 });
-				r.push_back({ std::format("SB VagRimO_{}", k), 0, true });
 				r.push_back({ std::format("SB AnusRim_{}", k), 1 });
+			}
+			for (int k = 0; k < 12; ++k) {
+				r.push_back({ std::format("SB VagRimO_{}", k), 0, true });
 				r.push_back({ std::format("SB AnusRimO_{}", k), 1, true });
 			}
 			return r;

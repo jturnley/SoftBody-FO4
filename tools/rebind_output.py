@@ -28,9 +28,10 @@ from nif_smp import Nif  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REFERENCE = os.path.join(ROOT, r"mod\Tools\BodySlide\ShapeData\CBBE SoftBody\CBBEBodySoftBody.nif")
-SKIN_SHAPES = ("SoftBodyVulva", "SoftBodyGenitals")          # the drawn skin: the displacement field
-ALL_SHAPES = SKIN_SHAPES + ("SoftBodyVaginaOut", "SoftBodyAnus", "SoftBodyAnalCanal", "SoftBodyVaginalCanal",
-                             "CBBE")   # CBBE: its skin round the openings rides on the rims too
+SKIN_PREFIXES = ("SoftBodyVulva", "SoftBodyGenitals")      # the drawn skin: the displacement field (the genitals
+                                                           # may be several shapes: SoftBodyGenitals2, ...)
+OTHER_SHAPES = ("SoftBodyVaginaOut", "SoftBodyAnus", "SoftBodyAnalCanal", "SoftBodyVaginalCanal",
+                "CBBE")   # CBBE: its skin round the openings rides on the rims too
 FIELD_K = 24          # skin points averaged for a node's move
 FIELD_SIGMA = 0.8     # game units: their weight falls off over this from the nearest
 
@@ -92,7 +93,9 @@ def main(argv):
 
     # the sliders' displacement of the skin, vertex for vertex
     P, D = [], []
-    for name in SKIN_SHAPES:
+    shapes = [out.net(i)[0] for i, (t, _) in enumerate(out.blocks) if t.endswith("TriShape")]
+    skin_shapes = [n for n in shapes if n.startswith(SKIN_PREFIXES)]
+    for name in skin_shapes:
         _, pr = positions(ref, name)
         _, po = positions(out, name)
         if len(pr) != len(po):
@@ -130,7 +133,7 @@ def main(argv):
 
     # the binds: a bone moved by delta from its reference place takes t' = t_ref - R delta, so the skin stays put
     moved = {names[c]: new_mesh[c] - ref_by_name[names[c]][0] for c in names}
-    for shape in ALL_SHAPES:
+    for shape in skin_shapes + [n for n in OTHER_SHAPES if n in shapes]:
         so = SkinnedShape(out, shape)
         sr = SkinnedShape(ref, shape)
         for k, bone in enumerate(so.names):

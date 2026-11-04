@@ -112,9 +112,13 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
         print("  collision: %s" % ", ".join("%s %d triangles" % kv for kv in report["collision_triangles"].items()))
         print("  spring anchors: %d, GT's node tree off its skin binds by at most %.4f" % (
             len(genitals.GT_ANCHORS) + 1, report["anchor_mismatch"]))
-        meshes = {name: dict(src=m["src"], hidden=m.get("hidden", False),
-                             body_bones=sorted({b for w in m["weights"] for b in w if not genitals.is_genital(b)}))
-                  for name, m in meshes.items()}
+        # a mesh drawn as several shapes (genitals.MAX_SHAPE_BONES) gives each its own slider data
+        drawn = {}
+        for name, m in meshes.items():
+            for part, vidx in m.get("parts", [(name, range(len(m["src"])))]):
+                drawn[part] = dict(src=[m["src"][v] for v in vidx], hidden=m.get("hidden", False),
+                                   body_bones=sorted({b for v in vidx for b in m["weights"][v] if not genitals.is_genital(b)}))
+        meshes = drawn
         meshes["bones"] = sorted(bones)
     nif.add_hidden_twin(shape, NAME_ANCHOR)
     os.makedirs(os.path.dirname(dst), exist_ok=True)

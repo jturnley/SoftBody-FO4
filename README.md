@@ -163,8 +163,8 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   with its bones on the skin. It keeps the original as `.nif.bak`. (To do: let the plugin do this.)
 - **Openings round the penis.** Left to collision, the rims opened where the thrusting penis shoved
   their pads: along the slit, lagging behind, oval (v0.14: the entrance 7.3 front to back, 3.5 across).
-  So each visible hole has two rings of 24 bones of our own: one at its edge (`SB VagRim_*`,
-  `SB AnusRim_*`) and one further out (`SB VagRimO_*`, `SB AnusRimO_*`). The vagina also has its
+  So each visible hole has two rings of bones of our own: 24 at its edge (`SB VagRim_*`,
+  `SB AnusRim_*`) and 12 further out (`SB VagRimO_*`, `SB AnusRimO_*`). The vagina also has its
   12-bone entrance ring inside. They're kinematic in her physics files, and every 4 ms the plugin moves
   them round the penis wherever the shaft or its rounded tip passes the opening.
   The rings' centre moves onto his line (up to `fRimFollow`, 1.5). The inner ring opens to his thickness
@@ -187,6 +187,10 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   (`Penis_00_Offset`, which nothing animates) so his line runs through the centre of the opening in
   use, by at most `fBendMax` (20°), following over `fBendSmoothing`. With it on (`bBendPenis=1`) the
   aligner no longer tries 4Stim's bend steps.
+- **At most 131 bones a shape.** v0.22's CBBE (199 bones) and genitals (162) crashed the game as the
+  body was drawn; v0.21's largest, 131, did not. So CBBE and the vulva's seam with it ride on the outer
+  rings only, and a mesh over the cap is drawn as several shapes (the genitals as `SoftBodyGenitals`
+  and `SoftBodyGenitals2`), each with its own slider data.
 - **Tuning log.** With `bLogSamples=1` it logs her genital bones and the penis every 25 ms to
   `Documents\My Games\Fallout4\F4SE\SoftBodyFO4.log` (what `probe/` did).
 
