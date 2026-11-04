@@ -240,7 +240,8 @@
     Goutou), ported value for value except travel: GT lets these bones move up
     to 30 units, and a kinematic penis off the opening (4Stim swaps A-Body to
     its rigid MaleBodyHard.xml in scenes) dragged her flesh out that far, so
-    every linear limit is capped: 5 on the lips and anus, 6 on the canal walls, 3 elsewhere (room for a penis
+    every linear limit is capped: 5 on the rear lip and anus, 3 on the outer lips, 1.5 on the hood, 6 on GT's canal
+    walls, 3 elsewhere (room for a penis
     up to about twice A-Body's default; 4Stim also aligns it about 3 units off the canal's centre). Each moving genital bone hangs off one of
     GT's Skyrim skeleton bones; the body NIF carries those as kinematic anchors,
     turned as GT has them (a spring's limits run along its anchor's axes, after
@@ -249,7 +250,8 @@
       lips    Clitoral1, VaginaB1, NPC L/R Pussy02
       canal   VaginaD{B,F,R,L}01-03 (three rings of four), VaginaDeep1/2
       anus    NPC {LT,RT,LB,RB} Anus2
-    and SoftBody's own canal rings (at the end): anal SB Anus{T,L,B,R}1-3, vaginal SB Vag{1-5}_{0-7}.
+    and SoftBody's own canal rings (written by build_prototype.py from the NIF's bones): anal SB Anus{T,L,B,R}1-3,
+    vaginal SB VagIn_0-11 (the entrance) and SB Vag{1-5}_{0-11}, each on a kinematic "<bone> Base".
   -->
   <bone-default name="gtClitoral">
     <mass>0.1</mass>
@@ -355,58 +357,90 @@
   <bone name="NPC RT Anus1"/>
   <bone name="NPC LB Anus1"/>
   <bone name="NPC RB Anus1"/>
-  <bone name="SB AnusT1 Base"/>
-  <bone name="SB AnusL1 Base"/>
   <bone name="SB AnusB1 Base"/>
-  <bone name="SB AnusR1 Base"/>
-  <bone name="SB AnusT2 Base"/>
-  <bone name="SB AnusL2 Base"/>
   <bone name="SB AnusB2 Base"/>
-  <bone name="SB AnusR2 Base"/>
-  <bone name="SB AnusT3 Base"/>
-  <bone name="SB AnusL3 Base"/>
   <bone name="SB AnusB3 Base"/>
+  <bone name="SB AnusL1 Base"/>
+  <bone name="SB AnusL2 Base"/>
+  <bone name="SB AnusL3 Base"/>
+  <bone name="SB AnusR1 Base"/>
+  <bone name="SB AnusR2 Base"/>
   <bone name="SB AnusR3 Base"/>
+  <bone name="SB AnusT1 Base"/>
+  <bone name="SB AnusT2 Base"/>
+  <bone name="SB AnusT3 Base"/>
   <bone name="SB Vag1_0 Base"/>
   <bone name="SB Vag1_1 Base"/>
+  <bone name="SB Vag1_10 Base"/>
+  <bone name="SB Vag1_11 Base"/>
   <bone name="SB Vag1_2 Base"/>
   <bone name="SB Vag1_3 Base"/>
   <bone name="SB Vag1_4 Base"/>
   <bone name="SB Vag1_5 Base"/>
   <bone name="SB Vag1_6 Base"/>
   <bone name="SB Vag1_7 Base"/>
+  <bone name="SB Vag1_8 Base"/>
+  <bone name="SB Vag1_9 Base"/>
   <bone name="SB Vag2_0 Base"/>
   <bone name="SB Vag2_1 Base"/>
+  <bone name="SB Vag2_10 Base"/>
+  <bone name="SB Vag2_11 Base"/>
   <bone name="SB Vag2_2 Base"/>
   <bone name="SB Vag2_3 Base"/>
   <bone name="SB Vag2_4 Base"/>
   <bone name="SB Vag2_5 Base"/>
   <bone name="SB Vag2_6 Base"/>
   <bone name="SB Vag2_7 Base"/>
+  <bone name="SB Vag2_8 Base"/>
+  <bone name="SB Vag2_9 Base"/>
   <bone name="SB Vag3_0 Base"/>
   <bone name="SB Vag3_1 Base"/>
+  <bone name="SB Vag3_10 Base"/>
+  <bone name="SB Vag3_11 Base"/>
   <bone name="SB Vag3_2 Base"/>
   <bone name="SB Vag3_3 Base"/>
   <bone name="SB Vag3_4 Base"/>
   <bone name="SB Vag3_5 Base"/>
   <bone name="SB Vag3_6 Base"/>
   <bone name="SB Vag3_7 Base"/>
+  <bone name="SB Vag3_8 Base"/>
+  <bone name="SB Vag3_9 Base"/>
   <bone name="SB Vag4_0 Base"/>
   <bone name="SB Vag4_1 Base"/>
+  <bone name="SB Vag4_10 Base"/>
+  <bone name="SB Vag4_11 Base"/>
   <bone name="SB Vag4_2 Base"/>
   <bone name="SB Vag4_3 Base"/>
   <bone name="SB Vag4_4 Base"/>
   <bone name="SB Vag4_5 Base"/>
   <bone name="SB Vag4_6 Base"/>
   <bone name="SB Vag4_7 Base"/>
+  <bone name="SB Vag4_8 Base"/>
+  <bone name="SB Vag4_9 Base"/>
   <bone name="SB Vag5_0 Base"/>
   <bone name="SB Vag5_1 Base"/>
+  <bone name="SB Vag5_10 Base"/>
+  <bone name="SB Vag5_11 Base"/>
   <bone name="SB Vag5_2 Base"/>
   <bone name="SB Vag5_3 Base"/>
   <bone name="SB Vag5_4 Base"/>
   <bone name="SB Vag5_5 Base"/>
   <bone name="SB Vag5_6 Base"/>
   <bone name="SB Vag5_7 Base"/>
+  <bone name="SB Vag5_8 Base"/>
+  <bone name="SB Vag5_9 Base"/>
+  <bone name="SB VagIn_0 Base"/>
+  <bone name="SB VagIn_1 Base"/>
+  <bone name="SB VagIn_10 Base"/>
+  <bone name="SB VagIn_11 Base"/>
+  <bone name="SB VagIn_2 Base"/>
+  <bone name="SB VagIn_3 Base"/>
+  <bone name="SB VagIn_4 Base"/>
+  <bone name="SB VagIn_5 Base"/>
+  <bone name="SB VagIn_6 Base"/>
+  <bone name="SB VagIn_7 Base"/>
+  <bone name="SB VagIn_8 Base"/>
+  <bone name="SB VagIn_9 Base"/>
 
   <bone name="Clitoral1" template="gtClitoral"/>
   <bone name="VaginaB1" template="gtLipBack"/>
@@ -430,58 +464,90 @@
   <bone name="NPC RT Anus2" template="gtAnus"/>
   <bone name="NPC LB Anus2" template="gtAnus"/>
   <bone name="NPC RB Anus2" template="gtAnus"/>
-  <bone name="SB AnusT1" template="sbCanal"/>
-  <bone name="SB AnusL1" template="sbCanal"/>
   <bone name="SB AnusB1" template="sbCanal"/>
-  <bone name="SB AnusR1" template="sbCanal"/>
-  <bone name="SB AnusT2" template="sbCanal"/>
-  <bone name="SB AnusL2" template="sbCanal"/>
   <bone name="SB AnusB2" template="sbCanal"/>
-  <bone name="SB AnusR2" template="sbCanal"/>
-  <bone name="SB AnusT3" template="sbCanal"/>
-  <bone name="SB AnusL3" template="sbCanal"/>
   <bone name="SB AnusB3" template="sbCanal"/>
+  <bone name="SB AnusL1" template="sbCanal"/>
+  <bone name="SB AnusL2" template="sbCanal"/>
+  <bone name="SB AnusL3" template="sbCanal"/>
+  <bone name="SB AnusR1" template="sbCanal"/>
+  <bone name="SB AnusR2" template="sbCanal"/>
   <bone name="SB AnusR3" template="sbCanal"/>
+  <bone name="SB AnusT1" template="sbCanal"/>
+  <bone name="SB AnusT2" template="sbCanal"/>
+  <bone name="SB AnusT3" template="sbCanal"/>
   <bone name="SB Vag1_0" template="sbCanal"/>
   <bone name="SB Vag1_1" template="sbCanal"/>
+  <bone name="SB Vag1_10" template="sbCanal"/>
+  <bone name="SB Vag1_11" template="sbCanal"/>
   <bone name="SB Vag1_2" template="sbCanal"/>
   <bone name="SB Vag1_3" template="sbCanal"/>
   <bone name="SB Vag1_4" template="sbCanal"/>
   <bone name="SB Vag1_5" template="sbCanal"/>
   <bone name="SB Vag1_6" template="sbCanal"/>
   <bone name="SB Vag1_7" template="sbCanal"/>
+  <bone name="SB Vag1_8" template="sbCanal"/>
+  <bone name="SB Vag1_9" template="sbCanal"/>
   <bone name="SB Vag2_0" template="sbCanal"/>
   <bone name="SB Vag2_1" template="sbCanal"/>
+  <bone name="SB Vag2_10" template="sbCanal"/>
+  <bone name="SB Vag2_11" template="sbCanal"/>
   <bone name="SB Vag2_2" template="sbCanal"/>
   <bone name="SB Vag2_3" template="sbCanal"/>
   <bone name="SB Vag2_4" template="sbCanal"/>
   <bone name="SB Vag2_5" template="sbCanal"/>
   <bone name="SB Vag2_6" template="sbCanal"/>
   <bone name="SB Vag2_7" template="sbCanal"/>
+  <bone name="SB Vag2_8" template="sbCanal"/>
+  <bone name="SB Vag2_9" template="sbCanal"/>
   <bone name="SB Vag3_0" template="sbCanal"/>
   <bone name="SB Vag3_1" template="sbCanal"/>
+  <bone name="SB Vag3_10" template="sbCanal"/>
+  <bone name="SB Vag3_11" template="sbCanal"/>
   <bone name="SB Vag3_2" template="sbCanal"/>
   <bone name="SB Vag3_3" template="sbCanal"/>
   <bone name="SB Vag3_4" template="sbCanal"/>
   <bone name="SB Vag3_5" template="sbCanal"/>
   <bone name="SB Vag3_6" template="sbCanal"/>
   <bone name="SB Vag3_7" template="sbCanal"/>
+  <bone name="SB Vag3_8" template="sbCanal"/>
+  <bone name="SB Vag3_9" template="sbCanal"/>
   <bone name="SB Vag4_0" template="sbCanal"/>
   <bone name="SB Vag4_1" template="sbCanal"/>
+  <bone name="SB Vag4_10" template="sbCanal"/>
+  <bone name="SB Vag4_11" template="sbCanal"/>
   <bone name="SB Vag4_2" template="sbCanal"/>
   <bone name="SB Vag4_3" template="sbCanal"/>
   <bone name="SB Vag4_4" template="sbCanal"/>
   <bone name="SB Vag4_5" template="sbCanal"/>
   <bone name="SB Vag4_6" template="sbCanal"/>
   <bone name="SB Vag4_7" template="sbCanal"/>
+  <bone name="SB Vag4_8" template="sbCanal"/>
+  <bone name="SB Vag4_9" template="sbCanal"/>
   <bone name="SB Vag5_0" template="sbCanal"/>
   <bone name="SB Vag5_1" template="sbCanal"/>
+  <bone name="SB Vag5_10" template="sbCanal"/>
+  <bone name="SB Vag5_11" template="sbCanal"/>
   <bone name="SB Vag5_2" template="sbCanal"/>
   <bone name="SB Vag5_3" template="sbCanal"/>
   <bone name="SB Vag5_4" template="sbCanal"/>
   <bone name="SB Vag5_5" template="sbCanal"/>
   <bone name="SB Vag5_6" template="sbCanal"/>
   <bone name="SB Vag5_7" template="sbCanal"/>
+  <bone name="SB Vag5_8" template="sbCanal"/>
+  <bone name="SB Vag5_9" template="sbCanal"/>
+  <bone name="SB VagIn_0" template="sbCanal"/>
+  <bone name="SB VagIn_1" template="sbCanal"/>
+  <bone name="SB VagIn_10" template="sbCanal"/>
+  <bone name="SB VagIn_11" template="sbCanal"/>
+  <bone name="SB VagIn_2" template="sbCanal"/>
+  <bone name="SB VagIn_3" template="sbCanal"/>
+  <bone name="SB VagIn_4" template="sbCanal"/>
+  <bone name="SB VagIn_5" template="sbCanal"/>
+  <bone name="SB VagIn_6" template="sbCanal"/>
+  <bone name="SB VagIn_7" template="sbCanal"/>
+  <bone name="SB VagIn_8" template="sbCanal"/>
+  <bone name="SB VagIn_9" template="sbCanal"/>
 
   <!--
     Collision surface: the body mesh itself. Kinematic bone influences are
@@ -569,16 +635,6 @@
   -->
   <per-vertex-shape name="SoftBodyVaginaOut">
     <margin>0.35</margin>
-    <penetration>0.8</penetration>
-    <shared>public</shared>
-    <tag>SB_Vagina</tag>
-    <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
-    <no-collide-with-tag>SB_Anus</no-collide-with-tag>
-    <no-collide-with-tag>Balls</no-collide-with-tag>
-    <no-collide-with-tag>Penis</no-collide-with-tag>
-  </per-vertex-shape>
-  <per-vertex-shape name="SoftBodyVaginaDeep">
-    <margin>0.15</margin>
     <penetration>0.8</penetration>
     <shared>public</shared>
     <tag>SB_Vagina</tag>
@@ -696,9 +752,11 @@
   </generic-constraint-default>
 
   <!-- the hood pulls back, the rear lip and the labia part -->
+  <!-- the hood and the outer lips give a little (real ones barely move round a shaft; the entrance ring does the
+       opening), the rear lip more -->
   <generic-constraint bodyA="Clitoral1" bodyB="Clitoral" template="gtSpring">
     <frameInB><basis x="-0.25" y="0" z="0" w="0.5"/><origin x="0" y="0" z="0"/></frameInB>
-    <linearLowerLimit x="0" y="-5" z="0"/>
+    <linearLowerLimit x="0" y="-1.5" z="0"/>
     <linearStiffness x="0" y="40" z="0"/>
     <linearDamping x="0" y="10" z="0"/>
   </generic-constraint>
@@ -709,12 +767,12 @@
     <linearDamping x="0" y="10" z="0"/>
   </generic-constraint>
   <generic-constraint bodyA="NPC L Pussy02" bodyB="NPC L Pussy01" template="gtSpring">
-    <linearUpperLimit x="5" y="0" z="0"/>
+    <linearUpperLimit x="3" y="0" z="0"/>
     <linearStiffness x="40" y="0" z="0"/>
     <linearDamping x="10" y="0" z="0"/>
   </generic-constraint>
   <generic-constraint bodyA="NPC R Pussy02" bodyB="NPC R Pussy01" template="gtSpring">
-    <linearLowerLimit x="-5" y="0" z="0"/>
+    <linearLowerLimit x="-3" y="0" z="0"/>
     <linearStiffness x="40" y="0" z="0"/>
     <linearDamping x="10" y="0" z="0"/>
   </generic-constraint>
@@ -891,8 +949,8 @@
     <linearDamping x="0" y="1" z="0"/>
   </generic-constraint>
 
-  <!-- the anal canal (SoftBody's own, not GT's): three rings of four bones, at 2, 4 and 6 deep, each held on its
-       base by a spring that lets it go only straight outward (its base's x), up to 4 (sbCanalWall) -->
+  <!-- the canals (SoftBody's own, not GT's): rings of bones round the anal canal and round the vaginal entrance and
+       canal, each held on its base by a spring that lets it go only straight outward (its base's x), up to 4 -->
   <generic-constraint-default name="sbCanalWall">
     <frameInB>
       <basis x="0" y="0" z="0" w="1"/>
@@ -914,60 +972,90 @@
     <linearEquilibrium x="0" y="0" z="0"/>
     <angularEquilibrium x="0" y="0" z="0"/>
   </generic-constraint-default>
-  <generic-constraint bodyA="SB AnusT1" bodyB="SB AnusT1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusL1" bodyB="SB AnusL1 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB AnusB1" bodyB="SB AnusB1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusR1" bodyB="SB AnusR1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusT2" bodyB="SB AnusT2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusL2" bodyB="SB AnusL2 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB AnusB2" bodyB="SB AnusB2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusR2" bodyB="SB AnusR2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusT3" bodyB="SB AnusT3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusL3" bodyB="SB AnusL3 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB AnusB3" bodyB="SB AnusB3 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB AnusL1" bodyB="SB AnusL1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB AnusL2" bodyB="SB AnusL2 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB AnusL3" bodyB="SB AnusL3 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB AnusR1" bodyB="SB AnusR1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB AnusR2" bodyB="SB AnusR2 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB AnusR3" bodyB="SB AnusR3 Base" template="sbCanalWall"/>
-
-  <!-- the vaginal canal (SoftBody's own past GT's entrance): five rings of eight bones, from 3.6 to 9.2 deep, on the
-       same springs -->
+  <generic-constraint bodyA="SB AnusT1" bodyB="SB AnusT1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB AnusT2" bodyB="SB AnusT2 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB AnusT3" bodyB="SB AnusT3 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag1_0" bodyB="SB Vag1_0 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag1_1" bodyB="SB Vag1_1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag1_10" bodyB="SB Vag1_10 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag1_11" bodyB="SB Vag1_11 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag1_2" bodyB="SB Vag1_2 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag1_3" bodyB="SB Vag1_3 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag1_4" bodyB="SB Vag1_4 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag1_5" bodyB="SB Vag1_5 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag1_6" bodyB="SB Vag1_6 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag1_7" bodyB="SB Vag1_7 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag1_8" bodyB="SB Vag1_8 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag1_9" bodyB="SB Vag1_9 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag2_0" bodyB="SB Vag2_0 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag2_1" bodyB="SB Vag2_1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag2_10" bodyB="SB Vag2_10 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag2_11" bodyB="SB Vag2_11 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag2_2" bodyB="SB Vag2_2 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag2_3" bodyB="SB Vag2_3 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag2_4" bodyB="SB Vag2_4 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag2_5" bodyB="SB Vag2_5 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag2_6" bodyB="SB Vag2_6 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag2_7" bodyB="SB Vag2_7 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag2_8" bodyB="SB Vag2_8 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag2_9" bodyB="SB Vag2_9 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag3_0" bodyB="SB Vag3_0 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag3_1" bodyB="SB Vag3_1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag3_10" bodyB="SB Vag3_10 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag3_11" bodyB="SB Vag3_11 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag3_2" bodyB="SB Vag3_2 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag3_3" bodyB="SB Vag3_3 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag3_4" bodyB="SB Vag3_4 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag3_5" bodyB="SB Vag3_5 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag3_6" bodyB="SB Vag3_6 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag3_7" bodyB="SB Vag3_7 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag3_8" bodyB="SB Vag3_8 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag3_9" bodyB="SB Vag3_9 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag4_0" bodyB="SB Vag4_0 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag4_1" bodyB="SB Vag4_1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag4_10" bodyB="SB Vag4_10 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag4_11" bodyB="SB Vag4_11 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag4_2" bodyB="SB Vag4_2 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag4_3" bodyB="SB Vag4_3 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag4_4" bodyB="SB Vag4_4 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag4_5" bodyB="SB Vag4_5 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag4_6" bodyB="SB Vag4_6 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag4_7" bodyB="SB Vag4_7 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag4_8" bodyB="SB Vag4_8 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag4_9" bodyB="SB Vag4_9 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_0" bodyB="SB Vag5_0 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_1" bodyB="SB Vag5_1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag5_10" bodyB="SB Vag5_10 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag5_11" bodyB="SB Vag5_11 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_2" bodyB="SB Vag5_2 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_3" bodyB="SB Vag5_3 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_4" bodyB="SB Vag5_4 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_5" bodyB="SB Vag5_5 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_6" bodyB="SB Vag5_6 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB Vag5_7" bodyB="SB Vag5_7 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag5_8" bodyB="SB Vag5_8 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB Vag5_9" bodyB="SB Vag5_9 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_0" bodyB="SB VagIn_0 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_1" bodyB="SB VagIn_1 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_10" bodyB="SB VagIn_10 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_11" bodyB="SB VagIn_11 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_2" bodyB="SB VagIn_2 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_3" bodyB="SB VagIn_3 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_4" bodyB="SB VagIn_4 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_5" bodyB="SB VagIn_5 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_6" bodyB="SB VagIn_6 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_7" bodyB="SB VagIn_7 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_8" bodyB="SB VagIn_8 Base" template="sbCanalWall"/>
+  <generic-constraint bodyA="SB VagIn_9" bodyB="SB VagIn_9 Base" template="sbCanalWall"/>
+
 
 </system>

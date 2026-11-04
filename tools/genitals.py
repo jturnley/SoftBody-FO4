@@ -41,10 +41,9 @@ WEIGHT_FADE = 1.5        # the vulva's weights go from CBBE's (outer seam) to fi
 OVER_DEPTH = 1.5        # GT triangles further than this from the cut CBBE surface are not "over" it
 EASE = 0.8              # the patch's outer band this wide is eased onto CBBE's surface
 SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's real seams jump much further)
-OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1,
-# fading smoothly to none at the patch's outer seam (v0.1-v0.10: within 1.5 of the edge), so an opening stretches the
-# skin round it over the whole patch rather than a narrow band at the rim. Skin GT left off the genital bones takes
-# the mix of its nearest point on the edge.
+OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1 ...
+OPENING_FADE = 1.25     # ... fading out over this distance from them: real outer lips barely move round a shaft (v0.11
+# spread it over the whole patch). Skin GT left off the genital bones takes the mix of its nearest point on the edge.
 ANUS_PULL = 0.85        # the anal canal's share on the anus bones goes this much of the way to 1
 # The anal canal. GT's is a pocket 2.5 deep and 1 across, moved only by the anus ring; a penis goes 7 deep. Past
 # ANAL_KEEP (its depth from the anus ring, which stays as GT has it) it is stretched into a tube ANAL_DEPTH deep and
@@ -76,18 +75,38 @@ VAG_DEPTH = 10.0
 VAG_RADIUS = 0.5
 VAG_TILT = 0.0
 VAG_RINGS = (3.6, 5.0, 6.4, 7.8, 9.2)
-VAG_SIDES = 8                # every 45 degrees, from the front
+VAG_SIDES = 12               # every 30 degrees, from the front
 VAG_PAD_HALF = 0.7
 VAG_PAD_RADIUS = 1.2
 VAG_PADS = "SoftBodyVaginalCanal"
-VAG_BLEND = 1.0              # from where the pocket starts, its weights go from GT's to the rings' over this
+# The entrance. Between the vestibule (the flat floor of the vulva, about level with the slit) and the pocket, GT has
+# a narrow channel (about 0.55 round, from about 0.75 to 3.4 in); a ring of VAG_SIDES bones of our own sits in it at
+# VAG_ENTRANCE (SB VagIn_*), so the entrance closes round a shaft as a collar does, rather than opening as the four
+# lip bones' diamond. The channel and the pocket ride on the entrance ring and the canal's rings by depth, the
+# vestibule round the channel easing onto them from VAG_FLOOR to VAG_FLOOR + VAG_FLOOR_EASE in and within
+# VAG_FLOOR_REACH of the channel.
+VAG_ENTRANCE = 1.2
+VAG_FLOOR = 0.3
+VAG_FLOOR_EASE = 0.6
+VAG_FLOOR_REACH = (0.7, 1.6)
+# Real entrances sit at the back end of the slit (toward the perineum); GT's is near its middle. The channel, the
+# pocket and their rings are moved VAG_BACK toward the back up to VAG_BACK_DEPTH[0] in, easing to none by
+# VAG_BACK_DEPTH[1] (the deep end stays clear of the anal canal); the vestibule round the channel goes with them,
+# easing out between VAG_BACK_REACH of the channel and toward the slit's own edge, which never moves (nor do the ring
+# weights reach it: they ease out within VAG_RIM_EASE of it).
+VAG_BACK = 1.2
+VAG_BACK_REACH = (0.7, 2.0)
+VAG_BACK_DEPTH = (3.5, 9.0)
+VAG_RIM_EASE = 1.0
 # GT's genital bones (ported) and the anal canal's own; every other bone's share of a vertex is taken from CBBE's
 # surface instead
 GENITAL_PREFIXES = ("NPC L Pussy", "NPC R Pussy", "Vagina", "Clitoral", "NPC LT Anus", "NPC RT Anus",
                     "NPC LB Anus", "NPC RB Anus", "Pussy", "SB Anus", "SB Vag")
 # GT's collision for the openings (its HVA collision NIF): small closed pads, one per genital bone, round the opening,
 # the canal and the anus; a penis is held in the channel between them. Hidden shapes here, collided per vertex.
-COLLISION = {"body_VaginaOut": "SoftBodyVaginaOut", "body_VaginaDeep": "SoftBodyVaginaDeep", "body_anus": "SoftBodyAnus"}
+COLLISION = {"body_VaginaOut": "SoftBodyVaginaOut", "body_anus": "SoftBodyAnus"}
+# (GT's canal pads, body_VaginaDeep, went with v0.12: they sat round GT's entrance channel, which has moved, and the
+# entrance and canal rings have pads of their own.)
 # The Skyrim skeleton bones GT's genital springs hang from. They become kinematic NIF-only nodes here, in GT's own
 # orientation (a spring's limits run along its anchor's axes); GT's pelvis comes as GT_PELVIS, as FO4's Pelvis_skin
 # is turned differently
@@ -519,6 +538,11 @@ def vaginal_tube(P, mouth, ax, front):
     return out, S, ax2, float(start)
 
 
+def smoothstep(x):
+    x = np.clip(x, 0, 1)
+    return x * x * (3 - 2 * x)
+
+
 def ring_weights(p, mouth, ax, up, left, centre, rings):
     """rings: [(depth, [(bone, angle)])], deepening. The two rings either side of p's depth share it linearly, and
     each ring's share goes to the two bones either side of p's angle round the canal (bones evenly spaced)"""
@@ -751,20 +775,43 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     vag_up = front - (front @ vag_ax2) * vag_ax2
     vag_up /= np.linalg.norm(vag_up)
     vag_left = np.cross(vag_ax2, vag_up)
+    in_pocket = np.zeros(len(gen_P), bool)
+    in_pocket[pocket] = True
+    # the vagina's own points: depth along the tube's line (from the slit) and distance from it
+    vidx = np.arange(n_vagina)
+    vdepth = (gen_P[vidx] - vag_S) @ vag_ax2 + vag_start
+    voff = gen_P[vidx] - vag_S - np.outer((gen_P[vidx] - vag_S) @ vag_ax2, vag_ax2)
+    vdist = np.linalg.norm(voff, axis=1)
+    # moved toward the back: the channel and pocket wholly near the entrance, easing out deeper in; the vestibule
+    # round them easing out away from the channel and toward the slit's edge
+    back_by = -VAG_BACK * vag_up
+    back_at = lambda depth: smoothstep((VAG_BACK_DEPTH[1] - depth) / (VAG_BACK_DEPTH[1] - VAG_BACK_DEPTH[0]))
+    rims = vidx[snap[vidx]]
+    rim_fade = smoothstep(cKDTree(gen_P[rims]).query(gen_P[vidx])[0] / VAG_RIM_EASE) if len(rims) else np.ones(len(vidx))
+    lo, hi = VAG_BACK_REACH
+    move = np.where(in_pocket[vidx], 1.0, smoothstep((hi - vdist) / (hi - lo))) * back_at(vdepth) * rim_fade
+    gen_P[vidx] += np.outer(move, back_by)
+    vag_S = vag_S + back_by * back_at(vag_start)
+    vag_centre = lambda depth: back_by * (back_at(depth) - back_at(vag_start))   # the tube's centre off its line
+    # the rings: the entrance, then the canal's
     vag_rings, vag_bones = [], {}
-    for i, depth in enumerate(VAG_RINGS):
+    for i, depth in enumerate((VAG_ENTRANCE,) + VAG_RINGS):
         ring = []
         for k in range(VAG_SIDES):
             a = 360.0 * k / VAG_SIDES
             out = across(a, vag_up, vag_left)
             frame = np.column_stack([out, np.cross(vag_ax2, out), vag_ax2])
-            name = "SB Vag%d_%d" % (i + 1, k)
-            vag_bones[name] = (vag_S + (depth - vag_start) * vag_ax2 + VAG_RADIUS * out, frame)
+            name = "SB VagIn_%d" % k if i == 0 else "SB Vag%d_%d" % (i, k)
+            vag_bones[name] = (vag_S + (depth - vag_start) * vag_ax2 + vag_centre(depth) + VAG_RADIUS * out, frame)
             vag_bones[name + " Base"] = vag_bones[name]
             ring.append((name, a))
         vag_rings.append((depth - vag_start, ring))
-    in_pocket = np.zeros(len(gen_P), bool)
-    in_pocket[pocket] = True
+    # how much of each vagina point rides on the rings: the pocket and channel wholly, the vestibule round the
+    # channel easing in
+    lo, hi = VAG_FLOOR_REACH
+    near = np.clip((hi - vdist) / (hi - lo), 0, 1)
+    into = np.clip((vdepth - VAG_FLOOR) / VAG_FLOOR_EASE, 0, 1)
+    on_rings = np.where(in_pocket[vidx], 1.0, (near * near * (3 - 2 * near)) * (into * into * (3 - 2 * into))) * rim_fade
 
     def surface(points):
         """UVs, body weights and the source (CBBE vertices, barycentrics) of the nearest CBBE surface point"""
@@ -806,8 +853,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         # opened while the bones behind it did. The genital share is pulled toward 1 by OPENING_PULL at the edge,
         # easing to none at the outer seam; GT's mix between its genital bones is kept, and skin GT left off them
         # takes its nearest edge point's mix
-        reach = opening_dist[k] / max(opening_dist[k] + edge_dist[k], 1e-6)
-        pull = OPENING_PULL * smooth_fade(reach, 1.0)
+        pull = OPENING_PULL * smooth_fade(opening_dist[k], OPENING_FADE)
         mix = gw if g > 0.05 else {b: x for b, x in body.weights[pverts[inner_v[opening_near[k]]]].items() if is_genital(b)}
         mt = sum(mix.values())
         if pull > 0 and mt > 0:
@@ -847,9 +893,10 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         if k >= n_vagina and (gen_P[k] - mouth) @ ax > 0:
             blend = 1 - smooth_fade((gen_P[k] - mouth) @ ax, ANAL_BLEND)
             rw = ring_weights(gen_P[k], mouth, ax, up, left, anal_centre, anal_rings)
-        elif in_pocket[k]:
-            blend = 1 - smooth_fade((gen_P[k] - vag_S) @ vag_ax2, VAG_BLEND)
-            rw = ring_weights(gen_P[k], vag_S, vag_ax2, vag_up, vag_left, np.zeros(3), vag_rings)
+        elif k < n_vagina and on_rings[k] > 0:
+            blend = on_rings[k]
+            rw = ring_weights(gen_P[k], vag_S, vag_ax2, vag_up, vag_left,
+                              vag_centre((gen_P[k] - vag_S) @ vag_ax2 + vag_start), vag_rings)
         if blend > 0:
             w = top4({b: (1 - blend) * w.get(b, 0) + blend * rw.get(b, 0) for b in set(w) | set(rw)})
         gen_w.append(w)
@@ -932,8 +979,8 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         # the vaginal canal's: the same, round the tube
         P, tris, w = [], [], []
         for depth, ring in vag_rings:
-            p, t, angles = tube(vag_S, vag_ax2, vag_up, vag_left, np.zeros(3),
-                                (depth - VAG_PAD_HALF, depth, depth + VAG_PAD_HALF), VAG_PAD_RADIUS)
+            p, t, angles = tube(vag_S, vag_ax2, vag_up, vag_left, vag_centre(depth + vag_start),
+                                (depth - VAG_PAD_HALF, depth, depth + VAG_PAD_HALF), VAG_PAD_RADIUS, 2 * VAG_SIDES)
             tris.append(t + sum(len(x) for x in P))
             P.append(p)
             for _ in range(3):

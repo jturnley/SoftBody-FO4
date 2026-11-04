@@ -36,7 +36,7 @@ GT_SKELETON = r"meshes\actors\character\character assets\Xml Addon\SMP Object Fe
 # margin-multiplier: 2 on the canal bones, 1 elsewhere), and colliding with everything but each other, as a body
 # whose lip and anus proxies do collide in FO4 has them. GT's per-triangle pads (margin 0.1-0.2) built in SMP but
 # never collided with A-Body's penis, itself per-triangle in 4Stim scenes (MaleBodyHard.xml).
-COLLISION_SHAPES = {"SoftBodyVaginaOut": ("SB_Vagina", 0.35, 0.8), "SoftBodyVaginaDeep": ("SB_Vagina", 0.15, 0.8),
+COLLISION_SHAPES = {"SoftBodyVaginaOut": ("SB_Vagina", 0.35, 0.8),
                     "SoftBodyAnus": ("SB_Anus", 0.3, 0.8), "SoftBodyAnalCanal": ("SB_Anus", 0.5, 0.8),
                     "SoftBodyVaginalCanal": ("SB_Vagina", 0.5, 0.8)}
 # ... and not with A-Body's balls ("Balls"): in doggy they hit the pads and were thrown up; A-Body's own anus shapes
@@ -145,9 +145,21 @@ def collision_xml(collision, skip=()):
     return lines
 
 
-def write_xml(rel, dents=None, collision=None, skip=(), suffix=""):
-    """Copy a physics XML from src/ to the mod, filling in the dent and collision markers.
-    collision: {shape: [its body (non-genital) bones]}; skip, suffix: an ACT_VARIANTS variant"""
+CANAL_PREFIXES = ("SB Anus", "SB Vag")
+
+
+def canal_xml(nif_bones):
+    """The canals' ring bones (SoftBody's own, in the NIF): each a sbCanal bone on a kinematic "<bone> Base", held by
+    sbCanalWall"""
+    rings = sorted(b for b in nif_bones if b.startswith(CANAL_PREFIXES) and not b.endswith(" Base"))
+    return (['  <bone name="%s Base"/>' % b for b in rings], ['  <bone name="%s" template="sbCanal"/>' % b for b in rings],
+            ['  <generic-constraint bodyA="%s" bodyB="%s Base" template="sbCanalWall"/>' % (b, b) for b in rings])
+
+
+def write_xml(rel, dents=None, collision=None, skip=(), suffix="", nif_bones=()):
+    """Copy a physics XML from src/ to the mod, filling in the dent, collision and canal markers.
+    collision: {shape: [its body (non-genital) bones]}; skip, suffix: an ACT_VARIANTS variant; nif_bones: the genital
+    bones added to the NIF"""
     text = open(os.path.join(ROOT, "src", os.path.basename(rel)), encoding="utf-8").read()
     if dents:
         bones = []
@@ -158,6 +170,9 @@ def write_xml(rel, dents=None, collision=None, skip=(), suffix=""):
                 constraints.append('  <generic-constraint bodyA="%s" bodyB="%s%s" template="dentSpring"/>' % (name, region, PHYSICS_SUFFIX))
         markers = [("<!-- @DENT_BONES@ -->", bones), ("<!-- @DENT_CONSTRAINTS@ -->", constraints),
                    ("<!-- @COLLISION_SHAPES@ -->", collision_xml(collision or {}, skip))]
+        bases, ring_bones, walls = canal_xml(nif_bones)
+        markers += [("<!-- @CANAL_BASES@ -->", bases), ("<!-- @CANAL_BONES@ -->", ring_bones),
+                    ("<!-- @CANAL_CONSTRAINTS@ -->", walls)]
         for marker, lines in markers:
             assert marker in text, (rel, marker)
             text = text.replace("  " + marker, "\n".join(lines))
@@ -246,9 +261,9 @@ def main():
     print("physics XML")
     genital_bones = genital_meshes.pop("bones") if genital_meshes else ()
     collision = {name: m["body_bones"] for name, m in (genital_meshes or {}).items() if m["hidden"]}
-    write_xml(BODY_XML, dents, collision)
+    write_xml(BODY_XML, dents, collision, nif_bones=genital_bones)
     for suffix, skip in ACT_VARIANTS.items():
-        write_xml(BODY_XML, dents, collision, skip, suffix)
+        write_xml(BODY_XML, dents, collision, skip, suffix, genital_bones)
     write_xml(HANDS_XML)
     check_xml(BODY_XML, "CBBE", genital_bones)
     for suffix in ACT_VARIANTS:

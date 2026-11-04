@@ -56,9 +56,13 @@ of four bones (`SB Anus{T,L,B,R}1-3`, at 2, 4 and 6 deep, each sprung to go stra
 4) and a hidden pad tube at each ring (`SoftBodyAnalCanal`). So is the vaginal canal past its entrance:
 GT's pocket hangs on two bones that only slide along it (its ring bones carry almost none of the
 mesh), so it becomes a tube 10 deep from the slit, aimed at GT's deepest bone, with five rings of
-eight bones (`SB Vag1-5_0-7`, 3.6 to 9.2 deep) and pads (`SoftBodyVaginalCanal`). The skin round
-both openings rides on the lip and anus bones over the whole vulva patch, easing out to the seam,
-instead of a narrow band at the rim. The pads follow the recipe of a TWB body whose lip and anus
+twelve bones (`SB Vag1-5_0-11`, 3.6 to 9.2 deep) and pads (`SoftBodyVaginalCanal`). A ring of
+twelve more (`SB VagIn_0-11`) sits in GT's narrow entrance channel, 1.2 in, so the entrance closes
+round a shaft as a collar does. As real entrances do, it sits at the back of the slit (GT's was near
+its middle): the channel and the top of the canal are moved 1.2 back, easing out deeper in and into
+the vestibule; the slit's edge doesn't move. The hood barely gives (1.5), the outer lips a little (3),
+the rear lip 5; the skin round the openings follows the lip and anus bones within 1.25 of the edge.
+GT's own canal pads are gone. The ring bones' XML is written from the NIF's bones. The pads follow the recipe of a TWB body whose lip and anus
 proxies do collide in FO4: per-vertex shapes (spheres), weighted wholly to their genital bones,
 colliding with everything except each other, hidden by having no shader. GT's per-triangle pads
 (v0.1–v0.2) built in SMP but never collided with A-Body's penis, which is itself per-triangle in
@@ -87,9 +91,10 @@ Status (2026-11-01):
 - v0.7, measured in game (doggy, anal): the anus ring opens from about 1 to 3-4
   across, about the shaft's width, but the visible canal was a short narrow
   pocket the penis passed through. v0.8 replaces it with the deeper tube above.
-- v0.11: the vaginal canal tube and the wider skin stretch (above), after a look
-  at how another FO4 body is built (a deeper canal, rings of eight, broad stretch
-  weights; nothing taken from it).
+- v0.11: the vaginal canal tube (above), after a look at how another FO4 body
+  is built (a deeper canal, rings of bones, broad stretch weights; nothing taken
+  from it). v0.12, from photos of real penetration: rings of twelve, the entrance
+  ring at the back of the slit, a quiet hood and outer lips.
 - v0.4: the genitals keep their own texture. v0.1-v0.3 shipped their material
   with the skin material's SkinTint flag and root template, so in game FO4
   dressed them in the actor's skin texture. Without the flag they don't take
