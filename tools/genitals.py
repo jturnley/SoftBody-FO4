@@ -111,6 +111,8 @@ VAG_RIM_GATE = (0.6, 1.4)
 ANAL_RIM_DEPTH = -0.3        # along the anal canal from the anus bones' ring (the pucker sits a little outside it)
 ANAL_RIM_RADIUS = 0.35
 ANAL_RIM_REACH = (0.45, 1.8)
+RIM_SEAM_FADE = 1.2          # the rims' share fades to none at the vulva's outer seam with CBBE, over this (v0.19
+                             # reached it at the sides, and the seam, which must not move, tore open)
 VAG_BACK_REACH = (0.7, 2.0)
 VAG_BACK_DEPTH = (3.5, 9.0)
 VAG_RIM_EASE = 1.0
@@ -858,11 +860,13 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         off = p - c
         d = off @ axis
         return smoothstep((hi - np.linalg.norm(off - d * axis)) / (hi - lo)), d
-    def rim_blend(p, w, canal=0.0):
-        """w with p's rim shares blended in (canal: how much of p the vaginal canal's rings already carry)"""
+    def rim_blend(p, w, canal=0.0, seam=1.0):
+        """w with p's rim shares blended in (canal: how much of p the vaginal canal's rings already carry; seam: 0 at
+        the vulva's outer seam, 1 clear of it)"""
         fv, dv = reach(p, vrim_c, vag_ax2, *VAG_RIM_REACH)
         fv *= smoothstep((VAG_RIM_GATE[1] - dv) / (VAG_RIM_GATE[1] - VAG_RIM_GATE[0])) * (1 - canal)
         fa, _ = reach(p, arim_c, ax, *ANAL_RIM_REACH)
+        fv, fa = fv * seam, fa * seam
         total = fv + fa
         if total <= 1e-4:
             return w
@@ -924,7 +928,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
             w = {b: x * (1 - pull) for b, x in w.items()}
             for b, x in mix.items():
                 w[b] = w.get(b, 0) + pull * x / mt
-        vul_w.append(rim_blend(vulva_P[k], top4(w)))
+        vul_w.append(rim_blend(vulva_P[k], top4(w), seam=smoothstep(edge_dist[k] / RIM_SEAM_FADE)))
     _, gen_body_w, gen_src = surface(gen_P)
     # The parts that must open with the penis ride on their bones like the outer skin does (GT leaves them mostly on
     # the pelvis, its bones travelling far enough to drag them anyway): the labia minora, vestibule and clitoris (2Vagina

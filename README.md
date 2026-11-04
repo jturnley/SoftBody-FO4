@@ -172,7 +172,7 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   slit's middle) is measured by that edge instead (`fRimEdge` from the opening's centre), so the lips
   part as far as the slit must; the hood moves a third as much. The skin opens round the shaft and
   closes behind it; the canals inside stay SMP.
-  `bDriveOpenings`, `fPenisRadius` (1.8), `fPenisTipLength`, `fPenisTipExtra`, `fRimSmoothing` in the INI.
+  Only the opening in use opens (the perineum is short: a penis in one passes the other's rim). `bDriveOpenings`, `fPenisRadius` (2.0), `fPenisTipLength`, `fPenisTipExtra`, `fRimSmoothing` in the INI.
   The lips no longer jiggle or take a hand's push.
 - **Tuning log.** With `bLogSamples=1` it logs her genital bones and the penis every 25 ms to
   `Documents\My Games\Fallout4\F4SE\SoftBodyFO4.log` (what `probe/` did).

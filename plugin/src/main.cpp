@@ -40,9 +40,9 @@ namespace
 		float maxStep = 6.0F;  // the most he is moved in one step
 		// the openings' rims, placed round the penis (game units, at his scale 1)
 		bool  driveOpenings = true;
-		float penisRadius = 1.8F;     // the shaft's
+		float penisRadius = 2.0F;     // the shaft's (A-Body's: 2.2 at the root, 1.8 two thirds along)
 		float penisTipLength = 1.5F;  // the rounded tip: the radius grows from 0 at its end to the shaft's over this
-		float penisTipExtra = 1.0F;   // the penis's end beyond its last bone (Penis_05_SMP)
+		float penisTipExtra = 0.75F;  // the penis's end beyond its last bone (Penis_05_SMP; A-Body's: 0.73)
 		float rimSmoothing = 0.02F;   // seconds: how quickly the rims follow
 		float rimEdge = 0.5F;         // an opening's edge at rest, from its centre: where a rim bone's skin starts
 
@@ -341,6 +341,17 @@ namespace
 		himPosition = himAt;
 	}
 
+	enum class Act
+	{
+		kNone,
+		kVaginal,
+		kAnal,
+		kBoth
+	};
+
+	// the act going on (from 4Stim's scene, the penis, or F11)
+	std::atomic<Act> currentAct{ Act::kNone };
+
 	// ---------------------------------------------------------------- the openings' rims, round the penis
 	// Left to collision, the rims opened where the thrusting penis shoved their pads: along the slit, lagging, oval.
 	// So her physics files make the rims' bones kinematic, and here each is pushed straight out from the penis's axis
@@ -417,6 +428,10 @@ namespace
 			haveCentre[o] = n == 4;
 			centre[o] = Mul(c, 0.25F);
 		}
+		// only the opening in use opens: the perineum is short, so a penis in one passes within reach of the other's
+		// rim (v0.19: an anal penis opened the vagina's under it)
+		const Act act = currentAct.load();
+		const bool open[2] = { act != Act::kAnal, act != Act::kVaginal };
 		const float follow = Settings::rimSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::rimSmoothing) : 1.0F;
 		const float radius = Settings::penisRadius * scale;
 		const float tipLength = Settings::penisTipLength * scale;
@@ -427,7 +442,7 @@ namespace
 				continue;
 			}
 			V target = d.rest;
-			if (penis) {
+			if (penis && open[d.opening]) {
 				// A bone can sit well out from the edge of the opening it carries (GT's lip bones are about 3 from the
 				// slit's middle, the slit itself closed), so it is the edge that is measured against the penis: the
 				// point on the bone's side of the opening, fRimEdge from its centre, at the bone's depth. The bone
@@ -556,14 +571,6 @@ namespace
 
 	// ---------------------------------------------------------------- the act: which opening, which physics
 
-	enum class Act
-	{
-		kNone,
-		kVaginal,
-		kAnal,
-		kBoth
-	};
-
 	const char* ActName(Act a_act)
 	{
 		switch (a_act) {
@@ -588,7 +595,6 @@ namespace
 		return vaginal && anal ? Act::kBoth : vaginal ? Act::kVaginal : anal ? Act::kAnal : Act::kNone;
 	}
 
-	std::atomic<Act> currentAct{ Act::kNone };
 	// the user picked the opening (F11's vagina or anus mode): kept, and not re-detected, until the mode changes
 	std::atomic<bool> forcedAct{ false };
 
