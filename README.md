@@ -155,6 +155,12 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   that lines it up, and centres the entrance again. Keys (game in front): **F11** steps through four modes, aligning at once: *auto* (the scene's act,
   or where the penis goes), *vagina*, *anus* (either also sets that act's physics) and *off*. The mode
   holds across scene changes. **Ctrl+F11** goes back to the scene's own alignment. `bAutoAlign=0` starts in *off*.
+- **After every BodySlide build: `python -I tools/rebind_output.py <built FemaleBody.nif>`.** BodySlide
+  moves vertices by the sliders but never moves bones, so a preset that reshapes the crotch (one tested:
+  about 2 units) leaves the openings' skin off the bones that carry it, and the aim, rims, pads and
+  canals all miss what is drawn. The tool moves every genital node by the sliders' displacement of the
+  skin around it (against the reference mesh) and rebinds the skin, so the body looks the same at rest
+  with its bones on the skin. It keeps the original as `.nif.bak`. (To do: let the plugin do this.)
 - **Openings round the penis.** Left to collision, the rims opened where the thrusting penis shoved
   their pads: along the slit, lagging behind, oval (v0.14: the entrance 7.3 front to back, 3.5 across).
   So the rims' bones (GT's four lip bones, the 12-bone vaginal entrance ring, GT's four anus-rim bones)
