@@ -2,13 +2,14 @@
 //  1. gives her body the physics for the scene's act, as GT Softbody switches its collision by act: for vaginal sex
 //     SoftBody-CBBE-Vaginal.xml, for anal -Anal.xml, otherwise the full SoftBody-CBBE.xml (FO4 FSMP's DynamicHDT).
 //     The opening not in use lets the penis through, so it can't catch it or be dragged about by it.
+//     The act comes from 4Stim's Scenes interface; a 4Stim without it gets it from where the penis goes instead.
 //  2. aligns the penis with the opening in use. GT gets there with a bendable penis that her collision steers in;
 //     4Stim's penis is rigid, so his 4Stim alignment offset is corrected instead (4Stim saves it with the scene):
 //     where the penis line crosses the opening is measured over a couple of seconds of the loop, he is moved, and it
 //     is measured again, until it is within the tolerance.
 //  3. optionally logs her genital bones and the penis (what was SoftBodyProbe), for tuning.
-// Settings: Data\F4SE\Plugins\SoftBodyFO4.ini. Keys, with the game in front: F10 align now, Shift+F10 auto-align on
-// or off, Ctrl+F10 back to the scene's own alignment.
+// Settings: Data\F4SE\Plugins\SoftBodyFO4.ini. Keys, with the game in front: F11 align now, Shift+F11 auto-align on
+// or off, Ctrl+F11 back to the scene's own alignment.
 
 #include "PluginInterface.h"
 
@@ -29,7 +30,7 @@ namespace
 		bool  swapPhysics = true;
 		bool  autoAlign = true;
 		bool  logSamples = false;
-		int   alignKey = 0x79;  // F10
+		int   alignKey = 0x7A;  // F11
 		float tolerance = 0.4F;  // game units: the penis line within this of the opening's centre is aligned
 		int   maxSteps = 5;
 		float maxStep = 6.0F;  // the most he is moved in one step
@@ -497,12 +498,41 @@ namespace
 		return e;
 	}
 
+	// How far in past the opening's rim the penis tip is (negative: short of it). Called with heldLock held.
+	std::optional<float> TipDepth(const Opening& a_opening)
+	{
+		auto* pelvis = Held("her", "Pelvis_skin");
+		auto* tip = Held("him", kPenis[0]);
+		if (!pelvis || !tip) {
+			return std::nullopt;
+		}
+		V rim(0, 0, 0), deep(0, 0, 0);
+		for (int k = 0; k < 4; ++k) {
+			auto* r = Held("her", a_opening.rim[k]);
+			auto* d = Held("her", a_opening.deep[k]);
+			if (!r || !d) {
+				return std::nullopt;
+			}
+			rim = Add(rim, Mul(ToLocal(pelvis, r->world.translate), 0.25F));
+			deep = Add(deep, Mul(ToLocal(pelvis, d->world.translate), 0.25F));
+		}
+		return Dot(Sub(ToLocal(pelvis, tip->world.translate), rim), Unit(Sub(deep, rim)));
+	}
+
 	enum class Phase
 	{
 		kOff,
 		kSettle,
 		kMeasure,
 		kApply
+	};
+
+	// Where the penis goes, for each opening, while the act is being worked out
+	struct Seen
+	{
+		std::vector<V>     errors;
+		std::vector<float> depths;
+		V                  axis;
 	};
 
 	struct Aligner
@@ -520,6 +550,9 @@ namespace
 		bool              haveJ{ false };
 		M3                J;  // his offset (x, y, z) -> the crossing's move in her pelvis frame
 		float             first{ 0.0F };
+		bool              detect{ false };      // working out the act from the penis first
+		bool              alignAfter{ false };  // ... then aligning to it
+		Seen              seenVagina, seenAnus;
 	};
 
 	std::mutex alignLock;
@@ -533,6 +566,19 @@ namespace
 		aligner.phase = a_target ? Phase::kSettle : Phase::kOff;
 		aligner.until = Clock::now() + kSettle;
 	}
+
+	// The act from the penis: watch where it goes for a measurement, then set her physics and (a_align) align
+	void StartDetect(bool a_align)
+	{
+		std::scoped_lock lock{ alignLock };
+		aligner = Aligner{};
+		aligner.detect = true;
+		aligner.alignAfter = a_align;
+		aligner.phase = Phase::kSettle;
+		aligner.until = Clock::now() + kSettle;
+	}
+
+	const Opening* TargetFor(Act a_act);
 
 	V Median(std::vector<V>& a_values)
 	{
@@ -560,7 +606,24 @@ namespace
 		std::scoped_lock lock{ alignLock };
 		auto&            a = aligner;
 		if (a.phase == Phase::kOff || a.phase == Phase::kApply || Clock::now() < a.until) {
-			if (a.phase == Phase::kMeasure) {
+			if (a.phase == Phase::kMeasure && a.detect) {
+				std::scoped_lock held_{ heldLock };
+				for (auto [o, seen] : { std::pair{ &kVagina, &a.seenVagina }, std::pair{ &kAnus, &a.seenAnus } }) {
+					V ax;
+					auto e = CrossError(*o, &ax);
+					auto d = TipDepth(*o);
+					if (e && d) {
+						seen->errors.push_back(*e);
+						seen->depths.push_back(*d);
+						seen->axis = ax;
+					}
+				}
+				if (auto* pelvis = Held("her", "Pelvis_skin")) {
+					const auto& r = pelvis->world.rotate;
+					for (int i = 0; i < 3; ++i)
+						for (int j = 0; j < 3; ++j) a.pelvisRotate.m[i][j] = r.entry[i][j] / pelvis->world.scale;
+				}
+			} else if (a.phase == Phase::kMeasure) {
 				std::scoped_lock held_{ heldLock };
 				V                ax;
 				if (auto e = CrossError(*a.target, &ax)) {
@@ -582,6 +645,44 @@ namespace
 			return;
 		}
 		// a measurement is done
+		if (a.detect) {
+			// the opening the penis goes into: its tip mostly at or past the rim, its line the nearer of the two
+			auto judge = [](Seen& a_seen, float& a_off, float& a_depth) {
+				if (a_seen.errors.size() < 20) {
+					return false;
+				}
+				std::vector<float> d = a_seen.depths;
+				std::nth_element(d.begin(), d.begin() + d.size() / 2, d.end());
+				a_depth = d[d.size() / 2];
+				a_off = Len(Median(a_seen.errors));
+				return a_depth > -1.0F && a_off < 3.5F;
+			};
+			float      offV = 0, depthV = 0, offA = 0, depthA = 0;
+			const bool v = judge(a.seenVagina, offV, depthV);
+			const bool an = judge(a.seenAnus, offA, depthA);
+			const Act  act = v && (!an || offV <= offA) ? Act::kVaginal : an ? Act::kAnal : Act::kNone;
+			REX::INFO("act from the penis: {} (vagina: tip {:.1f} in, line {:.1f} off, {} readings; anus: tip {:.1f} in, line {:.1f} off, {} readings)",
+				ActName(act), depthV, offV, a.seenVagina.errors.size(), depthA, offA, a.seenAnus.errors.size());
+			currentAct = act;
+			const auto threadID = followed.load();
+			if (auto* tasks = F4SE::GetTaskInterface()) {
+				tasks->AddTask([threadID, act]() {
+					if (auto* thread = threads ? threads->getThread(threadID) : nullptr) {
+						ApplyAct(thread, act);
+					}
+				});
+			}
+			a.detect = false;
+			a.target = TargetFor(act);
+			if (!a.alignAfter || !a.target) {
+				a.phase = Phase::kOff;
+				return;
+			}
+			// this measurement is the alignment's first
+			Seen& seen = act == Act::kVaginal ? a.seenVagina : a.seenAnus;
+			a.errors = std::move(seen.errors);
+			a.axis = seen.axis;
+		}
 		if (a.errors.size() < 20) {
 			Notify(std::format("can't align: the penis doesn't point into the {} ({} usable readings)", a.target->name, a.errors.size()));
 			a.phase = Phase::kOff;
@@ -699,9 +800,12 @@ namespace
 				});
 				Notify("back to the scene's own alignment");
 			}
-		} else if (auto* target = TargetFor(currentAct.load())) {
+		} else if (auto* target = scenes ? TargetFor(currentAct.load()) : nullptr) {
 			Notify(std::format("aligning to the {}", target->name));
 			StartAlign(target);
+		} else if (!scenes) {
+			Notify("aligning: watching where the penis goes");
+			StartDetect(true);
 		} else {
 			Notify("nothing to align: this scene has no vaginal or anal sex");
 		}
@@ -751,6 +855,14 @@ namespace
 			scene = id ? id : "";
 		}
 		Identify(a_thread, nullptr, nullptr);
+		if (!scenes) {  // no act from 4Stim: from where the penis goes, after a moment
+			currentAct = Act::kNone;
+			REX::INFO("thread {} in {}: act from the penis", a_thread->getThreadID(), id ? id : "?");
+			if (Settings::swapPhysics || Settings::autoAlign) {
+				StartDetect(Settings::autoAlign);
+			}
+			return;
+		}
 		const Act act = SceneAct(id);
 		currentAct = act;
 		REX::INFO("thread {} in {}: {}", a_thread->getThreadID(), id ? id : "?", ActName(act));
@@ -828,7 +940,7 @@ namespace
 		threads->registerNodeChangedListener(&changed);
 		threads->registerThreadStopListener(&stopped);
 		REX::INFO("following 4Stim's scenes (threads v{}, alignment {}, scenes {})", threads->getVersion(),
-			alignment ? "yes" : "no - no auto-align", scenes ? "yes" : "no - no per-act physics or auto-align");
+			alignment ? "yes" : "no - no auto-align", scenes ? "yes" : "no - the act comes from where the penis goes");
 	}
 
 	void OnMessage(F4SE::MessagingInterface::Message* a_message)
