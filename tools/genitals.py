@@ -53,7 +53,13 @@ ANAL_DEPTH = 8.0
 ANAL_RADIUS = 0.4
 ANAL_RINGS = (2.0, 4.0, 6.0)
 ANAL_SIDES = (("T", 0.0), ("L", 90.0), ("B", 180.0), ("R", -90.0))    # degrees round the canal, from the vagina's side
-ANAL_PAD_HALF = 0.9          # each ring's pad tube runs this far either side of it
+ANAL_PAD_HALF = 0.9          # each ring's pad tube runs this far either side of it ...
+# ... and this far round the canal's centre, well outside the wall (ANAL_RADIUS). A penis rarely runs down the middle
+# (about 1 off it in game); with the pads on the wall the far side's pads lay inside the shaft on the near side of
+# its axis, were pushed across the canal (v0.8: up to 3, through the lower limit) and dragged the tube out through
+# the skin. Out here a pad is only met by the shaft on its own side. The wall rides the same bones, so it stays inside
+# the shaft, hidden.
+ANAL_PAD_RADIUS = 1.2
 ANAL_PADS = "SoftBodyAnalCanal"
 ANAL_BLEND = 1.0             # from the anus ring (depth 0) the canal's weights go from GT's to the rings' over this
 # GT's genital bones (ported) and the anal canal's own; every other bone's share of a vertex is taken from CBBE's
@@ -805,7 +811,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         P, tris, w = [], [], []
         for depth, ring in anal_rings[1:]:
             p, t, angles = tube(mouth, ax, up, left, anal_centre, (depth - ANAL_PAD_HALF, depth, depth + ANAL_PAD_HALF),
-                                ANAL_RADIUS)
+                                ANAL_PAD_RADIUS)
             tris.append(t + sum(len(x) for x in P))
             P.append(p)
             for _ in range(3):
