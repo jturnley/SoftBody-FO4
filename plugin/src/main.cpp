@@ -269,12 +269,16 @@ namespace
 		const char*                name;
 		std::array<const char*, 4> rim;
 		std::array<const char*, 4> deep;
+		float                      aimOut;  // the point aimed at: this far out from the rim's centre, along the canal
 	};
 	// each: its visible rim's ring (the vagina's at the back of the slit, where a real entrance is) and a canal ring
 	constexpr Opening kVagina{ "vagina", { "SB VagRim_0 Base", "SB VagRim_6 Base", "SB VagRim_12 Base", "SB VagRim_18 Base" },
-		{ "SB Vag2_0 Base", "SB Vag2_3 Base", "SB Vag2_6 Base", "SB Vag2_9 Base" } };
+		{ "SB Vag2_0 Base", "SB Vag2_3 Base", "SB Vag2_6 Base", "SB Vag2_9 Base" }, 0.0F };
 	constexpr Opening kAnus{ "anus", { "SB AnusRim_0 Base", "SB AnusRim_6 Base", "SB AnusRim_12 Base", "SB AnusRim_18 Base" },
-		{ "SB AnusT2 Base", "SB AnusB2 Base", "SB AnusL2 Base", "SB AnusR2 Base" } };
+		{ "SB AnusT2 Base", "SB AnusB2 Base", "SB AnusL2 Base", "SB AnusR2 Base" }, 0.8F };
+	// The anus's rim sits at the bottom of GT's pucker, 0.8 inside her skin along the canal. Aimed at the rim's centre,
+	// a penis coming in at an angle crossed her skin beside the hole, on the funnel's side (v0.25): the anus is aimed
+	// at where the canal's line meets her skin instead.
 
 	// her body's physics files, as the NIF names them (relative to Data)
 	constexpr const char* kXmlBoth = "meshes\\SoftBodyFO4\\SoftBody-CBBE.xml";
@@ -689,7 +693,7 @@ namespace
 		V     segStart[2], segU[2];
 		float segAlong[2]{};
 		// each opening's centre, from its kinematic rim anchors
-		V    centre[2];
+		V    centre[2], aim[2];
 		bool haveCentre[2]{};
 		for (int o = 0; o < 2; ++o) {
 			const Opening& op = o == 0 ? kVagina : kAnus;
@@ -703,6 +707,20 @@ namespace
 			}
 			haveCentre[o] = n == 4;
 			centre[o] = Mul(c, 0.25F);
+			aim[o] = centre[o];
+			if (op.aimOut > 0) {
+				V   dc(0, 0, 0);
+				int dn = 0;
+				for (const auto* name : op.deep) {
+					if (auto* r = Held("her", name)) {
+						dc = Add(dc, r->world.translate);
+						++dn;
+					}
+				}
+				if (dn == 4) {
+					aim[o] = Sub(centre[o], Mul(Unit(Sub(Mul(dc, 0.25F), centre[o])), op.aimOut * scale));
+				}
+			}
 			segStart[o] = b;
 			segU[o] = u;
 			if (penis && first > 1e-3F && Len(Sub(tip->world.translate, m)) > 1e-3F) {
@@ -892,7 +910,7 @@ namespace
 			d.now = Add(d.now, Mul(Sub(target, d.now), follow));
 			node->local.translate = d.now;
 		}
-		BendPenis(a_dt, penis, b, u, length, centre, haveCentre, act);
+		BendPenis(a_dt, penis, b, u, length, aim, haveCentre, act);
 	}
 
 	// On the main thread: find her and him in the thread and hold their nodes
@@ -1080,6 +1098,7 @@ namespace
 			deep = Add(deep, Mul(ToLocal(pelvis, d->world.translate), 0.25F));
 		}
 		const V axis = Unit(Sub(deep, rim));
+		rim = Sub(rim, Mul(axis, a_opening.aimOut * pelvis->world.scale));
 		const V b = ToLocal(pelvis, base->world.translate);
 		const V u = Unit(Sub(ToLocal(pelvis, tip->world.translate), b));
 		const float facing = Dot(u, axis);

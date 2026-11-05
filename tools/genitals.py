@@ -42,6 +42,9 @@ OVER_DEPTH = 1.5        # GT triangles further than this from the cut CBBE surfa
 EASE = 0.8              # the patch's outer band this wide is eased onto CBBE's surface
 FLATTEN = 1.0            # the patch is let down this much of the way onto CBBE's surface (where it stands proud) ...
 FLATTEN_KEEP = (0.15, 0.8) # ... easing in between these distances from the slit and anus edges
+ANUS_PAINT_SHIFT = 0.95   # CBBE's painted anus lies this far from GT's hole toward the vagina, across the anal canal's
+                          # line (measured on the 8K CBBE skin)
+ANUS_PAINT_R = (0.6, 1.6)  # the patch reads the paint shifted onto the hole within the first, easing out by the second
 SAME_CHART = 0.15       # a corner's UV is taken from CBBE triangles within this of its home triangle in UV
 SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's real seams jump much further)
 OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1 ...
@@ -360,7 +363,8 @@ def split_by_uv_island(full, ctree, cent, m):
     across its plane), and vertices split where neighbouring triangles get different UVs: CBBE's crotch is
     cut along the midline in its UV layout and mirrored there, so one UV per vertex smears the texture across
     the seam and garbles tangents."""
-    P, T = m["P"], m["tris"]
+    P0, T = m["P"], m["tris"]
+    P = m.get("uv_P", P0)    # where each point takes its UVs from (the anus's paint moved onto its hole, below)
     island = uv_islands(full.tris, len(full.P))
     vert_island = np.full(len(full.P), -1)
     for t, tri in enumerate(full.tris):
@@ -453,7 +457,7 @@ def split_by_uv_island(full, ctree, cent, m):
             uvs.append(total / len(members))
             tans.append(sum(corner_tan[k, c] for k, c in members))
             bits.append(sum(corner_bit[k, c] for k, c in members))
-    return dict(P=P[old], UV=np.array(uvs), tris=new_T, frame_T=np.array(tans), frame_B=np.array(bits),
+    return dict(P=P0[old], UV=np.array(uvs), tris=new_T, frame_T=np.array(tans), frame_B=np.array(bits),
                 weights=[m["weights"][v] for v in old], src=[m["src"][v] for v in old],
                 fixed_normals={i: m["fixed_normals"][v] for i, v in enumerate(old) if v in m["fixed_normals"]},
                 blend_normals={i: m["blend_normals"][v] for i, v in enumerate(old) if v in m["blend_normals"]})
@@ -925,7 +929,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         return RIM_THIGH if "Thigh" in bone else 1.0
     def gate(d):
         return smoothstep((VAG_RIM_GATE[1] - d) / (VAG_RIM_GATE[1] - VAG_RIM_GATE[0]))
-    def rim_blend(p, w, canal=0.0, inner_ok=True):
+    def rim_blend(p, w, canal=0.0, inner_ok=True, vaginal=False):
         """w with p's rim shares blended in (canal: how much of p the vaginal canal's rings already carry; inner_ok
         False for CBBE's body and the vulva's seam with it, which ride on the outer rings alone, so CBBE's shape keeps
         to MAX_SHAPE_BONES)"""
@@ -933,6 +937,10 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         g = gate(dv) * (1 - canal)
         ai, ao, da = reach(p, arim_c, ax, ANAL_RIM_RADIUS, ANAL_RIM_OUTER, *ANAL_RIM_REACH, inner_ok)
         h = gate(da)
+        if vaginal:
+            # the vagina's own skin takes none of the anus's rings past its rim (v0.25: the back of its entrance,
+            # 0.5-1.5 in, rode up to half on SB AnusRimO_0, and tore from the canal when the canal followed him)
+            h *= gate(dv) * (1 - canal)
         shares = [vi * g, vo * g, ai * h, ao * h]
         total = sum(shares)
         if total <= 1e-3:
@@ -1042,7 +1050,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         if blend > 0:
             w = top4({b: (1 - blend) * w.get(b, 0) + blend * rw.get(b, 0) for b in set(w) | set(rw)})
         if k < n_vagina:
-            w = rim_blend(gen_P[k], w, on_rings[k])
+            w = rim_blend(gen_P[k], w, on_rings[k], vaginal=True)
         elif (gen_P[k] - mouth) @ ax <= 0:      # past the anus ring the canal has its rings (the first the rim's)
             w = rim_blend(gen_P[k], w)
         gen_w.append(w)
@@ -1074,8 +1082,20 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                   bridge_flipped=int(flip.sum()), genital_vertices=len(gen_P), genital_triangles=len(gen_tris),
                   genital_bones=sorted(bones), bones_used=sorted(used - set(full.skin.names)),
                   fit_R=R, vagina_vertices=len(vagina.positions), cbbe_rim_vertices=len(cbbe.rim_weights))
+    # CBBE's skin paints the anus ANUS_PAINT_SHIFT nearer the vagina than GT's hole, where its pucker funnels in: the
+    # patch round the hole reads the texture from that much further along, so the painted anus sits on the hole (full
+    # within ANUS_PAINT_R[0] of the anal canal's line, easing to none by ANUS_PAINT_R[1], well inside the patch's edge)
+    toward_vag = vrim_c - arim_c
+    toward_vag = toward_vag - (toward_vag @ ax) * ax
+    toward_vag = toward_vag / np.linalg.norm(toward_vag)
+    uv_P = vulva_P.copy()
+    for k in range(len(patch_P)):
+        off = vulva_P[k] - arim_c
+        rho = np.linalg.norm(off - (off @ ax) * ax)
+        w = smooth_fade(max(0.0, rho - ANUS_PAINT_R[0]), ANUS_PAINT_R[1] - ANUS_PAINT_R[0])
+        uv_P[k] = vulva_P[k] + w * ANUS_PAINT_SHIFT * toward_vag
     vulva = split_by_uv_island(full, ctree, cent, dict(
-        P=vulva_P, tris=vulva_tris, weights=vul_w, src=vul_src,
+        P=vulva_P, uv_P=uv_P, tris=vulva_tris, weights=vul_w, src=vul_src,
         fixed_normals={len(patch_P) + k: cbbe.N[v] for k, v in enumerate(hole_v)}, blend_normals=blend_normals))
     report["vulva_vertices_after_uv_split"] = len(vulva["P"])
     meshes = {VULVA: vulva,

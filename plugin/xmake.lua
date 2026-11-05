@@ -5,7 +5,7 @@ set_xmakever("3.0.0")
 includes("../../4Strands/lib/commonlibf4")
 
 set_project("SoftBodyFO4")
-set_version("0.2.6")
+set_version("0.2.7")
 set_languages("c++23")
 set_warnings("allextra")
 

@@ -202,6 +202,15 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   stay shut. Before, the deeper rings were springs on fixed bases that his collision pushed open, so
   they kept to the canal's own line while he ran through at 10–20° to it. They are kinematic now
   (`bDriveCanal`, `fCanalFollow`, `fCanalCatch` in the INI).
+- **The anus is aimed at its mouth, and painted there.** The anus's rim sits at the bottom of GT's
+  pucker, 0.8 inside her skin along the canal. The aligner and the bend aimed his line through the
+  rim's centre, so coming in at an angle he crossed her skin forward of the hole, on the funnel's side,
+  where CBBE's skin also paints the anus (0.95 across the canal's line). Both now aim at where the
+  canal's line meets her skin. Round the hole, the patch reads the skin texture 0.95 further along, so
+  the painted anus sits on the hole (`ANUS_PAINT_SHIFT`, `ANUS_PAINT_R` in `tools/genitals.py`).
+- **The vagina's entrance rides on its own rings.** The back of the vaginal canal's entrance, 0.5 to
+  1.5 units in, rode up to half on the anus's outer ring, and tore away from the canal once the canal
+  followed him. The vagina's inner skin now takes none of the anus's rings.
 - **Nearby bones move with the opening in use.** The vagina's and anus's centres are 4.1 units apart,
   and about 1,200 points of skin between them ride partly on each one's bones. Up to v0.23 only the
   opening in use moved, so an open anus had the skin on its vagina side hanging across it as a sheet.
