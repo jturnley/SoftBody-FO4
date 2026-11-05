@@ -64,6 +64,8 @@ ANAL_PAD_HALF = 0.9          # each ring's pad tube runs this far either side of
 # the shaft, hidden.
 ANAL_PAD_RADIUS = 1.2
 ANAL_PADS = "SoftBodyAnalCanal"
+PAD_UNDER = 0.15            # the opening pads are kept this far under the vulva's skin ...
+PAD_CLEAR = 0.3             # ... except within this of the slit and anus edges
 ANAL_BLEND = 0.0             # from the anus ring (depth 0) the canal's weights go from GT's to the rings' over this
                              # (0: at once; v0.22's 1.0 left the anus's throat on GT's undriven anus bones, shut)
 # The vaginal canal. Past its entrance GT's is a pocket about 6.5 deep from the slit, hanging almost wholly on
@@ -1094,6 +1096,21 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
             for b in shape.bone_names:
                 if is_genital(b):
                     bones.setdefault(b, bone_frame(shape, b))
+            # the pads are drawn (white) wherever they come through the skin, so they're kept PAD_UNDER under the
+            # vulva's patch (v0.23.1 laid it down onto CBBE, and the lip pads beside the slit came out 0.75 through it);
+            # inside the slit and anus, where the patch has its openings, they're left as GT has them
+            vtree = cKDTree(vulva_P[vulva_tris].mean(1))
+            vcent = vulva_P[vulva_tris].mean(1)
+            for k, (d, t_, bary) in enumerate(closest_on_triangles(P, vulva_P, vulva_tris, vtree, vcent)):
+                a_, b_, c_ = vulva_P[vulva_tris[t_]]
+                fn = np.cross(b_ - a_, c_ - a_)
+                if np.linalg.norm(fn) < 1e-9 or (t_ < len(patch_tris) and
+                                                 min(opening_dist[x] for x in vulva_tris[t_]) < PAD_CLEAR):
+                    continue
+                fn = fn / np.linalg.norm(fn)
+                h = (P[k] - np.asarray(bary) @ vulva_P[vulva_tris[t_]]) @ fn
+                if d < 2.0 and h > -PAD_UNDER:
+                    P[k] -= (h + PAD_UNDER) * fn
             _, _, src = surface(P)
             meshes[name] = dict(P=P, UV=np.zeros((len(P), 2)), tris=tris, weights=w_all,
                                 src=src, fixed_normals={}, hidden=True)
