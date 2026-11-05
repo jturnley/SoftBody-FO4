@@ -59,7 +59,8 @@ namespace
 		float canalFollow = 8.0F;     // how far a canal ring moves across onto his line
 		float canalCatch = 8.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
 		float cervixStretch = 4.0F;   // how far his tip may carry the cervix deeper
-		float anusAimBack = 0.0F;     // the anus's aim moved this far toward her back (onto its hole, as seen in game)
+		float anusAimBack = 0.0F;
+		float snakeMax = 60.0F;       // degrees: the most her canal may turn from his line and still be followed     // the anus's aim moved this far toward her back (onto its hole, as seen in game)
 		float uterusSwell = 0.6F;     // how much wider the uterus grows when full (0.6: by 60%)
 
 		void Load()
@@ -92,6 +93,7 @@ namespace
 			cervixStretch = f("fCervixStretch", cervixStretch);
 			uterusSwell = f("fUterusSwell", uterusSwell);
 			anusAimBack = f("fAnusAimBack", anusAimBack);
+			snakeMax = f("fSnakeMax", snakeMax);
 			bendMax = std::clamp(f("fBendMax", bendMax), 0.0F, 45.0F);
 			bendSmoothing = std::max(0.0F, f("fBendSmoothing", bendSmoothing));
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
@@ -517,8 +519,10 @@ namespace
 	struct Bend
 	{
 		BendLeaf leaves[4]{ { "Penis_02_SMP", 1 }, { "Penis_03_SMP", 2 }, { "Penis_04_SMP", 2 }, { "Penis_05_SMP", 2 } };
-		V        turn;  // the whole turn, in the first pivot's parent's frame: axis times angle (radians)
-		bool     started{ false };
+		V              turn;
+		bool           started{ false };
+		float          weight{ 0 };  // how far the shaft is laid along the path (eased)
+		std::vector<V> path;         // the last path he was laid along (kept while easing out)
 	} bend;
 
 	RE::NiMatrix3 AxisAngle(const V& a_turn)
@@ -599,19 +603,44 @@ namespace
 		}
 		bend.turn = V(0, 0, 0);
 		bend.started = false;
+		bend.weight = 0;
+		bend.path.clear();
 	}
 
-	// under heldLock, from DriveRims
-	void BendPenis(float a_dt, bool a_penis, const V& a_base, const V& a_u, float a_length, const V* a_centre,
-		const bool* a_haveCentre, Act a_act)
+	// A point `a_s` along a polyline from its first point (past its end, carried on along its last piece), and the
+	// polyline's direction there
+	V AlongPath(const std::vector<V>& a_path, float a_s, V* a_dir)
 	{
-		RE::NiAVObject* pivots[2]{};
+		float walked = 0;
+		for (std::size_t k = 0; k + 1 < a_path.size(); ++k) {
+			const V     seg = Sub(a_path[k + 1], a_path[k]);
+			const float len = Len(seg);
+			if (len < 1e-4F) {
+				continue;
+			}
+			const bool last = k + 2 == a_path.size();
+			if (a_s <= walked + len || last) {
+				*a_dir = Mul(seg, 1.0F / len);
+				return Add(a_path[k], Mul(*a_dir, a_s - walked));
+			}
+			walked += len;
+		}
+		*a_dir = V(0, 0, 1);
+		return a_path.empty() ? V(0, 0, 0) : a_path.back();
+	}
+
+	// The snake aim (v0.31; the idea is fo4-ocbpc's, by ReidenXerx, written afresh here). His shaft runs straight from
+	// its base (Penis_01_SMP) to the entrance of the opening in use, then along her canal's middle (its rings' rest
+	// centres, to the cervix), each skin bone (Penis_02_SMP..05_SMP) placed at its own distance along that path and
+	// turned to it. Before his tip reaches the entrance the same path just points him at it. v0.23-v0.30 only turned
+	// him toward the opening's centre and had the canal follow his line: 22-49 degrees off it, the canal swung up to 4
+	// units and tore. Eased in and out over fBendSmoothing; given up (eased out) where the entrance is more than
+	// fBendMax off his line, or the canal turns more than fSnakeMax from it.
+	void BendPenis(float a_dt, bool a_penis, const V& a_base, const V& a_u, float a_length, const std::vector<V>* a_paths,
+		Act a_act)
+	{
 		RE::NiAVObject* leaves[4]{};
 		bool            all = Settings::bendPenis;
-		for (int i = 0; all && i < 2; ++i) {
-			pivots[i] = Held("him", kBendPivots[i].name);
-			all = pivots[i] && pivots[i]->parent;
-		}
 		for (int i = 0; all && i < 4; ++i) {
 			leaves[i] = Held("him", bend.leaves[i].name);
 			all = leaves[i] && leaves[i]->parent;
@@ -634,7 +663,7 @@ namespace
 				l.base = l.written = leaves[i]->local;
 			}
 			bend.started = true;
-			REX::INFO("bend: turning his shaft's skin bones about {} and {}", kBendPivots[0].name, kBendPivots[1].name);
+			REX::INFO("bend: laying his shaft's skin bones along the opening in use");
 		} else {
 			for (auto& l : bend.leaves) {
 				if (!SameTransform(l.node->local, l.written)) {
@@ -645,55 +674,62 @@ namespace
 				}
 			}
 		}
-		auto* frame = pivots[0]->parent;  // the turn is kept in this frame, which moves with him
-		// what the turn should become: by how much more it must turn to put his line through the centre
-		V    want = bend.turn;
-		bool aiming = false;
+		// his line as the animation has it (the tip bone's own place, not where this laid it), so the bend never
+		// measures itself
+		const V tip0 = ToWorld(leaves[3]->parent, bend.leaves[3].base.translate);
+		const V u0 = Len(Sub(tip0, a_base)) > 1e-3F ? Unit(Sub(tip0, a_base)) : a_u;
+		// the path: his base, the entrance, then inside her
 		const int o = a_act == Act::kVaginal ? 0 : a_act == Act::kAnal ? 1 : -1;
-		if (a_penis && o >= 0 && a_haveCentre[o]) {
-			const V     pivot = pivots[0]->world.translate;
-			const V     rel = Sub(a_centre[o], a_base);
-			const float along = Dot(rel, a_u);
-			const V     q = Add(a_base, Mul(a_u, along));      // his line's nearest to the centre
-			const V     now = Sub(q, pivot), to = Sub(a_centre[o], pivot);
-			const float scale = pivots[0]->world.scale;
-			if (along > -Settings::penisBaseExtra * scale && along < a_length + 6.0F * scale && Len(now) > 1.0F && Len(to) > 1.0F) {
-				const V     axis = Cross(Unit(now), Unit(to));
-				const float s = std::min(1.0F, Len(axis));
-				if (s > 1e-5F) {
-					want = Add(bend.turn, DirIn(frame, Mul(Unit(axis), std::asin(s))));
-					aiming = true;
+		std::vector<V> path;
+		bool           locked = false;
+		if (a_penis && o >= 0 && a_paths[o].size() >= 2) {
+			const V&    entrance = a_paths[o][0];
+			const V     toEntrance = Sub(entrance, a_base);
+			const float reach = Len(toEntrance);
+			const float most = Settings::bendMax * 0.0174533F;
+			const float snakeMost = Settings::snakeMax * 0.0174533F;
+			const V     inward = Unit(Sub(a_paths[o].back(), entrance));
+			const float off = reach > 1e-3F ? std::acos(std::clamp(Dot(Unit(toEntrance), u0), -1.0F, 1.0F)) : 0.0F;
+			const float turn = std::acos(std::clamp(Dot(inward, u0), -1.0F, 1.0F));
+			if (reach > 1.0F && reach < a_length + 6.0F && off <= most && turn <= snakeMost) {
+				path.push_back(a_base);
+				for (const auto& q : a_paths[o]) {
+					path.push_back(q);
 				}
+				locked = true;
 			}
-		}
-		if (!aiming) {
-			want = V(0, 0, 0);
-		}
-		const float most = Settings::bendMax * 0.0174533F;
-		if (Len(want) > most) {
-			want = Mul(want, most / Len(want));
 		}
 		const float follow = Settings::bendSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::bendSmoothing) : 1.0F;
-		bend.turn = Add(bend.turn, Mul(Sub(want, bend.turn), follow));
-		const V     world = DirOut(frame, bend.turn);
-		const float angle = Len(world);
-		const V     k = angle > 1e-7F ? Mul(world, 1.0F / angle) : V(1, 0, 0);
-		const float a1 = angle * kBendPivots[0].share, a2 = angle * kBendPivots[1].share;
-		// the pivots as turned: the second turns with the first
-		const V p1 = pivots[0]->world.translate;
-		const V p2 = Add(p1, Rotate(Sub(pivots[1]->world.translate, p1), k, a1));
-		for (int i = 0; i < 4; ++i) {
-			auto&  l = bend.leaves[i];
-			auto*  parent = leaves[i]->parent;
-			V      w = Add(p1, Rotate(Sub(ToWorld(parent, l.base.translate), p1), k, a1));
-			float  a = a1;
-			if (l.pivots > 1) {
-				w = Add(p2, Rotate(Sub(w, p2), k, a2));
-				a += a2;
+		bend.weight += ((locked ? 1.0F : 0.0F) - bend.weight) * follow;
+		if (locked) {
+			bend.path = path;
+		}
+		const float w = bend.weight;
+		if (w < 1e-3F || bend.path.size() < 2) {
+			for (int i = 0; i < 4; ++i) {
+				auto& l = bend.leaves[i];
+				l.written = l.base;
+				leaves[i]->local.rotate = l.base.rotate;
+				leaves[i]->local.translate = l.base.translate;
 			}
+			return;
+		}
+		for (int i = 0; i < 4; ++i) {
+			auto&   l = bend.leaves[i];
+			auto*   parent = leaves[i]->parent;
+			const V now = ToWorld(parent, l.base.translate);       // where the animation has it
+			const float s = Dot(Sub(now, a_base), u0);           // how far along his shaft
+			V       dir;
+			const V there = AlongPath(bend.path, std::max(0.0F, s), &dir);
+			const V placed = Add(now, Mul(Sub(there, now), w));
+			const V axis = Cross(u0, dir);
+			const float sn = std::min(1.0F, Len(axis));
+			const float angle = std::asin(sn) * (Dot(u0, dir) < 0 ? -1.0F : 1.0F) * w;
 			l.written = l.base;
-			l.written.rotate = TimesTransposed(l.base.rotate, AxisAngle(Mul(DirIn(parent, k), a)));
-			l.written.translate = ToLocal(parent, w);
+			if (sn > 1e-5F) {
+				l.written.rotate = TimesTransposed(l.base.rotate, AxisAngle(Mul(DirIn(parent, Unit(axis)), angle)));
+			}
+			l.written.translate = ToLocal(parent, placed);
 			leaves[i]->local.rotate = l.written.rotate;
 			leaves[i]->local.translate = l.written.translate;
 		}
@@ -1046,7 +1082,26 @@ namespace
 			std::scoped_lock lock{ publishedLock };
 			published = c;
 		}
-		BendPenis(a_dt, penis, b, u, length, aim, haveCentre, act);
+		// the openings' paths for the snake aim: the entrance, then the canal's rest middle inward
+		std::vector<V> paths[2];
+		if (haveCentre[0]) {
+			paths[0].push_back(aim[0]);
+			for (int i = 0; i < kVagRings; ++i) {
+				if (canalN[i]) paths[0].push_back(canalC[i]);
+			}
+			if (canalN[0] && canalN[kVagRings - 1]) {
+				const V axis = Unit(Sub(canalC[kVagRings - 1], canalC[0]));
+				paths[0].push_back(Add(canalC[kVagRings - 1], Mul(axis, kCervixBeyond * scale)));
+			}
+		}
+		if (haveCentre[1]) {
+			paths[1].push_back(aim[1]);
+			paths[1].push_back(centre[1]);
+			for (int i = kVagRings; i < kRings; ++i) {
+				if (canalN[i]) paths[1].push_back(canalC[i]);
+			}
+		}
+		BendPenis(a_dt, penis, b, u, length, paths, act);
 	}
 
 	// On the main thread: find her and him in the thread and hold their nodes

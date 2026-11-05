@@ -183,7 +183,15 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   `bDriveOpenings`, `fPenisRadius`, `fPenisRadiusTip`, `fPenisTipLength`, `fPenisTipExtra`,
   `fPenisBaseExtra`, `fRimSmoothing`, `fRimFollow`, `fRimCatch`, `fRimMargin` in the INI. The lips no
   longer jiggle or take a hand's push.
-- **The penis bent through the opening.** Every 4 ms the plugin bends his penis so his line runs
+- **The snake aim (v0.31).** His shaft runs straight from its base to the entrance of the opening in
+  use, then along her canal's middle (its rings' rest centres, to the cervix). Each of his skin bones,
+  `Penis_02_SMP` to `Penis_05_SMP`, is placed at its own distance along that path and turned to it,
+  easing in and out. Before his tip reaches the entrance, the path just points him at it. It gives up,
+  leaving the animation's pose, when the entrance is more than `fBendMax` off his line or the canal
+  turns more than `fSnakeMax` (60°) from it. The idea is fo4-ocbpc's (ReidenXerx, GPL-3); this is our
+  own version, not its code. Before, the plugin only turned him toward the opening and had the canal
+  chase his line, so at 22–49° off the canal it swung up to 4 units and tore.
+- **The penis bent through the opening** (before v0.31). Every 4 ms the plugin bends his penis so his line runs
   through the centre of the opening in use, by at most `fBendMax` (20°), following over
   `fBendSmoothing`. The bend is split evenly between his shaft's first two joints, `Penis_02_Offset`
   (at the base of his tracked line) and `Penis_03_Offset`. v0.22 turned him at his root
