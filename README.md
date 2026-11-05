@@ -202,6 +202,12 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   stay shut. Before, the deeper rings were springs on fixed bases that his collision pushed open, so
   they kept to the canal's own line while he ran through at 10–20° to it. They are kinematic now
   (`bDriveCanal`, `fCanalFollow`, `fCanalCatch` in the INI).
+- **The cervix takes his tip.** The canal ends in a closed cap 0.8 units past its last ring, and the
+  cap rides on that ring. Once his tip reaches the cap, the plugin carries the canal deeper along his
+  line by however far he has gone past it, up to `fCervixStretch` (4). The push is shared out by depth,
+  so the canal stretches evenly from the entrance (which stays put) to the cervix (which moves the full
+  amount), and the cap stays capped over his tip. Before, his tip went through the cap. The tuning log
+  records the push (`cervixPush`).
 - **The anus is aimed at its mouth, and painted there.** The anus's rim sits at the bottom of GT's
   pucker, 0.8 inside her skin along the canal. The aligner and the bend aimed his line through the
   rim's centre, so coming in at an angle he crossed her skin forward of the hole, on the funnel's side,

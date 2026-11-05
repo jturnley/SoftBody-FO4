@@ -57,6 +57,7 @@ namespace
 		bool  driveCanal = true;      // centre the vaginal canal's rings on his line and open them to his thickness
 		float canalFollow = 3.0F;     // how far a canal ring moves across onto his line
 		float canalCatch = 2.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
+		float cervixStretch = 4.0F;   // how far his tip may carry the cervix deeper
 
 		void Load()
 		{
@@ -85,6 +86,7 @@ namespace
 			driveCanal = i("bDriveCanal", 1) != 0;
 			canalFollow = f("fCanalFollow", canalFollow);
 			canalCatch = f("fCanalCatch", canalCatch);
+			cervixStretch = f("fCervixStretch", cervixStretch);
 			bendMax = std::clamp(f("fBendMax", bendMax), 0.0F, 45.0F);
 			bendSmoothing = std::max(0.0F, f("fBendSmoothing", bendSmoothing));
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
@@ -337,7 +339,7 @@ namespace
 		for (const auto* name : kPenis) {
 			header += std::format(",{0}.x,{0}.y,{0}.z", name);
 		}
-		return header;
+		return header + ",cervixPush";
 	}
 
 	// The nodes read, held (NiPointer) from scene start to scene end so a read off the main thread can't meet a freed
@@ -403,6 +405,8 @@ namespace
 	// Each visible hole has an inner ring of 24 (12 showed as a polygon) and an outer ring of 12 (a shape's bones are
 	// capped: see the mesh builder's MAX_SHAPE_BONES), and the vagina its entrance ring of 12.
 	constexpr int kCanalRings = 5;  // SB Vag1_* .. SB Vag5_*, behind the entrance ring SB VagIn_*
+	constexpr float kCervixBeyond = 0.8F;  // the canal's closed end past its last ring (tools/genitals.py VAG_DEPTH - VAG_RINGS[-1])
+	std::atomic<float> cervixPush{ 0 };      // how far his tip carries it now (logged)
 	const std::vector<Rim>& Rims()
 	{
 		static const std::vector<Rim> rims = [] {
@@ -813,10 +817,34 @@ namespace
 			}
 		}
 		for (int i = 0; i < kRings; ++i) {
+			if (canalN[i]) {
+				canalC[i] = Mul(canalC[i], 1.0F / canalN[i]);
+			}
+		}
+		// The cervix: the canal's closed end, CERVIX_BEYOND past its last ring (which the cap rides on). His tip
+		// pushes it rather than passing through it (v0.25): past it, the canal is carried deeper along his line by
+		// as much (up to fCervixStretch), the push shared out along the canal by depth, so it stretches evenly from
+		// the entrance (still) to the cervix (all of it)
+		float push = 0;
+		float ringDepth[kRings]{};
+		if (penis && open[0] && Settings::driveCanal && canalN[0] && canalN[kRings - 1]) {
+			const V     axis = Unit(Sub(canalC[kRings - 1], canalC[0]));
+			const float span = Len(Sub(canalC[kRings - 1], canalC[0]));
+			for (int i = 0; i < kRings; ++i) {
+				ringDepth[i] = canalN[i] && span > 1e-3F ? std::clamp(Dot(Sub(canalC[i], canalC[0]), axis) / span, 0.0F, 1.0F) : 0.0F;
+			}
+			const V     end = Add(tip->world.translate, Mul(Unit(Sub(tip->world.translate, m)), Settings::penisTipExtra * scale));
+			const float facing = Dot(u, axis);
+			const float past = Dot(Sub(end, canalC[kRings - 1]), axis) - kCervixBeyond * scale;
+			if (facing > 0.3F && past > 0) {
+				push = std::min(past / facing, Settings::cervixStretch * scale);  // along his line
+			}
+		}
+		cervixPush = push;
+		for (int i = 0; i < kRings; ++i) {
 			if (!canalN[i] || !penis || !open[0] || !Settings::driveCanal) {
 				continue;
 			}
-			canalC[i] = Mul(canalC[i], 1.0F / canalN[i]);
 			V     start = b, su = u;
 			float before = 0;
 			if (first > 1e-3F && Len(Sub(tip->world.translate, m)) > 1e-3F) {
@@ -864,7 +892,10 @@ namespace
 					const float restDist = Len(across);
 					const V     out = restDist > 1e-4F ? Mul(across, 1.0F / restDist) : V(0, 0, 0);
 					const float dist = std::max(restDist, canalGrow[i]);
-					target = ToLocal(parent, Add(Add(canalC[i], canalShift[i]), Add(Mul(out, dist), Mul(su, axial))));
+					target = ToLocal(parent, Add(Add(Add(canalC[i], canalShift[i]), Mul(u, push * ringDepth[i])),
+						Add(Mul(out, dist), Mul(su, axial))));
+				} else if (push > 0) {
+					target = ToLocal(parent, Add(ToWorld(parent, d.rest), Mul(u, push * ringDepth[i])));
 				}
 				d.now = Add(d.now, Mul(Sub(target, d.now), follow));
 				node->local.translate = d.now;
@@ -1009,6 +1040,7 @@ namespace
 				line += ",,,";
 			}
 		}
+		line += std::format(",{:.2f}", cervixPush.load());
 		REX::INFO("{}", line);
 	}
 
