@@ -94,7 +94,8 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
                                                      os.path.join(GT, GT_SKELETON))
         tex = ["Textures\\" + t.replace("/", "\\") for t in genital_textures.TEXTURES]
         genitals.add_to_nif(nif, cbbe, meshes, bones,
-                            materials={genitals.GENITALS: (genital_textures.MATERIAL, tex)})
+                            materials={genitals.GENITALS: (genital_textures.MATERIAL, tex),
+                                       genitals.UTERUS: (genital_textures.MATERIAL, tex)})
         made_tex = genital_textures.write(OUT, meshes[genitals.GENITALS], report["vagina_vertices"],
                                           report["fit_R"], GT, GAME_DATA, meshes[genitals.VULVA],
                                           os.path.join(CBBE, SKIN_D))
@@ -149,14 +150,15 @@ def collision_xml(collision, skip=()):
     return lines
 
 
-CANAL_PREFIXES = ("SB Anus", "SB Vag")
+CANAL_PREFIXES = ("SB Anus", "SB Vag", "SB Os", "SB Uterus")
 # The openings' rims, placed by the SoftBodyFO4 plugin (round the penis, from its line) rather than simulated: kinematic
 # in every XML, their springs dropped. GT's lips and anus rim, SoftBody's vaginal entrance ring and both visible rims.
 DRIVEN_BONES = ("Clitoral1", "VaginaB1", "NPC L Pussy02", "NPC R Pussy02",
                 "NPC LT Anus2", "NPC RT Anus2", "NPC LB Anus2", "NPC RB Anus2")
 # The vaginal canal's rings too (v0.25): each centred on his line at its depth and opened to his thickness there.
 DRIVEN_PREFIXES = ("SB VagIn_", "SB VagRim_", "SB VagRimO_", "SB AnusRim_", "SB AnusRimO_",
-                   "SB Vag1_", "SB Vag2_", "SB Vag3_", "SB Vag4_", "SB Vag5_")
+                   "SB Vag1_", "SB Vag2_", "SB Vag3_", "SB Vag4_", "SB Vag5_",
+                   "SB Os_", "SB Uterus")   # and the cervix and uterus (v0.28)
 
 
 def driven(bone):

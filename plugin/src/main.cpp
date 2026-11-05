@@ -16,6 +16,7 @@
 // scene's own alignment.
 
 #include "PluginInterface.h"
+#include "../include/SoftBodyFO4API.h"
 
 extern "C" __declspec(dllimport) short __stdcall GetAsyncKeyState(int);
 extern "C" __declspec(dllimport) void* __stdcall GetForegroundWindow();
@@ -58,6 +59,7 @@ namespace
 		float canalFollow = 3.0F;     // how far a canal ring moves across onto his line
 		float canalCatch = 2.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
 		float cervixStretch = 4.0F;   // how far his tip may carry the cervix deeper
+		float uterusSwell = 0.6F;     // how much wider the uterus grows when full (0.6: by 60%)
 
 		void Load()
 		{
@@ -87,6 +89,7 @@ namespace
 			canalFollow = f("fCanalFollow", canalFollow);
 			canalCatch = f("fCanalCatch", canalCatch);
 			cervixStretch = f("fCervixStretch", cervixStretch);
+			uterusSwell = f("fUterusSwell", uterusSwell);
 			bendMax = std::clamp(f("fBendMax", bendMax), 0.0F, 45.0F);
 			bendSmoothing = std::max(0.0F, f("fBendSmoothing", bendSmoothing));
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
@@ -358,6 +361,8 @@ namespace
 	}
 
 	// her: the actor with SoftBody's genital bones; him: the one with A-Body's penis
+	std::atomic<std::uint32_t> herFormID{ 0 };  // the woman followed (for SoftBodyFO4API.h)
+
 	void Identify(FourStimAPI::Thread* a_thread, RE::NiAVObject** a_her, RE::NiAVObject** a_him)
 	{
 		std::int32_t herAt = -1, himAt = -1;
@@ -367,6 +372,7 @@ namespace
 			if (herAt < 0 && Find(root, "VaginaDB02")) {
 				herAt = static_cast<std::int32_t>(i);
 				if (a_her) *a_her = root;
+				herFormID = actor->GetFormID();
 			} else if (himAt < 0 && Find(root, kPenis[0])) {
 				himAt = static_cast<std::int32_t>(i);
 				if (a_him) *a_him = root;
@@ -400,6 +406,7 @@ namespace
 		bool        outer{ false };  // an outer ring's: kept outside the inner, where the skin between keeps its area
 		bool        field{ false };  // not a ring's: carried by the opening in use as the skin round it is (below)
 		int         canal{ -1 };     // the vaginal canal's rings (0 the entrance, then 1-5 deeper): each on its own centre
+		int         womb{ -1 };      // the cervix and uterus (v0.28): 0 the os ring, 1 the cavity's ring, 2 its top
 	};
 	// GT's lip and anus bones are no longer driven (v0.21): moved on their own they folded the skin round the rims.
 	// Each visible hole has an inner ring of 24 (12 showed as a polygon) and an outer ring of 12 (a shape's bones are
@@ -407,6 +414,11 @@ namespace
 	constexpr int kCanalRings = 5;  // SB Vag1_* .. SB Vag5_*, behind the entrance ring SB VagIn_*
 	constexpr float kCervixBeyond = 0.8F;  // the canal's closed end past its last ring (tools/genitals.py VAG_DEPTH - VAG_RINGS[-1])
 	std::atomic<float> cervixPush{ 0 };      // how far his tip carries it now (logged)
+	// requests from other plugins (SoftBodyFO4API.h) and what is published back
+	std::atomic<float>         uterusFill{ 0 };
+	std::atomic<float>         osOpen{ 0 };
+	std::mutex                 publishedLock;
+	SoftBodyFO4API::Canal      published{};
 	const std::vector<Rim>& Rims()
 	{
 		static const std::vector<Rim> rims = [] {
@@ -415,6 +427,9 @@ namespace
 			for (int i = 1; i <= kCanalRings; ++i) {
 				for (int k = 0; k < 12; ++k) r.push_back({ std::format("SB Vag{}_{}", i, k), 0, false, false, i });
 			}
+			for (int k = 0; k < 8; ++k) r.push_back({ std::format("SB Os_{}", k), 0, false, false, -1, 0 });
+			for (int k = 0; k < 8; ++k) r.push_back({ std::format("SB Uterus_{}", k), 0, false, false, -1, 1 });
+			r.push_back({ "SB UterusTop", 0, false, false, -1, 2 });
 			for (int k = 0; k < 24; ++k) {
 				r.push_back({ std::format("SB VagRim_{}", k), 0 });
 				r.push_back({ std::format("SB AnusRim_{}", k), 1 });
@@ -442,6 +457,7 @@ namespace
 		bool                          edge{ false };  // a visible hole's inner ring: its rest radius is the hole's
 		bool                          field{ false };
 		int                           canal{ -1 };
+		int                           womb{ -1 };
 	};
 	std::unordered_map<std::string, Driven> driven;  // under heldLock
 
@@ -455,7 +471,7 @@ namespace
 		auto& d = driven[a_rim.name];
 		if (d.node.get() != node) {
 			d = Driven{ RE::NiPointer<RE::NiAVObject>(node), node->local.translate, node->local.translate, a_rim.opening,
-				a_rim.outer, !a_rim.outer && a_rim.name.find("Rim_") != std::string::npos, a_rim.field, a_rim.canal };
+				a_rim.outer, !a_rim.outer && a_rim.name.find("Rim_") != std::string::npos, a_rim.field, a_rim.canal, a_rim.womb };
 			if (a_rim.name.ends_with("_0")) {
 				REX::INFO("rim {}: rest ({:.3f}, {:.3f}, {:.3f})", a_rim.name, d.rest.x, d.rest.y, d.rest.z);
 			}
@@ -821,6 +837,28 @@ namespace
 				canalC[i] = Mul(canalC[i], 1.0F / canalN[i]);
 			}
 		}
+		V     wombC[3];
+		int   wombN[3]{};
+		float wombR[3]{};
+		for (auto& [name, d] : driven) {
+			if (d.womb >= 0 && d.node && d.node->parent) {
+				wombC[d.womb] = Add(wombC[d.womb], ToWorld(d.node->parent, d.rest));
+				++wombN[d.womb];
+			}
+		}
+		for (int i = 0; i < 3; ++i) {
+			if (wombN[i]) {
+				wombC[i] = Mul(wombC[i], 1.0F / wombN[i]);
+			}
+		}
+		for (auto& [name, d] : driven) {
+			if (d.womb >= 0 && d.womb < 2 && d.node && d.node->parent && wombN[d.womb]) {
+				wombR[d.womb] += Len(Sub(ToWorld(d.node->parent, d.rest), wombC[d.womb])) / wombN[d.womb];
+			}
+		}
+		const V     wombAxis = wombN[0] && wombN[2] ? Unit(Sub(wombC[2], wombC[0])) : V(0, 0, 1);
+		const float wombLength = wombN[0] && wombN[2] ? Len(Sub(wombC[2], wombC[0])) : 0.0F;
+		const float swell = std::clamp(uterusFill.load(), 0.0F, 1.0F) * Settings::uterusSwell;
 		// The cervix: the canal's closed end, CERVIX_BEYOND past its last ring (which the cap rides on). His tip
 		// pushes it rather than passing through it (v0.25): past it, the canal is carried deeper along his line by
 		// as much (up to fCervixStretch), the push shared out along the canal by depth, so it stretches evenly from
@@ -882,6 +920,29 @@ namespace
 				continue;
 			}
 			V target = d.rest;
+			if (d.womb >= 0) {
+				// carried with the cervix, along his line; the os opened and the cavity swelled on request
+				V w0 = ToWorld(parent, d.rest);
+				if (wombN[d.womb] && wombN[0] && wombN[2]) {
+					const V&    c = wombC[d.womb];
+					const V     off = Sub(w0, c);
+					const float axial = Dot(off, wombAxis);
+					const V     across = Sub(off, Mul(wombAxis, axial));
+					const float r = Len(across);
+					const V     out = r > 1e-5F ? Mul(across, 1.0F / r) : V(0, 0, 0);
+					if (d.womb == 0) {
+						w0 = Add(Add(c, Mul(wombAxis, axial)), Mul(out, std::max(r, osOpen.load() * scale)));
+					} else if (d.womb == 1) {
+						w0 = Add(Add(c, Mul(wombAxis, axial)), Mul(out, r * (1 + swell)));
+					} else {
+						w0 = Add(w0, Mul(wombAxis, swell * 0.5F * wombLength));
+					}
+				}
+				target = ToLocal(parent, Add(w0, Mul(u, push)));
+				d.now = Add(d.now, Mul(Sub(target, d.now), follow));
+				node->local.translate = d.now;
+				continue;
+			}
 			if (d.canal >= 0) {
 				const int i = d.canal;
 				if (canalOn[i]) {
@@ -940,6 +1001,34 @@ namespace
 			}
 			d.now = Add(d.now, Mul(Sub(target, d.now), follow));
 			node->local.translate = d.now;
+		}
+		{
+			// for other plugins (SoftBodyFO4API.h)
+			SoftBodyFO4API::Canal c{};
+			c.version = SoftBodyFO4API::kVersion;
+			auto put = [](float* a_out, const V& a_v) { a_out[0] = a_v.x; a_out[1] = a_v.y; a_out[2] = a_v.z; };
+			if (canalN[0] && canalN[kRings - 1] && wombN[0] && wombN[2]) {
+				c.herFormID = herFormID.load();
+				c.ringCount = kRings;
+				for (int i = 0; i < kRings; ++i) {
+					const V at = canalOn[i] ? Add(Add(canalC[i], canalShift[i]), Mul(u, push * ringDepth[i])) :
+					                          Add(canalC[i], Mul(u, push * ringDepth[i]));
+					put(c.rings[i].centre, at);
+					c.rings[i].radius = canalOn[i] ? canalGrow[i] : 0.5F * scale;
+				}
+				const V axis = Unit(Sub(canalC[kRings - 1], canalC[0]));
+				put(c.cervix, Add(Add(canalC[kRings - 1], Mul(axis, kCervixBeyond * scale)), Mul(u, push)));
+				put(c.os.centre, Add(wombC[0], Mul(u, push)));
+				c.os.radius = std::max(wombR[0], osOpen.load() * scale);
+				put(c.uterusCentre, Add(wombC[1], Mul(u, push)));
+				put(c.uterusAxis, wombAxis);
+				c.uterusLength = wombLength * (1 + 0.5F * swell);
+				c.uterusRadius = wombR[1] * (1 + swell);
+				c.fill = uterusFill.load();
+				c.cervixPush = push;
+			}
+			std::scoped_lock lock{ publishedLock };
+			published = c;
 		}
 		BendPenis(a_dt, penis, b, u, length, aim, haveCentre, act);
 	}
@@ -1007,6 +1096,13 @@ namespace
 		}
 		driven.clear();
 		ReleaseBend();
+		uterusFill = 0;
+		osOpen = 0;
+		herFormID = 0;
+		{
+			std::scoped_lock plock{ publishedLock };
+			published = SoftBodyFO4API::Canal{};
+		}
 	}
 
 	// Off the main thread, at whatever point of the frame the timer wakes: as the SMP wireframe sees the bones, after
@@ -1796,4 +1892,30 @@ F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 	timer = std::jthread(Timer);
 	driver = std::jthread(Driver);
 	return true;
+}
+
+// ---------------------------------------------------------------- the interface for other plugins (SoftBodyFO4API.h)
+extern "C" __declspec(dllexport) bool SoftBodyFO4_GetCanal(SoftBodyFO4API::Canal* a_out)
+{
+	if (!a_out) {
+		return false;
+	}
+	std::scoped_lock lock{ publishedLock };
+	*a_out = published;
+	a_out->version = SoftBodyFO4API::kVersion;
+	return published.herFormID != 0;
+}
+
+extern "C" __declspec(dllexport) void SoftBodyFO4_SetUterusFill(std::uint32_t a_her, float a_fill)
+{
+	if (a_her && a_her == herFormID.load()) {
+		uterusFill = std::clamp(a_fill, 0.0F, 1.0F);
+	}
+}
+
+extern "C" __declspec(dllexport) void SoftBodyFO4_SetOsOpen(std::uint32_t a_her, float a_radius)
+{
+	if (a_her && a_her == herFormID.load()) {
+		osOpen = std::max(0.0F, a_radius);
+	}
 }

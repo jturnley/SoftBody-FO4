@@ -30,7 +30,7 @@ from scipy.spatial import cKDTree
 from dents import SkinnedShape
 from sse_nif import SseNif
 
-VULVA, GENITALS = "SoftBodyVulva", "SoftBodyGenitals"
+VULVA, GENITALS, UTERUS = "SoftBodyVulva", "SoftBodyGenitals", "SoftBodyUterus"
 # GT's anus and the front of its slit (the open loops "2Anus" and "2Vagina" join the body at), GT space
 ANUS_GT, SLIT_FRONT_GT = (0.0, -5.69, 67.6), (0.0, 2.91, 65.6)
 SLIT_GT = (0.0, 0.0, 65.58)
@@ -90,6 +90,21 @@ VAG_SIDES = 12               # every 30 degrees, from the front
 VAG_PAD_HALF = 0.7
 VAG_PAD_RADIUS = 1.2
 VAG_PADS = "SoftBodyVaginalCanal"
+# The cervix and uterus (v0.28; GT has none: its canal ends closed). The canal's closed end is cut UT_CUT short of its
+# tip, and a shape of our own (UTERUS) carries on from the cut: the cervix's face narrowing to the os (UT_OS round)
+# over UT_FACE, the cervical canal UT_NECK long, then the uterine cavity UT_LEN long, UT_WIDTH round side to side and
+# UT_FLAT of that front to back, closing at its top (the fundus). Its bones: a ring of UT_SIDES at the os (SB Os_*), one
+# round the cavity's middle (SB Uterus_*) and one at the fundus (SB UterusTop), all kinematic and placed by the plugin
+# (the cervix carried with the canal's end; the os opened and the cavity swelled on request, as 4Strands fills it).
+UT_CUT = 0.25
+UT_OS = 0.08
+UT_FACE = 0.25
+UT_NECK = 1.0
+UT_LEN = 3.0
+UT_WIDTH = 1.2
+UT_FLAT = 0.55
+UT_SIDES = 8
+UT_RING_SIDES = 24     # points round each ring of the generated surface
 # The entrance. Between the vestibule (the flat floor of the vulva, about level with the slit) and the pocket, GT has
 # a narrow channel (about 0.55 round, from about 0.75 to 3.4 in); a ring of VAG_SIDES bones of our own sits in it at
 # VAG_ENTRANCE (SB VagIn_*), so the entrance closes round a shaft as a collar does, rather than opening as the four
@@ -596,6 +611,161 @@ def smoothstep(x):
     return x * x * (3 - 2 * x)
 
 
+def build_uterus(gen_P, gen_UV, gen_tris, gen_w, n_vagina, axis, up, left):
+    """Cut the vaginal canal's closed end and grow the cervix, os and uterus from the cut (see UT_*). Returns the
+    genitals' triangles without the cut, the new mesh (positions, UVs, triangles, weights; its first points are copies
+    of the cut's edge, with the canal's own weights, so the two shapes meet exactly) and its bones."""
+    vag = np.arange(n_vagina)
+    depth = gen_P[vag] @ axis
+    tip = int(vag[np.argmax(depth)])
+    cut_at = depth.max() - UT_CUT
+    cent_d = gen_P[gen_tris].mean(1) @ axis
+    in_vag = (gen_tris < n_vagina).all(1)
+    drop = in_vag & (cent_d > cut_at)
+    if drop.sum() < 3:
+        raise ValueError("the canal's end has too few triangles to cut")
+    kept = gen_tris[~drop]
+    # the cut's edge: the boundary of the kept triangles round the canal's end
+    ids = weld(gen_P)
+    edges = {}
+    for tri in kept:
+        for a, b in ((0, 1), (1, 2), (2, 0)):
+            e = (ids[tri[a]], ids[tri[b]])
+            edges[e] = edges.get(e, 0) + 1
+    first = {}
+    for v, i in enumerate(ids):
+        first.setdefault(i, v)
+    bnd = [e for e in edges if (e[1], e[0]) not in edges]
+    tip_p = gen_P[tip]
+    loop_ids = sorted({i for e in bnd for i in e if np.linalg.norm(gen_P[first[i]] - tip_p) < 1.5})
+    if len(loop_ids) < 6:
+        raise ValueError("the canal's cut has no edge loop (%d points)" % len(loop_ids))
+    L = np.array([gen_P[first[i]] for i in loop_ids])
+    c = L.mean(0)
+    def angle(q):
+        r = q - c - ((q - c) @ axis) * axis
+        return math.atan2(r @ left, r @ up)
+    order = np.argsort([angle(q) for q in L])
+    loop = [first[loop_ids[k]] for k in order]
+    r_loop = float(np.mean([np.linalg.norm((gen_P[v] - c) - ((gen_P[v] - c) @ axis) * axis) for v in loop]))
+    # which way the canal's triangles wind at the cut: the new surface winds the same way about the axis
+    ccw = 0.0
+    for tri in kept:
+        if sum(ids[v] in set(loop_ids) for v in tri) >= 2:
+            a, b, d = gen_P[tri]
+            n = np.cross(b - a, d - a)
+            radial = (a + b + d) / 3 - c
+            radial -= (radial @ axis) * axis
+            ccw += np.sign(n @ radial)
+    inward = ccw < 0             # normals point into the lumen (seen from inside)
+    # the profile: (distance past the cut, radius side to side, how much of it front to back)
+    prof = []
+    for s in np.linspace(0, UT_FACE, 4)[1:]:
+        f = s / UT_FACE
+        prof.append((s, r_loop + (UT_OS - r_loop) * (f * f * (3 - 2 * f)), 1.0))
+    for s in np.linspace(UT_FACE, UT_FACE + UT_NECK, 5)[1:]:
+        prof.append((s, UT_OS, 1.0))
+    s0 = UT_FACE + UT_NECK
+    for f in np.linspace(0, 1, 13)[1:-1]:
+        r = UT_OS + (UT_WIDTH - UT_OS) * math.sin(math.pi * f) ** 0.6 * (1 - 0.35 * (1 - f))
+        prof.append((s0 + f * UT_LEN, r, UT_FLAT + (1 - UT_FLAT) * (1 - min(1.0, r / UT_WIDTH * 1.5))))
+    apex_s = s0 + UT_LEN
+    # points: the cut's edge (copies), the rings, the apex
+    P = [gen_P[v] for v in loop]
+    UV = [gen_UV[v] for v in loop]
+    W = [dict(gen_w[v]) for v in loop]
+    uv0 = np.mean([gen_UV[v] for v in loop], 0)
+    n = UT_RING_SIDES
+    os_ring = [("SB Os_%d" % k, 360.0 * k / UT_SIDES) for k in range(UT_SIDES)]
+    ut_ring = [("SB Uterus_%d" % k, 360.0 * k / UT_SIDES) for k in range(UT_SIDES)]
+    def ring_w(ring, theta):
+        w = {}
+        spacing = 360.0 / len(ring)
+        for b, a in ring:
+            x = max(0.0, 1 - abs((theta - a + 180) % 360 - 180) / spacing)
+            if x > 0:
+                w[b] = w.get(b, 0) + x
+        return w
+    canal_end = {}
+    for v in loop:
+        for b, x in gen_w[v].items():
+            canal_end[b] = canal_end.get(b, 0) + x / len(loop)
+    canal_end = top4(canal_end)
+    for s, r, flat in prof:
+        for k in range(n):
+            theta = 360.0 * k / n
+            a = math.radians(theta)
+            q = c + s * axis + r * math.cos(a) * flat * up + r * math.sin(a) * left
+            P.append(q)
+            UV.append(uv0 + 0.01 * np.array([math.cos(a), math.sin(a)]))
+            if s <= UT_FACE:
+                f = s / UT_FACE
+                w = {b: (1 - f) * x for b, x in canal_end.items()}
+                for b, x in ring_w(os_ring, theta).items():
+                    w[b] = w.get(b, 0) + f * x
+            elif s <= s0:
+                w = ring_w(os_ring, theta)
+            else:
+                f = (s - s0) / UT_LEN
+                a_os = max(0.0, 1 - f / 0.25)
+                a_top = smoothstep((f - 0.6) / 0.4)
+                w = {}
+                for b, x in ring_w(os_ring, theta).items():
+                    w[b] = w.get(b, 0) + a_os * x
+                for b, x in ring_w(ut_ring, theta).items():
+                    w[b] = w.get(b, 0) + (1 - a_os) * (1 - a_top) * x
+                w["SB UterusTop"] = w.get("SB UterusTop", 0) + (1 - a_os) * a_top
+            W.append(top4(w))
+    apex = len(P)
+    P.append(c + apex_s * axis)
+    UV.append(uv0)
+    W.append({"SB UterusTop": 1.0})
+    P = np.array(P)
+    tris = []
+    def tri(a, b, d):
+        tris.append((a, d, b) if inward else (a, b, d))
+    # the cut's edge (m points) to the first ring (n), by angle round the axis
+    m = len(loop)
+    la = [angle(P[k]) % (2 * math.pi) for k in range(m)]
+    ra = [(2 * math.pi * k / n) for k in range(n)]
+    # both walked from angle 0 upward
+    lo = sorted(range(m), key=lambda k: la[k])
+    i = j = 0
+    while i < m or j < n:
+        a, b = lo[i % m], m + (j % n)
+        na = la[lo[(i + 1) % m]] + (2 * math.pi if i + 1 >= m else 0)
+        nb = ra[(j + 1) % n] + (2 * math.pi if j + 1 >= n else 0)
+        if j >= n or (i < m and na <= nb):
+            tri(a, lo[(i + 1) % m], b); i += 1
+        else:
+            tri(a, m + ((j + 1) % n), b); j += 1
+    for r in range(len(prof) - 1):
+        for k in range(n):
+            a0, a1 = m + r * n + k, m + r * n + (k + 1) % n
+            b0, b1 = a0 + n, a1 + n
+            tri(a0, a1, b0)
+            tri(a1, b1, b0)
+    last = m + (len(prof) - 1) * n
+    for k in range(n):
+        tri(last + k, last + (k + 1) % n, apex)
+    # the bones: their frames along the canal's axis, each ring bone's x outward
+    bones = {}
+    def ring_bones(ring, s, r, flat):
+        for b, theta in ring:
+            a = math.radians(theta)
+            out = math.cos(a) * up + math.sin(a) * left
+            pos = c + s * axis + r * math.cos(a) * flat * up + r * math.sin(a) * left
+            bones[b] = (pos, np.column_stack([out, np.cross(axis, out), axis]))
+            bones[b + " Base"] = bones[b]
+    ring_bones(os_ring, UT_FACE + UT_NECK / 2, UT_OS, 1.0)
+    ring_bones(ut_ring, s0 + UT_LEN / 2, UT_WIDTH, UT_FLAT)
+    bones["SB UterusTop"] = (c + apex_s * axis, np.column_stack([up, left, axis]))
+    bones["SB UterusTop Base"] = bones["SB UterusTop"]
+    mesh = dict(P=P, UV=np.array(UV), tris=np.array(tris), weights=W, fixed_normals={})
+    return kept, mesh, bones, dict(cut_triangles=int(drop.sum()), cut_edge=m, cut_radius=r_loop,
+                                   uterus_vertices=len(P), uterus_triangles=len(tris))
+
+
 def ring_weights(p, mouth, ax, up, left, centre, rings):
     """rings: [(depth, [(bone, angle)])], deepening. The two rings either side of p's depth share it linearly, and
     each ring's share goes to the two bones either side of p's angle round the canal (bones evenly spaced)"""
@@ -1098,8 +1268,15 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         P=vulva_P, uv_P=uv_P, tris=vulva_tris, weights=vul_w, src=vul_src,
         fixed_normals={len(patch_P) + k: cbbe.N[v] for k, v in enumerate(hole_v)}, blend_normals=blend_normals))
     report["vulva_vertices_after_uv_split"] = len(vulva["P"])
+    # the cervix, os and uterus, carried on from the canal's cut end (UT_*)
+    gen_tris, ut_mesh, ut_bones, ut_report = build_uterus(gen_P, gen_UV, gen_tris, gen_w, n_vagina, vag_ax2,
+                                                          vag_up, vag_left)
+    _, _, ut_mesh["src"] = surface(ut_mesh["P"])
+    bones.update(ut_bones)
+    report["uterus"] = ut_report
     meshes = {VULVA: vulva,
-              GENITALS: dict(P=gen_P, UV=gen_UV, tris=gen_tris, weights=gen_w, src=gen_src, fixed_normals={})}
+              GENITALS: dict(P=gen_P, UV=gen_UV, tris=gen_tris, weights=gen_w, src=gen_src, fixed_normals={}),
+              UTERUS: ut_mesh}
 
     # 6. the collision pads: GT's geometry, each pad wholly on its own genital bone (GT's pelvis share dropped), as
     # the lip and anus proxies of a body that does collide in FO4 have it: a pad then moves as one with its bone, and

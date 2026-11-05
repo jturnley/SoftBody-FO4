@@ -407,6 +407,23 @@
   <bone name="SB AnusT1 Base"/>
   <bone name="SB AnusT2 Base"/>
   <bone name="SB AnusT3 Base"/>
+  <bone name="SB Os_0 Base"/>
+  <bone name="SB Os_1 Base"/>
+  <bone name="SB Os_2 Base"/>
+  <bone name="SB Os_3 Base"/>
+  <bone name="SB Os_4 Base"/>
+  <bone name="SB Os_5 Base"/>
+  <bone name="SB Os_6 Base"/>
+  <bone name="SB Os_7 Base"/>
+  <bone name="SB UterusTop Base"/>
+  <bone name="SB Uterus_0 Base"/>
+  <bone name="SB Uterus_1 Base"/>
+  <bone name="SB Uterus_2 Base"/>
+  <bone name="SB Uterus_3 Base"/>
+  <bone name="SB Uterus_4 Base"/>
+  <bone name="SB Uterus_5 Base"/>
+  <bone name="SB Uterus_6 Base"/>
+  <bone name="SB Uterus_7 Base"/>
   <bone name="SB Vag1_0 Base"/>
   <bone name="SB Vag1_1 Base"/>
   <bone name="SB Vag1_10 Base"/>
@@ -586,6 +603,23 @@
   <bone name="SB AnusT1" template="sbCanal"/>
   <bone name="SB AnusT2" template="sbCanal"/>
   <bone name="SB AnusT3" template="sbCanal"/>
+  <bone name="SB Os_0"/>
+  <bone name="SB Os_1"/>
+  <bone name="SB Os_2"/>
+  <bone name="SB Os_3"/>
+  <bone name="SB Os_4"/>
+  <bone name="SB Os_5"/>
+  <bone name="SB Os_6"/>
+  <bone name="SB Os_7"/>
+  <bone name="SB UterusTop"/>
+  <bone name="SB Uterus_0"/>
+  <bone name="SB Uterus_1"/>
+  <bone name="SB Uterus_2"/>
+  <bone name="SB Uterus_3"/>
+  <bone name="SB Uterus_4"/>
+  <bone name="SB Uterus_5"/>
+  <bone name="SB Uterus_6"/>
+  <bone name="SB Uterus_7"/>
   <bone name="SB Vag1_0"/>
   <bone name="SB Vag1_1"/>
   <bone name="SB Vag1_10"/>

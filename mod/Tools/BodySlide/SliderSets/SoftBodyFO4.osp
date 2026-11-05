@@ -9,6 +9,7 @@
         <Shape target="SoftBodyVulva" DataFolder="CBBE SoftBody">SoftBodyVulva</Shape>
         <Shape target="SoftBodyGenitals" DataFolder="CBBE SoftBody">SoftBodyGenitals</Shape>
         <Shape target="SoftBodyGenitals2" DataFolder="CBBE SoftBody">SoftBodyGenitals2</Shape>
+        <Shape target="SoftBodyUterus" DataFolder="CBBE SoftBody">SoftBodyUterus</Shape>
         <Shape target="SoftBodyVaginaOut" DataFolder="CBBE SoftBody">SoftBodyVaginaOut</Shape>
         <Shape target="SoftBodyAnus" DataFolder="CBBE SoftBody">SoftBodyAnus</Shape>
         <Shape target="SoftBodyAnalCanal" DataFolder="CBBE SoftBody">SoftBodyAnalCanal</Shape>
@@ -28,11 +29,13 @@
         <Slider name="BreastsSmall" invert="false" default="0">
             <Data name="CBBEBreastsSmall" target="CBBE" local="true">CBBEBody.osd\CBBEBreastsSmall</Data>
             <Data name="SoftBodyGenitalsCBBEBreastsSmall" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEBreastsSmall</Data>
+            <Data name="SoftBodyUterusCBBEBreastsSmall" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEBreastsSmall</Data>
             <Data name="SoftBodyVaginalCanalCBBEBreastsSmall" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEBreastsSmall</Data>
         </Slider>
         <Slider name="BreastsSmall2" invert="false" default="0">
             <Data name="CBBEBreastsSmall2" target="CBBE" local="true">CBBEBody.osd\CBBEBreastsSmall2</Data>
             <Data name="SoftBodyGenitalsCBBEBreastsSmall2" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEBreastsSmall2</Data>
+            <Data name="SoftBodyUterusCBBEBreastsSmall2" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEBreastsSmall2</Data>
             <Data name="SoftBodyVaginalCanalCBBEBreastsSmall2" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEBreastsSmall2</Data>
         </Slider>
         <Slider name="BreastsTogether" invert="false" default="0">
@@ -49,6 +52,7 @@
             <Data name="SoftBodyVulvaCBBEButt" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEButt</Data>
             <Data name="SoftBodyGenitalsCBBEButt" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEButt</Data>
             <Data name="SoftBodyGenitals2CBBEButt" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEButt</Data>
+            <Data name="SoftBodyUterusCBBEButt" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEButt</Data>
             <Data name="SoftBodyVaginaOutCBBEButt" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEButt</Data>
             <Data name="SoftBodyAnusCBBEButt" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEButt</Data>
             <Data name="SoftBodyAnalCanalCBBEButt" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEButt</Data>
@@ -59,6 +63,7 @@
             <Data name="SoftBodyVulvaCBBEButtCrack" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEButtCrack</Data>
             <Data name="SoftBodyGenitalsCBBEButtCrack" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEButtCrack</Data>
             <Data name="SoftBodyGenitals2CBBEButtCrack" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEButtCrack</Data>
+            <Data name="SoftBodyUterusCBBEButtCrack" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEButtCrack</Data>
             <Data name="SoftBodyVaginaOutCBBEButtCrack" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEButtCrack</Data>
             <Data name="SoftBodyAnusCBBEButtCrack" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEButtCrack</Data>
             <Data name="SoftBodyAnalCanalCBBEButtCrack" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEButtCrack</Data>
@@ -69,6 +74,7 @@
             <Data name="SoftBodyVulvaCBBEButtNew" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEButtNew</Data>
             <Data name="SoftBodyGenitalsCBBEButtNew" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEButtNew</Data>
             <Data name="SoftBodyGenitals2CBBEButtNew" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEButtNew</Data>
+            <Data name="SoftBodyUterusCBBEButtNew" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEButtNew</Data>
             <Data name="SoftBodyVaginaOutCBBEButtNew" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEButtNew</Data>
             <Data name="SoftBodyAnusCBBEButtNew" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEButtNew</Data>
             <Data name="SoftBodyAnalCanalCBBEButtNew" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEButtNew</Data>
@@ -79,6 +85,7 @@
             <Data name="SoftBodyVulvaCBBEButtShape2" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEButtShape2</Data>
             <Data name="SoftBodyGenitalsCBBEButtShape2" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEButtShape2</Data>
             <Data name="SoftBodyGenitals2CBBEButtShape2" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEButtShape2</Data>
+            <Data name="SoftBodyUterusCBBEButtShape2" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEButtShape2</Data>
             <Data name="SoftBodyVaginaOutCBBEButtShape2" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEButtShape2</Data>
             <Data name="SoftBodyAnusCBBEButtShape2" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEButtShape2</Data>
             <Data name="SoftBodyAnalCanalCBBEButtShape2" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEButtShape2</Data>
@@ -89,6 +96,7 @@
             <Data name="SoftBodyVulvaCBBEButtSmall" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEButtSmall</Data>
             <Data name="SoftBodyGenitalsCBBEButtSmall" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEButtSmall</Data>
             <Data name="SoftBodyGenitals2CBBEButtSmall" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEButtSmall</Data>
+            <Data name="SoftBodyUterusCBBEButtSmall" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEButtSmall</Data>
             <Data name="SoftBodyVaginaOutCBBEButtSmall" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEButtSmall</Data>
             <Data name="SoftBodyAnusCBBEButtSmall" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEButtSmall</Data>
             <Data name="SoftBodyAnalCanalCBBEButtSmall" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEButtSmall</Data>
@@ -104,10 +112,12 @@
             <Data name="CBBEChestDepth" target="CBBE" local="true">CBBEBody.osd\CBBEChestDepth</Data>
             <Data name="SoftBodyVulvaCBBEChestDepth" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEChestDepth</Data>
             <Data name="SoftBodyGenitalsCBBEChestDepth" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEChestDepth</Data>
+            <Data name="SoftBodyUterusCBBEChestDepth" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEChestDepth</Data>
             <Data name="SoftBodyVaginalCanalCBBEChestDepth" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEChestDepth</Data>
         </Slider>
         <Slider name="ChestWidth" invert="false" default="0">
             <Data name="CBBEChestWidth" target="CBBE" local="true">CBBEBody.osd\CBBEChestWidth</Data>
+            <Data name="SoftBodyUterusCBBEChestWidth" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEChestWidth</Data>
         </Slider>
         <Slider name="ChubbyArms" invert="false" default="0">
             <Data name="CBBEChubbyArms" target="CBBE" local="true">CBBEBody.osd\CBBEChubbyArms</Data>
@@ -117,6 +127,7 @@
             <Data name="SoftBodyVulvaCBBEChubbyButt" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEChubbyButt</Data>
             <Data name="SoftBodyGenitalsCBBEChubbyButt" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEChubbyButt</Data>
             <Data name="SoftBodyGenitals2CBBEChubbyButt" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEChubbyButt</Data>
+            <Data name="SoftBodyUterusCBBEChubbyButt" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEChubbyButt</Data>
             <Data name="SoftBodyVaginaOutCBBEChubbyButt" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEChubbyButt</Data>
             <Data name="SoftBodyAnusCBBEChubbyButt" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEChubbyButt</Data>
             <Data name="SoftBodyAnalCanalCBBEChubbyButt" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEChubbyButt</Data>
@@ -127,6 +138,7 @@
             <Data name="SoftBodyVulvaCBBEChubbyLegs" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEChubbyLegs</Data>
             <Data name="SoftBodyGenitalsCBBEChubbyLegs" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEChubbyLegs</Data>
             <Data name="SoftBodyGenitals2CBBEChubbyLegs" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEChubbyLegs</Data>
+            <Data name="SoftBodyUterusCBBEChubbyLegs" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEChubbyLegs</Data>
             <Data name="SoftBodyVaginaOutCBBEChubbyLegs" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEChubbyLegs</Data>
             <Data name="SoftBodyAnusCBBEChubbyLegs" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEChubbyLegs</Data>
             <Data name="SoftBodyAnalCanalCBBEChubbyLegs" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEChubbyLegs</Data>
@@ -137,6 +149,7 @@
             <Data name="SoftBodyVulvaCBBEChubbyWaist" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEChubbyWaist</Data>
             <Data name="SoftBodyGenitalsCBBEChubbyWaist" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEChubbyWaist</Data>
             <Data name="SoftBodyGenitals2CBBEChubbyWaist" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEChubbyWaist</Data>
+            <Data name="SoftBodyUterusCBBEChubbyWaist" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEChubbyWaist</Data>
             <Data name="SoftBodyVaginaOutCBBEChubbyWaist" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEChubbyWaist</Data>
             <Data name="SoftBodyAnusCBBEChubbyWaist" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEChubbyWaist</Data>
             <Data name="SoftBodyAnalCanalCBBEChubbyWaist" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEChubbyWaist</Data>
@@ -147,6 +160,7 @@
             <Data name="SoftBodyVulvaCBBECrotchBack" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBECrotchBack</Data>
             <Data name="SoftBodyGenitalsCBBECrotchBack" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBECrotchBack</Data>
             <Data name="SoftBodyGenitals2CBBECrotchBack" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBECrotchBack</Data>
+            <Data name="SoftBodyUterusCBBECrotchBack" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBECrotchBack</Data>
             <Data name="SoftBodyVaginaOutCBBECrotchBack" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBECrotchBack</Data>
             <Data name="SoftBodyAnusCBBECrotchBack" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBECrotchBack</Data>
             <Data name="SoftBodyAnalCanalCBBECrotchBack" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBECrotchBack</Data>
@@ -160,6 +174,7 @@
             <Data name="SoftBodyVulvaCBBEGroin" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEGroin</Data>
             <Data name="SoftBodyGenitalsCBBEGroin" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEGroin</Data>
             <Data name="SoftBodyGenitals2CBBEGroin" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEGroin</Data>
+            <Data name="SoftBodyUterusCBBEGroin" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEGroin</Data>
             <Data name="SoftBodyVaginaOutCBBEGroin" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEGroin</Data>
             <Data name="SoftBodyAnusCBBEGroin" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEGroin</Data>
             <Data name="SoftBodyAnalCanalCBBEGroin" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEGroin</Data>
@@ -170,6 +185,7 @@
             <Data name="SoftBodyVulvaCBBEHipBack" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEHipBack</Data>
             <Data name="SoftBodyGenitalsCBBEHipBack" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEHipBack</Data>
             <Data name="SoftBodyGenitals2CBBEHipBack" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEHipBack</Data>
+            <Data name="SoftBodyUterusCBBEHipBack" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEHipBack</Data>
             <Data name="SoftBodyVaginaOutCBBEHipBack" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEHipBack</Data>
             <Data name="SoftBodyAnusCBBEHipBack" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEHipBack</Data>
             <Data name="SoftBodyAnalCanalCBBEHipBack" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEHipBack</Data>
@@ -180,6 +196,7 @@
             <Data name="SoftBodyVulvaCBBEHipBone" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEHipBone</Data>
             <Data name="SoftBodyGenitalsCBBEHipBone" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEHipBone</Data>
             <Data name="SoftBodyGenitals2CBBEHipBone" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEHipBone</Data>
+            <Data name="SoftBodyUterusCBBEHipBone" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEHipBone</Data>
             <Data name="SoftBodyVaginaOutCBBEHipBone" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEHipBone</Data>
             <Data name="SoftBodyAnusCBBEHipBone" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEHipBone</Data>
             <Data name="SoftBodyAnalCanalCBBEHipBone" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEHipBone</Data>
@@ -190,6 +207,7 @@
             <Data name="SoftBodyVulvaCBBEHips" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEHips</Data>
             <Data name="SoftBodyGenitalsCBBEHips" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEHips</Data>
             <Data name="SoftBodyGenitals2CBBEHips" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEHips</Data>
+            <Data name="SoftBodyUterusCBBEHips" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEHips</Data>
             <Data name="SoftBodyVaginaOutCBBEHips" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEHips</Data>
             <Data name="SoftBodyAnusCBBEHips" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEHips</Data>
             <Data name="SoftBodyAnalCanalCBBEHips" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEHips</Data>
@@ -200,6 +218,7 @@
             <Data name="SoftBodyVulvaCBBEHipUpperWidth" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEHipUpperWidth</Data>
             <Data name="SoftBodyGenitalsCBBEHipUpperWidth" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEHipUpperWidth</Data>
             <Data name="SoftBodyGenitals2CBBEHipUpperWidth" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEHipUpperWidth</Data>
+            <Data name="SoftBodyUterusCBBEHipUpperWidth" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEHipUpperWidth</Data>
             <Data name="SoftBodyAnalCanalCBBEHipUpperWidth" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEHipUpperWidth</Data>
             <Data name="SoftBodyVaginalCanalCBBEHipUpperWidth" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEHipUpperWidth</Data>
         </Slider>
@@ -254,6 +273,7 @@
             <Data name="SoftBodyVulvaCBBEPregnancyBelly" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEPregnancyBelly</Data>
             <Data name="SoftBodyGenitalsCBBEPregnancyBelly" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEPregnancyBelly</Data>
             <Data name="SoftBodyGenitals2CBBEPregnancyBelly" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEPregnancyBelly</Data>
+            <Data name="SoftBodyUterusCBBEPregnancyBelly" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEPregnancyBelly</Data>
             <Data name="SoftBodyVaginaOutCBBEPregnancyBelly" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEPregnancyBelly</Data>
             <Data name="SoftBodyAnusCBBEPregnancyBelly" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEPregnancyBelly</Data>
             <Data name="SoftBodyAnalCanalCBBEPregnancyBelly" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEPregnancyBelly</Data>
@@ -267,6 +287,7 @@
             <Data name="SoftBodyVulvaCBBERoundAss" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBERoundAss</Data>
             <Data name="SoftBodyGenitalsCBBERoundAss" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBERoundAss</Data>
             <Data name="SoftBodyGenitals2CBBERoundAss" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBERoundAss</Data>
+            <Data name="SoftBodyUterusCBBERoundAss" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBERoundAss</Data>
             <Data name="SoftBodyVaginaOutCBBERoundAss" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBERoundAss</Data>
             <Data name="SoftBodyAnusCBBERoundAss" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBERoundAss</Data>
             <Data name="SoftBodyAnalCanalCBBERoundAss" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBERoundAss</Data>
@@ -286,6 +307,7 @@
             <Data name="SoftBodyVulvaCBBESlimThighs" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBESlimThighs</Data>
             <Data name="SoftBodyGenitalsCBBESlimThighs" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBESlimThighs</Data>
             <Data name="SoftBodyGenitals2CBBESlimThighs" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBESlimThighs</Data>
+            <Data name="SoftBodyUterusCBBESlimThighs" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBESlimThighs</Data>
             <Data name="SoftBodyVaginaOutCBBESlimThighs" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBESlimThighs</Data>
             <Data name="SoftBodyAnusCBBESlimThighs" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBESlimThighs</Data>
             <Data name="SoftBodyAnalCanalCBBESlimThighs" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBESlimThighs</Data>
@@ -296,6 +318,7 @@
         </Slider>
         <Slider name="SternumHeight" invert="false" default="0">
             <Data name="CBBESternumHeight" target="CBBE" local="true">CBBEBody.osd\CBBESternumHeight</Data>
+            <Data name="SoftBodyUterusCBBESternumHeight" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBESternumHeight</Data>
         </Slider>
         <Slider name="Thighs" invert="false" default="0">
             <Data name="CBBEThighs" target="CBBE" local="true">CBBEBody.osd\CBBEThighs</Data>
@@ -312,6 +335,7 @@
             <Data name="SoftBodyVulvaCBBETummyTuck" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBETummyTuck</Data>
             <Data name="SoftBodyGenitalsCBBETummyTuck" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBETummyTuck</Data>
             <Data name="SoftBodyGenitals2CBBETummyTuck" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBETummyTuck</Data>
+            <Data name="SoftBodyUterusCBBETummyTuck" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBETummyTuck</Data>
             <Data name="SoftBodyVaginaOutCBBETummyTuck" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBETummyTuck</Data>
             <Data name="SoftBodyAnusCBBETummyTuck" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBETummyTuck</Data>
             <Data name="SoftBodyAnalCanalCBBETummyTuck" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBETummyTuck</Data>
@@ -322,6 +346,7 @@
             <Data name="SoftBodyVulvaCBBEVanillaFo4" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEVanillaFo4</Data>
             <Data name="SoftBodyGenitalsCBBEVanillaFo4" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEVanillaFo4</Data>
             <Data name="SoftBodyGenitals2CBBEVanillaFo4" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEVanillaFo4</Data>
+            <Data name="SoftBodyUterusCBBEVanillaFo4" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEVanillaFo4</Data>
             <Data name="SoftBodyVaginaOutCBBEVanillaFo4" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEVanillaFo4</Data>
             <Data name="SoftBodyAnusCBBEVanillaFo4" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEVanillaFo4</Data>
             <Data name="SoftBodyAnalCanalCBBEVanillaFo4" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEVanillaFo4</Data>
@@ -332,6 +357,7 @@
             <Data name="SoftBodyVulvaCBBEWaist" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEWaist</Data>
             <Data name="SoftBodyGenitalsCBBEWaist" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEWaist</Data>
             <Data name="SoftBodyGenitals2CBBEWaist" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEWaist</Data>
+            <Data name="SoftBodyUterusCBBEWaist" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEWaist</Data>
             <Data name="SoftBodyVaginaOutCBBEWaist" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEWaist</Data>
             <Data name="SoftBodyAnusCBBEWaist" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEWaist</Data>
             <Data name="SoftBodyAnalCanalCBBEWaist" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEWaist</Data>
@@ -342,6 +368,7 @@
             <Data name="SoftBodyVulvaCBBEWaistHeight" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEWaistHeight</Data>
             <Data name="SoftBodyGenitalsCBBEWaistHeight" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEWaistHeight</Data>
             <Data name="SoftBodyGenitals2CBBEWaistHeight" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEWaistHeight</Data>
+            <Data name="SoftBodyUterusCBBEWaistHeight" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEWaistHeight</Data>
             <Data name="SoftBodyAnusCBBEWaistHeight" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEWaistHeight</Data>
             <Data name="SoftBodyAnalCanalCBBEWaistHeight" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEWaistHeight</Data>
             <Data name="SoftBodyVaginalCanalCBBEWaistHeight" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEWaistHeight</Data>
@@ -350,6 +377,7 @@
             <Data name="CBBEWideWaistLine" target="CBBE" local="true">CBBEBody.osd\CBBEWideWaistLine</Data>
             <Data name="SoftBodyGenitalsCBBEWideWaistLine" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEWideWaistLine</Data>
             <Data name="SoftBodyGenitals2CBBEWideWaistLine" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEWideWaistLine</Data>
+            <Data name="SoftBodyUterusCBBEWideWaistLine" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEWideWaistLine</Data>
             <Data name="SoftBodyAnalCanalCBBEWideWaistLine" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEWideWaistLine</Data>
             <Data name="SoftBodyVaginalCanalCBBEWideWaistLine" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEWideWaistLine</Data>
         </Slider>
@@ -361,6 +389,7 @@
             <Data name="SoftBodyVulvaCBBEAppleCheeks" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEAppleCheeks</Data>
             <Data name="SoftBodyGenitalsCBBEAppleCheeks" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEAppleCheeks</Data>
             <Data name="SoftBodyGenitals2CBBEAppleCheeks" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEAppleCheeks</Data>
+            <Data name="SoftBodyUterusCBBEAppleCheeks" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEAppleCheeks</Data>
             <Data name="SoftBodyVaginaOutCBBEAppleCheeks" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEAppleCheeks</Data>
             <Data name="SoftBodyAnusCBBEAppleCheeks" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEAppleCheeks</Data>
             <Data name="SoftBodyAnalCanalCBBEAppleCheeks" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEAppleCheeks</Data>
@@ -373,6 +402,7 @@
             <Data name="CBBEBack" target="CBBE" local="true">CBBEBody.osd\CBBEBack</Data>
             <Data name="SoftBodyVulvaCBBEBack" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEBack</Data>
             <Data name="SoftBodyGenitals2CBBEBack" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEBack</Data>
+            <Data name="SoftBodyUterusCBBEBack" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEBack</Data>
             <Data name="SoftBodyAnusCBBEBack" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEBack</Data>
             <Data name="SoftBodyAnalCanalCBBEBack" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEBack</Data>
             <Data name="SoftBodyVaginalCanalCBBEBack" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEBack</Data>
@@ -380,6 +410,7 @@
         <Slider name="BackArch" invert="false" default="0">
             <Data name="CBBEBackArch" target="CBBE" local="true">CBBEBody.osd\CBBEBackArch</Data>
             <Data name="SoftBodyGenitals2CBBEBackArch" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEBackArch</Data>
+            <Data name="SoftBodyUterusCBBEBackArch" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEBackArch</Data>
             <Data name="SoftBodyAnalCanalCBBEBackArch" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEBackArch</Data>
             <Data name="SoftBodyVaginalCanalCBBEBackArch" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEBackArch</Data>
         </Slider>
@@ -387,6 +418,7 @@
             <Data name="CBBEBelly" target="CBBE" local="true">CBBEBody.osd\CBBEBelly</Data>
             <Data name="SoftBodyVulvaCBBEBelly" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEBelly</Data>
             <Data name="SoftBodyGenitalsCBBEBelly" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEBelly</Data>
+            <Data name="SoftBodyUterusCBBEBelly" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEBelly</Data>
             <Data name="SoftBodyVaginaOutCBBEBelly" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEBelly</Data>
             <Data name="SoftBodyVaginalCanalCBBEBelly" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEBelly</Data>
         </Slider>
@@ -394,6 +426,7 @@
             <Data name="CBBEBigBelly" target="CBBE" local="true">CBBEBody.osd\CBBEBigBelly</Data>
             <Data name="SoftBodyVulvaCBBEBigBelly" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEBigBelly</Data>
             <Data name="SoftBodyGenitalsCBBEBigBelly" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEBigBelly</Data>
+            <Data name="SoftBodyUterusCBBEBigBelly" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEBigBelly</Data>
             <Data name="SoftBodyVaginaOutCBBEBigBelly" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEBigBelly</Data>
             <Data name="SoftBodyVaginalCanalCBBEBigBelly" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEBigBelly</Data>
         </Slider>
@@ -402,6 +435,7 @@
             <Data name="SoftBodyVulvaCBBEBigButt" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEBigButt</Data>
             <Data name="SoftBodyGenitalsCBBEBigButt" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEBigButt</Data>
             <Data name="SoftBodyGenitals2CBBEBigButt" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEBigButt</Data>
+            <Data name="SoftBodyUterusCBBEBigButt" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEBigButt</Data>
             <Data name="SoftBodyVaginaOutCBBEBigButt" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEBigButt</Data>
             <Data name="SoftBodyAnusCBBEBigButt" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEBigButt</Data>
             <Data name="SoftBodyAnalCanalCBBEBigButt" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEBigButt</Data>
@@ -412,6 +446,7 @@
             <Data name="SoftBodyVulvaCBBEBigTorso" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEBigTorso</Data>
             <Data name="SoftBodyGenitalsCBBEBigTorso" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEBigTorso</Data>
             <Data name="SoftBodyGenitals2CBBEBigTorso" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEBigTorso</Data>
+            <Data name="SoftBodyUterusCBBEBigTorso" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEBigTorso</Data>
             <Data name="SoftBodyVaginaOutCBBEBigTorso" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBEBigTorso</Data>
             <Data name="SoftBodyAnusCBBEBigTorso" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEBigTorso</Data>
             <Data name="SoftBodyAnalCanalCBBEBigTorso" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEBigTorso</Data>
@@ -458,6 +493,7 @@
             <Data name="SoftBodyVulvaCBBE7B Lower" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBE7B Lower</Data>
             <Data name="SoftBodyGenitalsCBBE7B Lower" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBE7B Lower</Data>
             <Data name="SoftBodyGenitals2CBBE7B Lower" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBE7B Lower</Data>
+            <Data name="SoftBodyUterusCBBE7B Lower" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBE7B Lower</Data>
             <Data name="SoftBodyVaginaOutCBBE7B Lower" target="SoftBodyVaginaOut" local="true">SoftBodyGenitals.osd\SoftBodyVaginaOutCBBE7B Lower</Data>
             <Data name="SoftBodyAnusCBBE7B Lower" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBE7B Lower</Data>
             <Data name="SoftBodyAnalCanalCBBE7B Lower" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBE7B Lower</Data>
@@ -467,6 +503,7 @@
             <Data name="CBBEMuscularChest" target="CBBE" local="true">CBBEBody.osd\CBBEMuscularChest</Data>
             <Data name="SoftBodyVulvaCBBEMuscularChest" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEMuscularChest</Data>
             <Data name="SoftBodyGenitalsCBBEMuscularChest" target="SoftBodyGenitals" local="true">SoftBodyGenitals.osd\SoftBodyGenitalsCBBEMuscularChest</Data>
+            <Data name="SoftBodyUterusCBBEMuscularChest" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEMuscularChest</Data>
             <Data name="SoftBodyVaginalCanalCBBEMuscularChest" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEMuscularChest</Data>
         </Slider>
         <Slider name="MuscularArms" invert="false" default="0">
@@ -476,6 +513,7 @@
             <Data name="CBBEMuscularButt" target="CBBE" local="true">CBBEBody.osd\CBBEMuscularButt</Data>
             <Data name="SoftBodyVulvaCBBEMuscularButt" target="SoftBodyVulva" local="true">SoftBodyGenitals.osd\SoftBodyVulvaCBBEMuscularButt</Data>
             <Data name="SoftBodyGenitals2CBBEMuscularButt" target="SoftBodyGenitals2" local="true">SoftBodyGenitals.osd\SoftBodyGenitals2CBBEMuscularButt</Data>
+            <Data name="SoftBodyUterusCBBEMuscularButt" target="SoftBodyUterus" local="true">SoftBodyGenitals.osd\SoftBodyUterusCBBEMuscularButt</Data>
             <Data name="SoftBodyAnusCBBEMuscularButt" target="SoftBodyAnus" local="true">SoftBodyGenitals.osd\SoftBodyAnusCBBEMuscularButt</Data>
             <Data name="SoftBodyAnalCanalCBBEMuscularButt" target="SoftBodyAnalCanal" local="true">SoftBodyGenitals.osd\SoftBodyAnalCanalCBBEMuscularButt</Data>
             <Data name="SoftBodyVaginalCanalCBBEMuscularButt" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEMuscularButt</Data>

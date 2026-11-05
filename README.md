@@ -208,6 +208,21 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   so the canal stretches evenly from the entrance (which stays put) to the cervix (which moves the full
   amount), and the cap stays capped over his tip. Before, his tip went through the cap. The tuning log
   records the push (`cervixPush`).
+- **The cervix, os and uterus.** GT's canal ends closed. The mesh builder cuts the very tip off that end
+  and carries the canal on as a shape of its own, `SoftBodyUterus`. It runs from the cervix's face,
+  narrowing to the os (0.08 round), through a cervical canal 1 unit long, into a uterine cavity 3 long,
+  1.2 round side to side and about half that front to back, closed at its top. The cut's edge is
+  copied exactly, positions and weights both, so the two shapes meet with no seam. Its bones are a ring
+  of 8 at the os (`SB Os_*`), a ring of 8 round the cavity (`SB Uterus_*`) and one at its top
+  (`SB UterusTop`), all kinematic. The plugin carries them with the cervix push, opens the os and
+  swells the cavity (`fUterusSwell`) when asked. Move the camera inside to see it.
+- **An interface for other plugins.** `plugin/include/SoftBodyFO4API.h` describes three exported
+  functions, for 4Strands' fluid:
+  - `SoftBodyFO4_GetCanal` gives the followed woman's canal rings (centres and how far open),
+    the cervix, the os, the uterus's centre, axis, length and width, the fill and the cervix push,
+    all in world space.
+  - `SoftBodyFO4_SetUterusFill` sets how full the uterus is (0 to 1), which swells it.
+  - `SoftBodyFO4_SetOsOpen` sets how far the os opens.
 - **The anus is aimed at its mouth, and painted there.** The anus's rim sits at the bottom of GT's
   pucker, 0.8 inside her skin along the canal. The aligner and the bend aimed his line through the
   rim's centre, so coming in at an angle he crossed her skin forward of the hole, on the funnel's side,
