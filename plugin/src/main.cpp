@@ -250,6 +250,9 @@ namespace
 	};
 
 	// A-Body's penis chain: tip, middle, base (the _SMP bones are the simulated ones)
+	// the mesh builder's rim profile (tools/genitals.py RIM_PENIS, VAG_RIM_REACH, ANAL_RIM_REACH), at scale 1
+	constexpr float kRimPenis = 2.0F;
+	constexpr float kReach[2][2] = { { 3.0F, 4.5F }, { 2.5F, 4.0F } };
 	constexpr const char* kPenis[] = { "Penis_05_SMP", "Penis_03_SMP", "Penis_01_SMP" };
 	// where the plugin bends him: the root of A-Body's penis chain, above the animated Penis_00
 
@@ -383,6 +386,7 @@ namespace
 		std::string name;
 		int         opening;  // 0 the vagina, 1 the anus: its centre gives the way out, and the edge's place
 		bool        outer{ false };  // an outer ring's: kept outside the inner, where the skin between keeps its area
+		bool        field{ false };  // not a ring's: carried by the opening in use as the skin round it is (below)
 	};
 	// GT's lip and anus bones are no longer driven (v0.21): moved on their own they folded the skin round the rims.
 	// Each visible hole has an inner ring of 24 (12 showed as a polygon) and an outer ring of 12 (a shape's bones are
@@ -400,6 +404,10 @@ namespace
 				r.push_back({ std::format("SB VagRimO_{}", k), 0, true });
 				r.push_back({ std::format("SB AnusRimO_{}", k), 1, true });
 			}
+			// GT's lip and anus bones: the skin on them (677 of the hood's points on Clitoral1) stayed put while the
+			// rings round it opened, and folded (v0.23)
+			for (const char* n : { "Clitoral1", "VaginaB1", "NPC L Pussy02", "NPC R Pussy02" }) r.push_back({ n, 0, false, true });
+			for (const char* n : { "NPC LT Anus2", "NPC RT Anus2", "NPC LB Anus2", "NPC RB Anus2" }) r.push_back({ n, 1, false, true });
 			return r;
 		}();
 		return rims;
@@ -413,6 +421,7 @@ namespace
 		int                           opening{ 0 };
 		bool                          outer{ false };
 		bool                          edge{ false };  // a visible hole's inner ring: its rest radius is the hole's
+		bool                          field{ false };
 	};
 	std::unordered_map<std::string, Driven> driven;  // under heldLock
 
@@ -426,7 +435,7 @@ namespace
 		auto& d = driven[a_rim.name];
 		if (d.node.get() != node) {
 			d = Driven{ RE::NiPointer<RE::NiAVObject>(node), node->local.translate, node->local.translate, a_rim.opening,
-				a_rim.outer, !a_rim.outer && a_rim.name.find("Rim_") != std::string::npos };
+				a_rim.outer, !a_rim.outer && a_rim.name.find("Rim_") != std::string::npos, a_rim.field };
 			if (a_rim.name.ends_with("_0")) {
 				REX::INFO("rim {}: rest ({:.3f}, {:.3f}, {:.3f})", a_rim.name, d.rest.x, d.rest.y, d.rest.z);
 			}
@@ -438,24 +447,33 @@ namespace
 	// passes up to a unit off the opening's centre. Here, every few milliseconds, his penis is turned so his line runs
 	// through the centre of the opening in use, by at most fBendMax. v0.22 turned him at his root (Penis_00_Offset): the
 	// skin where his shaft meets his body, weighted between the turned bones and Penis_Offset_SMP, tore into sheets (at
-	// 15 degrees, A-Body's mesh had 222 edges stretched over 3x). The turn is now shared by the shaft's first two joints,
+	// 15 degrees, A-Body's mesh had 222 edges stretched over 3x). So the turn is shared by the shaft's first two joints,
 	// Penis_02_Offset (at Penis_01_SMP, his line's base) and Penis_03_Offset, which A-Body's weights blend smoothly
-	// across (1.5x at most at 20 degrees). FO4 keeps a node's rotation as the map from its parent's frame to its own
-	// (see ToLocal), so turning a node by Q (in its parent's frame) takes local.rotate * Q^T.
-	struct BendJoint
+	// across (1.5x at most at 20 degrees). v0.23 wrote those joints, but something rewrites them every frame (the log
+	// counted 16000 rewrites in a scene), so the bend rarely showed. His skin hangs on the _SMP leaves under them, which
+	// nothing animates: those are turned instead, about the joints, as if the joints had turned. FO4 keeps a node's
+	// rotation as the map from its parent's frame to its own (see ToLocal), so turning a node by Q (in its parent's
+	// frame) takes local.rotate * Q^T.
+	struct BendPivot
+	{
+		const char* name;
+		float       share;
+	};
+	constexpr BendPivot kBendPivots[2] = { { "Penis_02_Offset", 0.5F }, { "Penis_03_Offset", 0.5F } };
+	struct BendLeaf
 	{
 		const char*                   name;
-		float                         share;
+		int                           pivots;   // how many of kBendPivots (from the first) it hangs below
 		RE::NiPointer<RE::NiAVObject> node;
-		RE::NiMatrix3                 base;     // its rotation as the game (or 4Stim) last left it
-		RE::NiMatrix3                 written;  // what was last written
+		RE::NiTransform               base;     // its own place, as the NIF has it
+		RE::NiTransform               written;  // what was last written
 		std::uint32_t                 rebased{ 0 };
 	};
 	struct Bend
 	{
-		BendJoint joints[2]{ { "Penis_02_Offset", 0.5F }, { "Penis_03_Offset", 0.5F } };
-		V         turn;  // the whole turn, in the first joint's parent's frame: axis times angle (radians)
-		bool      started{ false };
+		BendLeaf leaves[4]{ { "Penis_02_SMP", 1 }, { "Penis_03_SMP", 2 }, { "Penis_04_SMP", 2 }, { "Penis_05_SMP", 2 } };
+		V        turn;  // the whole turn, in the first pivot's parent's frame: axis times angle (radians)
+		bool     started{ false };
 	} bend;
 
 	RE::NiMatrix3 AxisAngle(const V& a_turn)
@@ -512,14 +530,27 @@ namespace
 			e[0][2] * a_local.x + e[1][2] * a_local.y + e[2][2] * a_local.z);
 	}
 
+	// v rotated by angle about the (unit) axis k
+	V Rotate(const V& a_v, const V& a_k, float a_angle)
+	{
+		const float c = std::cos(a_angle), s = std::sin(a_angle);
+		return Add(Add(Mul(a_v, c), Mul(Cross(a_k, a_v), s)), Mul(a_k, Dot(a_k, a_v) * (1 - c)));
+	}
+
+	bool SameTransform(const RE::NiTransform& a, const RE::NiTransform& b)
+	{
+		return Same(a.rotate, b.rotate) && Len(Sub(a.translate, b.translate)) < 1e-5F;
+	}
+
 	void ReleaseBend()
 	{
-		for (auto& j : bend.joints) {
-			if (auto* node = j.node.get(); node && Same(node->local.rotate, j.written)) {
-				node->local.rotate = j.base;
+		for (auto& l : bend.leaves) {
+			if (auto* node = l.node.get(); node && SameTransform(node->local, l.written)) {
+				node->local.rotate = l.base.rotate;
+				node->local.translate = l.base.translate;
 			}
-			j.node.reset();
-			j.rebased = 0;
+			l.node.reset();
+			l.rebased = 0;
 		}
 		bend.turn = V(0, 0, 0);
 		bend.started = false;
@@ -529,47 +560,58 @@ namespace
 	void BendPenis(float a_dt, bool a_penis, const V& a_base, const V& a_u, float a_length, const V* a_centre,
 		const bool* a_haveCentre, Act a_act)
 	{
-		RE::NiAVObject* nodes[2]{};
-		for (int i = 0; i < 2; ++i) {
-			nodes[i] = Settings::bendPenis ? Held("him", bend.joints[i].name) : nullptr;
-			if (!nodes[i] || !nodes[i]->parent) {
-				if (bend.started) {
-					ReleaseBend();
-				}
-				return;
-			}
+		RE::NiAVObject* pivots[2]{};
+		RE::NiAVObject* leaves[4]{};
+		bool            all = Settings::bendPenis;
+		for (int i = 0; all && i < 2; ++i) {
+			pivots[i] = Held("him", kBendPivots[i].name);
+			all = pivots[i] && pivots[i]->parent;
 		}
-		if (bend.joints[0].node.get() != nodes[0] || bend.joints[1].node.get() != nodes[1]) {
+		for (int i = 0; all && i < 4; ++i) {
+			leaves[i] = Held("him", bend.leaves[i].name);
+			all = leaves[i] && leaves[i]->parent;
+		}
+		if (!all) {
+			if (bend.started) {
+				ReleaseBend();
+			}
+			return;
+		}
+		bool same = bend.started;
+		for (int i = 0; same && i < 4; ++i) {
+			same = bend.leaves[i].node.get() == leaves[i];
+		}
+		if (!same) {
 			ReleaseBend();
-			for (int i = 0; i < 2; ++i) {
-				auto& j = bend.joints[i];
-				j.node = RE::NiPointer<RE::NiAVObject>(nodes[i]);
-				j.base = j.written = nodes[i]->local.rotate;
+			for (int i = 0; i < 4; ++i) {
+				auto& l = bend.leaves[i];
+				l.node = RE::NiPointer<RE::NiAVObject>(leaves[i]);
+				l.base = l.written = leaves[i]->local;
 			}
 			bend.started = true;
-			REX::INFO("bend: turning him at {} and {}", bend.joints[0].name, bend.joints[1].name);
+			REX::INFO("bend: turning his shaft's skin bones about {} and {}", kBendPivots[0].name, kBendPivots[1].name);
 		} else {
-			for (auto& j : bend.joints) {
-				if (!Same(j.node->local.rotate, j.written)) {
-					j.base = j.node->local.rotate;  // the game or 4Stim set it since: turn from there
-					if (++j.rebased % 500 == 1) {
-						REX::INFO("bend: {} was set by something else ({} times)", j.name, j.rebased);
+			for (auto& l : bend.leaves) {
+				if (!SameTransform(l.node->local, l.written)) {
+					l.base = l.node->local;  // something else set it since: turn from there
+					if (++l.rebased % 500 == 1) {
+						REX::INFO("bend: {} was set by something else ({} times)", l.name, l.rebased);
 					}
 				}
 			}
 		}
-		auto* frame = nodes[0]->parent;  // the turn is kept in this frame, which moves with him
+		auto* frame = pivots[0]->parent;  // the turn is kept in this frame, which moves with him
 		// what the turn should become: by how much more it must turn to put his line through the centre
 		V    want = bend.turn;
 		bool aiming = false;
 		const int o = a_act == Act::kVaginal ? 0 : a_act == Act::kAnal ? 1 : -1;
 		if (a_penis && o >= 0 && a_haveCentre[o]) {
-			const V     pivot = nodes[0]->world.translate;
+			const V     pivot = pivots[0]->world.translate;
 			const V     rel = Sub(a_centre[o], a_base);
 			const float along = Dot(rel, a_u);
 			const V     q = Add(a_base, Mul(a_u, along));      // his line's nearest to the centre
 			const V     now = Sub(q, pivot), to = Sub(a_centre[o], pivot);
-			const float scale = nodes[0]->world.scale;
+			const float scale = pivots[0]->world.scale;
 			if (along > -Settings::penisBaseExtra * scale && along < a_length + 6.0F * scale && Len(now) > 1.0F && Len(to) > 1.0F) {
 				const V     axis = Cross(Unit(now), Unit(to));
 				const float s = std::min(1.0F, Len(axis));
@@ -588,11 +630,27 @@ namespace
 		}
 		const float follow = Settings::bendSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::bendSmoothing) : 1.0F;
 		bend.turn = Add(bend.turn, Mul(Sub(want, bend.turn), follow));
-		const V world = DirOut(frame, bend.turn);
-		for (int i = 0; i < 2; ++i) {
-			auto& j = bend.joints[i];
-			j.written = TimesTransposed(j.base, AxisAngle(Mul(DirIn(nodes[i]->parent, world), j.share)));
-			nodes[i]->local.rotate = j.written;
+		const V     world = DirOut(frame, bend.turn);
+		const float angle = Len(world);
+		const V     k = angle > 1e-7F ? Mul(world, 1.0F / angle) : V(1, 0, 0);
+		const float a1 = angle * kBendPivots[0].share, a2 = angle * kBendPivots[1].share;
+		// the pivots as turned: the second turns with the first
+		const V p1 = pivots[0]->world.translate;
+		const V p2 = Add(p1, Rotate(Sub(pivots[1]->world.translate, p1), k, a1));
+		for (int i = 0; i < 4; ++i) {
+			auto&  l = bend.leaves[i];
+			auto*  parent = leaves[i]->parent;
+			V      w = Add(p1, Rotate(Sub(ToWorld(parent, l.base.translate), p1), k, a1));
+			float  a = a1;
+			if (l.pivots > 1) {
+				w = Add(p2, Rotate(Sub(w, p2), k, a2));
+				a += a2;
+			}
+			l.written = l.base;
+			l.written.rotate = TimesTransposed(l.base.rotate, AxisAngle(Mul(DirIn(parent, k), a)));
+			l.written.translate = ToLocal(parent, w);
+			leaves[i]->local.rotate = l.written.rotate;
+			leaves[i]->local.translate = l.written.translate;
 		}
 	}
 
@@ -670,16 +728,25 @@ namespace
 		float grow[2]{};
 		float edgeRest[2]{};  // the hole's radius at rest (its inner ring's)
 		int   edgeCount[2]{};
+		float outerRest[2]{};  // its outer ring's
+		int   outerCount[2]{};
 		for (auto& [name, d] : driven) {
-			if (d.edge && d.node && d.node->parent && haveCentre[d.opening]) {
-				const V& su = segU[d.opening];
-				const V  off = Sub(ToWorld(d.node->parent, d.rest), centre[d.opening]);
-				edgeRest[d.opening] += Len(Sub(off, Mul(su, Dot(off, su))));
-				++edgeCount[d.opening];
+			if ((d.edge || d.outer) && d.node && d.node->parent && haveCentre[d.opening]) {
+				const V&    su = segU[d.opening];
+				const V     off = Sub(ToWorld(d.node->parent, d.rest), centre[d.opening]);
+				const float r = Len(Sub(off, Mul(su, Dot(off, su))));
+				if (d.edge) {
+					edgeRest[d.opening] += r;
+					++edgeCount[d.opening];
+				} else {
+					outerRest[d.opening] += r;
+					++outerCount[d.opening];
+				}
 			}
 		}
 		for (int o = 0; o < 2; ++o) {
 			edgeRest[o] = edgeCount[o] ? edgeRest[o] / edgeCount[o] : Settings::rimEdge * scale;
+			outerRest[o] = outerCount[o] ? outerRest[o] / outerCount[o] : 3.0F * edgeRest[o];
 			if (!penis || !open[o] || !haveCentre[o]) {
 				continue;
 			}
@@ -707,25 +774,41 @@ namespace
 				continue;
 			}
 			V target = d.rest;
-			if (active[d.opening]) {
-				const V&    su = segU[d.opening];
+			const int q = active[0] ? 0 : active[1] ? 1 : -1;   // the opening in use (only one opens)
+			if (q >= 0) {
+				const V&    su = segU[q];
 				const V     w0 = ToWorld(parent, d.rest);
-				const V     off = Sub(w0, centre[d.opening]);
+				const V     off = Sub(w0, centre[q]);
 				const float axial = Dot(off, su);
 				const V     across = Sub(off, Mul(su, axial));
 				const float restDist = Len(across);
 				const V     out = restDist > 1e-4F ? Mul(across, 1.0F / restDist) : V(0, 0, 0);
-				const float g = grow[d.opening];
-				float       dist;
-				if (d.outer) {
-					// where the skin between it and the hole keeps its area: always outside the inner ring
-					const float r0 = edgeRest[d.opening];
-					dist = std::sqrt(restDist * restDist + std::max(0.0F, g * g - r0 * r0));
-				} else {
+				const float g = grow[q];
+				const float r0 = edgeRest[q], r1 = outerRest[q];
+				float       dist = restDist;
+				float       carried = 1.0F;  // how much of the ring's move across onto his line it takes
+				if (d.opening == q && !d.field && !d.outer) {
 					// the edge, fRimEdge from the centre on the bone's side, is what must clear him
 					dist = restDist + std::max(0.0F, g - std::min(restDist, Settings::rimEdge * scale));
+				} else if ((d.opening == q && !d.field) || restDist <= r1) {
+					// an outer ring's, or close in: where the skin between it and the hole keeps its area, always
+					// outside the inner ring
+					dist = std::sqrt(restDist * restDist + std::max(0.0F, g * g - r0 * r0));
+				} else {
+					// further out (the other opening's rings, GT's lip and anus bones): moved as the skin there is,
+					// which rides on the outer ring by the share that keeps its area, easing to none at the reach
+					// (the mesh builder's RIM_PENIS and *_RIM_REACH). v0.23 left them at rest: the skin between the
+					// openings, half on each's bones, hung across an open anus as a sheet
+					const float lo = kReach[q][0] * scale, hi = kReach[q][1] * scale;
+					const float x = std::clamp((hi - restDist) / (hi - lo), 0.0F, 1.0F);
+					const float taper = x * x * (3 - 2 * x);
+					const float R = kRimPenis * scale;
+					auto travel = [&](float a_x, float a_g) { return std::sqrt(a_x * a_x + std::max(0.0F, a_g * a_g - r0 * r0)) - a_x; };
+					const float share = taper * std::min(1.0F, travel(restDist, R) / std::max(1e-4F, travel(r1, R)));
+					dist = restDist + share * travel(r1, g);
+					carried = share;
 				}
-				const V placed = Add(Add(centre[d.opening], shift[d.opening]), Add(Mul(out, dist), Mul(su, axial)));
+				const V placed = Add(Add(centre[q], Mul(shift[q], carried)), Add(Mul(out, dist), Mul(su, axial)));
 				target = ToLocal(parent, placed);
 			}
 			d.now = Add(d.now, Mul(Sub(target, d.now), follow));
@@ -766,8 +849,11 @@ namespace
 			for (const auto* name : kPenis) {
 				hold("him", him, name);
 			}
-			for (const auto& j : bend.joints) {
-				hold("him", him, j.name);
+			for (const auto& p : kBendPivots) {
+				hold("him", him, p.name);
+			}
+			for (const auto& l : bend.leaves) {
+				hold("him", him, l.name);
 			}
 			if (her) {
 				for (const auto& r : Rims()) {

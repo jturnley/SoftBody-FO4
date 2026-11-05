@@ -191,7 +191,17 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   skin is weighted partly to the shaft and partly to `Penis_Offset_SMP`. At 15°, 222 edges of
   A-Body's mesh stretched more than 3×; split across the two shaft joints, no edge stretches past
   1.5× even at 20°. Each opening follows the piece of his curved shaft that passes it.
+  v0.23 wrote those two joints, but something rewrites them every frame (16,000 times in one test), so
+  the bend rarely showed. The plugin now turns the `_SMP` bones his skin hangs on (`Penis_02_SMP` to
+  `Penis_05_SMP`) about those joints instead. Nothing animates them.
   With the bend on (`bBendPenis=1`), the aligner no longer tries 4Stim's bend steps.
+- **Nearby bones move with the opening in use.** The vagina's and anus's centres are 4.1 units apart,
+  and about 1,200 points of skin between them ride partly on each one's bones. Up to v0.23 only the
+  opening in use moved, so an open anus had the skin on its vagina side hanging across it as a sheet.
+  The hood folded the same way: 677 of its points ride on GT's `Clitoral1`, which stayed put. Now every
+  bone near the opening in use follows that opening's stretch: the other opening's rings, and GT's lip
+  and anus bones. Each moves as the skin at its distance does, easing to nothing at the edge of the
+  opening's reach.
 - **No shelf round the vulva.** GT sculpts its body round the vulva. Our patch of GT's skin
   stood up to 0.4 units proud of CBBE in a band either side of the slit and up into the mons, then
   dropped back to CBBE at the patch's edge, which showed in game as a shelf (vanilla CBBE has none).
