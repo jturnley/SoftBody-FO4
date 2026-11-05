@@ -59,6 +59,7 @@ namespace
 		float canalFollow = 8.0F;     // how far a canal ring moves across onto his line
 		float canalCatch = 8.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
 		float cervixStretch = 4.0F;   // how far his tip may carry the cervix deeper
+		float anusAimBack = 1.0F;     // the anus's aim moved this far toward her back (onto its hole, as seen in game)
 		float uterusSwell = 0.6F;     // how much wider the uterus grows when full (0.6: by 60%)
 
 		void Load()
@@ -90,6 +91,7 @@ namespace
 			canalCatch = f("fCanalCatch", canalCatch);
 			cervixStretch = f("fCervixStretch", cervixStretch);
 			uterusSwell = f("fUterusSwell", uterusSwell);
+			anusAimBack = f("fAnusAimBack", anusAimBack);
 			bendMax = std::clamp(f("fBendMax", bendMax), 0.0F, 45.0F);
 			bendSmoothing = std::max(0.0F, f("fBendSmoothing", bendSmoothing));
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
@@ -738,7 +740,13 @@ namespace
 					}
 				}
 				if (dn == 4) {
-					aim[o] = Sub(centre[o], Mul(Unit(Sub(Mul(dc, 0.25F), centre[o])), op.aimOut * scale));
+					const V axis = Unit(Sub(Mul(dc, 0.25F), centre[o]));
+					aim[o] = Sub(centre[o], Mul(axis, op.aimOut * scale));
+					if (o == 1 && haveCentre[0] && Settings::anusAimBack != 0) {
+						V back = Sub(centre[1], centre[0]);   // the vagina's centre is found first
+						back = Sub(back, Mul(axis, Dot(back, axis)));
+						aim[o] = Add(aim[o], Mul(Unit(back), Settings::anusAimBack * scale));
+					}
 				}
 			}
 			segStart[o] = b;
@@ -1227,6 +1235,22 @@ namespace
 		}
 		const V axis = Unit(Sub(deep, rim));
 		rim = Sub(rim, Mul(axis, a_opening.aimOut * pelvis->world.scale));
+		if (&a_opening == &kAnus && Settings::anusAimBack != 0) {
+			// toward her back: from the vagina's rim centre to the anus's, across the anal canal
+			V   vag(0, 0, 0);
+			int vn = 0;
+			for (const auto* name : kVagina.rim) {
+				if (auto* r = Held("her", name)) {
+					vag = Add(vag, ToLocal(pelvis, r->world.translate));
+					++vn;
+				}
+			}
+			if (vn == 4) {
+				V back = Sub(rim, Mul(vag, 0.25F));
+				back = Sub(back, Mul(axis, Dot(back, axis)));
+				rim = Add(rim, Mul(Unit(back), Settings::anusAimBack * pelvis->world.scale));
+			}
+		}
 		const V b = ToLocal(pelvis, base->world.translate);
 		const V u = Unit(Sub(ToLocal(pelvis, tip->world.translate), b));
 		const float facing = Dot(u, axis);

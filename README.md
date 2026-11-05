@@ -229,6 +229,8 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   where CBBE's skin also paints the anus (0.95 across the canal's line). Both now aim at where the
   canal's line meets her skin. Round the hole, the patch reads the skin texture 0.95 further along, so
   the painted anus sits on the hole (`ANUS_PAINT_SHIFT`, `ANUS_PAINT_R` in `tools/genitals.py`).
+  In game he still met her forward of the hole, so `fAnusAimBack` (1.0) moves the anus's aim toward
+  her back, across the anal canal.
 - **The vagina's entrance rides on its own rings.** The back of the vaginal canal's entrance, 0.5 to
   1.5 units in, rode up to half on the anus's outer ring, and tore away from the canal once the canal
   followed him. The vagina's inner skin now takes none of the anus's rings.
