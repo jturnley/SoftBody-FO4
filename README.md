@@ -192,6 +192,11 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   A-Body's mesh stretched more than 3×; split across the two shaft joints, no edge stretches past
   1.5× even at 20°. Each opening follows the piece of his curved shaft that passes it.
   With the bend on (`bBendPenis=1`), the aligner no longer tries 4Stim's bend steps.
+- **No shelf round the vulva.** GT sculpts its body round the vulva. Our patch of GT's skin
+  stood up to 0.4 units proud of CBBE in a band either side of the slit and up into the mons, then
+  dropped back to CBBE at the patch's edge, which showed in game as a shelf (vanilla CBBE has none).
+  The patch now lies on CBBE's surface everywhere except close to the slit and anus edges, which join
+  the genitals mesh (`FLATTEN`, `FLATTEN_KEEP` in `tools/genitals.py`).
 - **The anus's throat opens with its rim.** Up to v0.22 the anal canal took over from GT's anus
   weights over its first unit of depth. That left the throat on GT's anus bones, which are no longer
   driven, so it stayed shut while the skin round it opened. The canal now rides on its rings from the

@@ -40,6 +40,8 @@ FIT_RING = (3.5, 10.0)   # the skin used for the fit: around the vulva, not on i
 WEIGHT_FADE = 1.5        # the vulva's weights go from CBBE's (outer seam) to fixed bones over this distance
 OVER_DEPTH = 1.5        # GT triangles further than this from the cut CBBE surface are not "over" it
 EASE = 0.8              # the patch's outer band this wide is eased onto CBBE's surface
+FLATTEN = 1.0            # the patch is let down this much of the way onto CBBE's surface (where it stands proud) ...
+FLATTEN_KEEP = (0.15, 0.8) # ... easing in between these distances from the slit and anus edges
 SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's real seams jump much further)
 OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1 ...
 OPENING_FADE = 1.25     # ... fading out over this distance from them: real outer lips barely move round a shaft (v0.11
@@ -691,6 +693,20 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     opening_dist, opening_near = cKDTree(patch_P[inner_v]).query(patch_P)
     ease = np.clip(1 - d / EASE, 0, 1)
     ease = ease * ease * (3 - 2 * ease)
+    # GT sculpts its body round the vulva: a band either side of the slit stands up to 0.4 proud of CBBE's surface and
+    # drops back to it within the patch's eased edge, which showed in game as a shelf round the vulva (vanilla CBBE
+    # has none). Everywhere but near the slit and anus edges (the seams with the genitals, which stay put) the patch
+    # is let down onto CBBE's surface: by FLATTEN, easing in between FLATTEN_KEEP's distances from those edges
+    for k in range(len(patch_P)):
+        f = FLATTEN * smoothstep((opening_dist[k] - FLATTEN_KEEP[0]) / (FLATTEN_KEEP[1] - FLATTEN_KEEP[0]))
+        if f > 0:
+            _, t, bary = closest_on_triangles([patch_P[k]], full.P, full.tris, ctree, cent)[0]
+            q = np.asarray(bary) @ full.P[full.tris[t]]
+            nrm = np.asarray(bary) @ full.N[full.tris[t]]
+            nrm = nrm / np.linalg.norm(nrm)
+            h = (patch_P[k] - q) @ nrm
+            if h > 0:
+                patch_P[k] -= f * h * nrm
     blend_normals = {}
     for k in np.nonzero(ease > 0)[0]:
         _, t, bary = closest_on_triangles([patch_P[k]], full.P, full.tris, ctree, cent)[0]
