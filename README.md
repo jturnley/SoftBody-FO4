@@ -202,6 +202,9 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   stay shut. Before, the deeper rings were springs on fixed bases that his collision pushed open, so
   they kept to the canal's own line while he ran through at 10–20° to it. They are kinematic now
   (`bDriveCanal`, `fCanalFollow`, `fCanalCatch` in the INI).
+  The anal canal's three rings (`SB Anus{T,L,B,R}1` to `3`) are driven the same way since v0.29. They
+  were springs that stayed shut, so its entrance stayed closed behind the anus ring, which followed him
+  forward and pulled the skin into a sheet.
 - **The cervix takes his tip.** The canal ends in a closed cap 0.8 units past its last ring, and the
   cap rides on that ring. Once his tip reaches the cap, the plugin carries the canal deeper along his
   line by however far he has gone past it, up to `fCervixStretch` (4). The push is shared out by depth,

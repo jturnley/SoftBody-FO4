@@ -59,7 +59,7 @@ namespace
 		float canalFollow = 8.0F;     // how far a canal ring moves across onto his line
 		float canalCatch = 8.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
 		float cervixStretch = 4.0F;   // how far his tip may carry the cervix deeper
-		float anusAimBack = 1.0F;     // the anus's aim moved this far toward her back (onto its hole, as seen in game)
+		float anusAimBack = 0.0F;     // the anus's aim moved this far toward her back (onto its hole, as seen in game)
 		float uterusSwell = 0.6F;     // how much wider the uterus grows when full (0.6: by 60%)
 
 		void Load()
@@ -414,6 +414,8 @@ namespace
 	// Each visible hole has an inner ring of 24 (12 showed as a polygon) and an outer ring of 12 (a shape's bones are
 	// capped: see the mesh builder's MAX_SHAPE_BONES), and the vagina its entrance ring of 12.
 	constexpr int kCanalRings = 5;  // SB Vag1_* .. SB Vag5_*, behind the entrance ring SB VagIn_*
+	constexpr int kVagRings = kCanalRings + 1;
+	constexpr int kAnalRings = 3;   // SB Anus{T,L,B,R}1-3, the anal canal's (v0.29: driven as the vagina's are)
 	constexpr float kCervixBeyond = 0.8F;  // the canal's closed end past its last ring (tools/genitals.py VAG_DEPTH - VAG_RINGS[-1])
 	std::atomic<float> cervixPush{ 0 };      // how far his tip carries it now (logged)
 	// requests from other plugins (SoftBodyFO4API.h) and what is published back
@@ -428,6 +430,11 @@ namespace
 			for (int k = 0; k < 12; ++k) r.push_back({ std::format("SB VagIn_{}", k), 0, false, false, 0 });
 			for (int i = 1; i <= kCanalRings; ++i) {
 				for (int k = 0; k < 12; ++k) r.push_back({ std::format("SB Vag{}_{}", i, k), 0, false, false, i });
+			}
+			for (int i = 1; i <= kAnalRings; ++i) {
+				for (const char* side : { "T", "L", "B", "R" }) {
+					r.push_back({ std::format("SB Anus{}{}", side, i), 1, false, false, kVagRings + i - 1 });
+				}
 			}
 			for (int k = 0; k < 8; ++k) r.push_back({ std::format("SB Os_{}", k), 0, false, false, -1, 0 });
 			for (int k = 0; k < 8; ++k) r.push_back({ std::format("SB Uterus_{}", k), 0, false, false, -1, 1 });
@@ -829,7 +836,8 @@ namespace
 		// his line where he passes it (up to fCanalFollow), and it opens to his thickness there (rounding off over his
 		// tip). Before v0.25 they were springs on fixed bases that his collision pushed: they stayed on the canal's own
 		// line while he ran through it at 10-20 degrees.
-		constexpr int kRings = kCanalRings + 1;
+		constexpr int kRings = kVagRings + kAnalRings;
+		auto ringOpening = [](int a_i) { return a_i < kVagRings ? 0 : 1; };
 		V     canalC[kRings], canalU[kRings], canalShift[kRings];
 		float canalGrow[kRings]{};
 		bool  canalOn[kRings]{};
@@ -873,22 +881,22 @@ namespace
 		// the entrance (still) to the cervix (all of it)
 		float push = 0;
 		float ringDepth[kRings]{};
-		if (penis && open[0] && Settings::driveCanal && canalN[0] && canalN[kRings - 1]) {
-			const V     axis = Unit(Sub(canalC[kRings - 1], canalC[0]));
-			const float span = Len(Sub(canalC[kRings - 1], canalC[0]));
-			for (int i = 0; i < kRings; ++i) {
+		if (penis && open[0] && Settings::driveCanal && canalN[0] && canalN[kVagRings - 1]) {
+			const V     axis = Unit(Sub(canalC[kVagRings - 1], canalC[0]));
+			const float span = Len(Sub(canalC[kVagRings - 1], canalC[0]));
+			for (int i = 0; i < kVagRings; ++i) {
 				ringDepth[i] = canalN[i] && span > 1e-3F ? std::clamp(Dot(Sub(canalC[i], canalC[0]), axis) / span, 0.0F, 1.0F) : 0.0F;
 			}
 			const V     end = Add(tip->world.translate, Mul(Unit(Sub(tip->world.translate, m)), Settings::penisTipExtra * scale));
 			const float facing = Dot(u, axis);
-			const float past = Dot(Sub(end, canalC[kRings - 1]), axis) - kCervixBeyond * scale;
+			const float past = Dot(Sub(end, canalC[kVagRings - 1]), axis) - kCervixBeyond * scale;
 			if (facing > 0.3F && past > 0) {
 				push = std::min(past / facing, Settings::cervixStretch * scale);  // along his line
 			}
 		}
 		cervixPush = push;
 		for (int i = 0; i < kRings; ++i) {
-			if (!canalN[i] || !penis || !open[0] || !Settings::driveCanal) {
+			if (!canalN[i] || !penis || !open[ringOpening(i)] || !Settings::driveCanal) {
 				continue;
 			}
 			V     start = b, su = u;
@@ -1015,17 +1023,17 @@ namespace
 			SoftBodyFO4API::Canal c{};
 			c.version = SoftBodyFO4API::kVersion;
 			auto put = [](float* a_out, const V& a_v) { a_out[0] = a_v.x; a_out[1] = a_v.y; a_out[2] = a_v.z; };
-			if (canalN[0] && canalN[kRings - 1] && wombN[0] && wombN[2]) {
+			if (canalN[0] && canalN[kVagRings - 1] && wombN[0] && wombN[2]) {
 				c.herFormID = herFormID.load();
-				c.ringCount = kRings;
-				for (int i = 0; i < kRings; ++i) {
+				c.ringCount = kVagRings;
+				for (int i = 0; i < kVagRings; ++i) {
 					const V at = canalOn[i] ? Add(Add(canalC[i], canalShift[i]), Mul(u, push * ringDepth[i])) :
 					                          Add(canalC[i], Mul(u, push * ringDepth[i]));
 					put(c.rings[i].centre, at);
 					c.rings[i].radius = canalOn[i] ? canalGrow[i] : 0.5F * scale;
 				}
-				const V axis = Unit(Sub(canalC[kRings - 1], canalC[0]));
-				put(c.cervix, Add(Add(canalC[kRings - 1], Mul(axis, kCervixBeyond * scale)), Mul(u, push)));
+				const V axis = Unit(Sub(canalC[kVagRings - 1], canalC[0]));
+				put(c.cervix, Add(Add(canalC[kVagRings - 1], Mul(axis, kCervixBeyond * scale)), Mul(u, push)));
 				put(c.os.centre, Add(wombC[0], Mul(u, push)));
 				c.os.radius = std::max(wombR[0], osOpen.load() * scale);
 				put(c.uterusCentre, Add(wombC[1], Mul(u, push)));

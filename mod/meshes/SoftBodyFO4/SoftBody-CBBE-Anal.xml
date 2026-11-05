@@ -555,15 +555,15 @@
   <bone name="NPC RT Anus2"/>
   <bone name="NPC LB Anus2"/>
   <bone name="NPC RB Anus2"/>
-  <bone name="SB AnusB1" template="sbCanal"/>
-  <bone name="SB AnusB2" template="sbCanal"/>
-  <bone name="SB AnusB3" template="sbCanal"/>
-  <bone name="SB AnusL1" template="sbCanal"/>
-  <bone name="SB AnusL2" template="sbCanal"/>
-  <bone name="SB AnusL3" template="sbCanal"/>
-  <bone name="SB AnusR1" template="sbCanal"/>
-  <bone name="SB AnusR2" template="sbCanal"/>
-  <bone name="SB AnusR3" template="sbCanal"/>
+  <bone name="SB AnusB1"/>
+  <bone name="SB AnusB2"/>
+  <bone name="SB AnusB3"/>
+  <bone name="SB AnusL1"/>
+  <bone name="SB AnusL2"/>
+  <bone name="SB AnusL3"/>
+  <bone name="SB AnusR1"/>
+  <bone name="SB AnusR2"/>
+  <bone name="SB AnusR3"/>
   <bone name="SB AnusRimO_0"/>
   <bone name="SB AnusRimO_1"/>
   <bone name="SB AnusRimO_10"/>
@@ -600,9 +600,9 @@
   <bone name="SB AnusRim_7"/>
   <bone name="SB AnusRim_8"/>
   <bone name="SB AnusRim_9"/>
-  <bone name="SB AnusT1" template="sbCanal"/>
-  <bone name="SB AnusT2" template="sbCanal"/>
-  <bone name="SB AnusT3" template="sbCanal"/>
+  <bone name="SB AnusT1"/>
+  <bone name="SB AnusT2"/>
+  <bone name="SB AnusT3"/>
   <bone name="SB Os_0"/>
   <bone name="SB Os_1"/>
   <bone name="SB Os_2"/>
@@ -1109,18 +1109,7 @@
     <linearEquilibrium x="0" y="0" z="0"/>
     <angularEquilibrium x="0" y="0" z="0"/>
   </generic-constraint-default>
-  <generic-constraint bodyA="SB AnusB1" bodyB="SB AnusB1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusB2" bodyB="SB AnusB2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusB3" bodyB="SB AnusB3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusL1" bodyB="SB AnusL1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusL2" bodyB="SB AnusL2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusL3" bodyB="SB AnusL3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusR1" bodyB="SB AnusR1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusR2" bodyB="SB AnusR2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusR3" bodyB="SB AnusR3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusT1" bodyB="SB AnusT1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusT2" bodyB="SB AnusT2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB AnusT3" bodyB="SB AnusT3 Base" template="sbCanalWall"/>
+
 
 
 </system>

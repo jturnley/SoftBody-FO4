@@ -154,7 +154,9 @@ CANAL_PREFIXES = ("SB Anus", "SB Vag", "SB Os", "SB Uterus")
 # The openings' rims, placed by the SoftBodyFO4 plugin (round the penis, from its line) rather than simulated: kinematic
 # in every XML, their springs dropped. GT's lips and anus rim, SoftBody's vaginal entrance ring and both visible rims.
 DRIVEN_BONES = ("Clitoral1", "VaginaB1", "NPC L Pussy02", "NPC R Pussy02",
-                "NPC LT Anus2", "NPC RT Anus2", "NPC LB Anus2", "NPC RB Anus2")
+                "NPC LT Anus2", "NPC RT Anus2", "NPC LB Anus2", "NPC RB Anus2") + tuple(
+    # the anal canal's rings (v0.29), placed as the vaginal canal's are
+    "SB Anus%s%d" % (side, i) for side in "TLBR" for i in (1, 2, 3))
 # The vaginal canal's rings too (v0.25): each centred on his line at its depth and opened to his thickness there.
 DRIVEN_PREFIXES = ("SB VagIn_", "SB VagRim_", "SB VagRimO_", "SB AnusRim_", "SB AnusRimO_",
                    "SB Vag1_", "SB Vag2_", "SB Vag3_", "SB Vag4_", "SB Vag5_",
