@@ -42,6 +42,7 @@ OVER_DEPTH = 1.5        # GT triangles further than this from the cut CBBE surfa
 EASE = 0.8              # the patch's outer band this wide is eased onto CBBE's surface
 FLATTEN = 1.0            # the patch is let down this much of the way onto CBBE's surface (where it stands proud) ...
 FLATTEN_KEEP = (0.15, 0.8) # ... easing in between these distances from the slit and anus edges
+SAME_CHART = 0.15       # a corner's UV is taken from CBBE triangles within this of its home triangle in UV
 SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's real seams jump much further)
 OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1 ...
 OPENING_FADE = 1.25     # ... fading out over this distance from them: real outer lips barely move round a shaft (v0.11
@@ -375,19 +376,33 @@ def split_by_uv_island(full, ctree, cent, m):
         vs = full.tris[t]
         return bary @ full.UV[vs], bary @ full.Tan[vs], bary @ full.Bit[vs]
     centres = P[T].mean(1)
+    # CBBE's islands are joined by vertex index, and one can fold so that two of its edges meet on the body (beside the
+    # vulva, where v runs 0.03 and 0.99): a corner on the same island can still be far across the texture. A corner's
+    # UV comes only from CBBE triangles on its triangle's island AND near its home triangle in UV (SAME_CHART); v0.23
+    # had 7 triangles (13 after the patch was flattened) stretched over the whole texture, drawn as pale flecks
+    uv_cent = full.UV[full.tris].mean(1)
     for k, (tri, hit) in enumerate(zip(T, closest_on_triangles(centres, full.P, full.tris, ctree, cent))):
         home_t = hit[1]
         edge = [v for v in tri if v in m["fixed_normals"]]
         if edge:
             # touching the hole's edge: the UV island of the CBBE vertex it shares, so the join has no UV jump (where
             # CBBE's own UV seam runs into the hole, the jump then lies inside the patch, on CBBE's seam line)
-            want = vert_island[m["src"][edge[0]][0][0]]
-            if island[home_t] != want:
-                home_t = next((t for t in ctree.query(centres[k], k=60)[1] if island[t] == want), home_t)
+            # the CBBE triangle it maps through is one of that vertex's own (nearest one), so the join keeps CBBE's
+            # UVs (a nearby triangle of the same island could map elsewhere on a folded island)
+            cv = m["src"][edge[0]][0][0]
+            own_tris = np.nonzero((full.tris == cv).any(1))[0]
+            if len(own_tris):
+                home_t = own_tris[np.argmin(np.linalg.norm(cent[own_tris] - centres[k], axis=1))]
+            else:
+                want = vert_island[cv]
+                if island[home_t] != want:
+                    home_t = next((t for t in ctree.query(centres[k], k=60)[1] if island[t] == want), home_t)
         a, b, c = full.P[full.tris[home_t]]
         E = np.array([b - a, c - a]).T                    # 3x2: the triangle's plane
         uv = full.UV[full.tris[home_t]]
         home = island[home_t]
+        def in_chart(t_):
+            return island[t_] == home and np.abs(uv_cent[t_] - uv_cent[home_t]).max() < SAME_CHART
         for j, v in enumerate(tri):
             l = np.linalg.lstsq(E, P[v] - a, rcond=None)[0]
             corner_uv[k, j] = uv[0] + l[0] * (uv[1] - uv[0]) + l[1] * (uv[2] - uv[0])
@@ -396,16 +411,17 @@ def split_by_uv_island(full, ctree, cent, m):
                 # the hole's edge: exactly the CBBE vertex there, its copy in this triangle's UV island (CBBE splits
                 # its crotch midline in UV, so one position can carry two UVs and two frames)
                 cv = m["src"][v][0][0]
-                dups = [d for d in np.nonzero(full.ids == full.ids[cv])[0] if vert_island[d] == home]
+                dups = [d for d in np.nonzero(full.ids == full.ids[cv])[0]
+                        if vert_island[d] == home and np.abs(full.UV[d] - uv_cent[home_t]).max() < SAME_CHART]
                 if dups:
                     corner_uv[k, j], corner_tan[k, j], corner_bit[k, j] = full.UV[dups[0]], full.Tan[dups[0]], full.Bit[dups[0]]
                     continue
-            if island[own[v]] != home:
+            if not in_chart(own[v]):
                 # this corner lies across a UV seam from the triangle: extended through the island it would land
                 # in the texture's blank padding (pale wedges), so it takes the island's nearest point instead
                 best = None
                 for t in ctree.query(P[v], k=40)[1]:
-                    if island[t] == home:
+                    if in_chart(t):
                         bary, q = _closest_point(P[v], *full.P[full.tris[t]])
                         dist = np.linalg.norm(P[v] - q)
                         if best is None or dist < best[0]:

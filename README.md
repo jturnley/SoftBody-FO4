@@ -197,8 +197,13 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   dropped back to CBBE at the patch's edge, which showed in game as a shelf (vanilla CBBE has none).
   The patch now lies on CBBE's surface everywhere except close to the slit and anus edges, which join
   the genitals mesh (`FLATTEN`, `FLATTEN_KEEP` in `tools/genitals.py`). The collision pads beside the
-  lips then came out through the skin and showed as white flecks, since the game draws them wherever they're
-  not covered; they're now kept 0.15 under it (`PAD_UNDER`).
+  lips then came out through the skin; they're now kept 0.15 under it (`PAD_UNDER`).
+- **No texture flecks beside the lips.** CBBE's texture islands are joined by vertex index, and the one
+  beside the vulva folds so that two of its edges (v 0.03 and 0.99) meet on her body. A patch
+  triangle's corners were taken from that island alone, so up to 13 triangles stretched over the whole
+  texture and drew pale flecks with dark strokes. Each corner's UV now comes from CBBE triangles near its
+  triangle's own in UV as well (`SAME_CHART`), and a triangle at the hole's edge maps through a CBBE
+  triangle of the vertex it joins.
 - **The anus's throat opens with its rim.** Up to v0.22 the anal canal took over from GT's anus
   weights over its first unit of depth. That left the throat on GT's anus bones, which are no longer
   driven, so it stayed shut while the skin round it opened. The canal now rides on its rings from the
