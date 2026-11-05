@@ -1074,7 +1074,11 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     at_rim = gen_P[n_vagina:][np.abs(adepth - ANAL_RIM_DEPTH) < 0.3]
     if len(at_rim) < 8:
         raise ValueError("no anal canal points at the rim's depth")
-    arim_c = at_rim.mean(0) + (ANAL_RIM_DEPTH - (at_rim.mean(0) - mouth) @ ax) * ax
+    # centred on GT's anus point (the middle of the slit where 2Anus joins its body), not the canal points' middle at
+    # the rim's depth: that lay 0.17 forward of it, at the slit's front end, so the whole slit hung on the ring's back
+    # bones, and when the ring opened round him (v0.29, in game) they carried the hole back off him while the skin in
+    # front of it stretched over him
+    arim_c = anus_fo + (ANAL_RIM_DEPTH - (anus_fo - mouth) @ ax) * ax
     arim = rim_ring("SB AnusRim", arim_c, ax, up, left, ANAL_RIM_RADIUS)
     arim_o = rim_ring("SB AnusRimO", arim_c, ax, up, left, ANAL_RIM_OUTER, RIM_OUTER_SIDES)
     def reach(p, c, axis, r0, r1, lo, hi, inner_ok=True):
