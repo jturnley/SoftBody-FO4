@@ -118,6 +118,8 @@ def make_bgsm(template, textures):
         raise ValueError("unexpected BGSM layout: the hair tint should read 1,1,1")
     data = bytearray(template)
     data[f["skin_tint"]] = 0
+    data[48] = 1    # TwoSided: the canals are seen from inside her too (camera inside), where one-sided walls
+                    # showed only their far half
     data[f["root"][0]:f["root"][1]] = struct.pack("<I", 1) + b"\0"
     p = 63
     out = bytearray(data[:p])

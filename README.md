@@ -234,6 +234,8 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   the painted anus sits on the hole (`ANUS_PAINT_SHIFT`, `ANUS_PAINT_R` in `tools/genitals.py`).
   In game he still met her forward of the hole, so `fAnusAimBack` (1.0) moves the anus's aim toward
   her back, across the anal canal.
+- **Two-sided genitals.** The genitals' material draws both sides of each triangle. Seen with the camera inside
+  her, the one-sided canal showed only its far half, as if it wrapped half the shaft.
 - **The anus ring is centred on the anus.** GT's anus opening is a short slit, and the ring sat 0.17
   forward of its middle, at its front end. The whole slit then hung on the ring's back bones, so when
   the ring opened round him they carried the hole back off him (the SMP wireframe showed
