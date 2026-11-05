@@ -586,66 +586,66 @@
   <bone name="SB AnusT1" template="sbCanal"/>
   <bone name="SB AnusT2" template="sbCanal"/>
   <bone name="SB AnusT3" template="sbCanal"/>
-  <bone name="SB Vag1_0" template="sbCanal"/>
-  <bone name="SB Vag1_1" template="sbCanal"/>
-  <bone name="SB Vag1_10" template="sbCanal"/>
-  <bone name="SB Vag1_11" template="sbCanal"/>
-  <bone name="SB Vag1_2" template="sbCanal"/>
-  <bone name="SB Vag1_3" template="sbCanal"/>
-  <bone name="SB Vag1_4" template="sbCanal"/>
-  <bone name="SB Vag1_5" template="sbCanal"/>
-  <bone name="SB Vag1_6" template="sbCanal"/>
-  <bone name="SB Vag1_7" template="sbCanal"/>
-  <bone name="SB Vag1_8" template="sbCanal"/>
-  <bone name="SB Vag1_9" template="sbCanal"/>
-  <bone name="SB Vag2_0" template="sbCanal"/>
-  <bone name="SB Vag2_1" template="sbCanal"/>
-  <bone name="SB Vag2_10" template="sbCanal"/>
-  <bone name="SB Vag2_11" template="sbCanal"/>
-  <bone name="SB Vag2_2" template="sbCanal"/>
-  <bone name="SB Vag2_3" template="sbCanal"/>
-  <bone name="SB Vag2_4" template="sbCanal"/>
-  <bone name="SB Vag2_5" template="sbCanal"/>
-  <bone name="SB Vag2_6" template="sbCanal"/>
-  <bone name="SB Vag2_7" template="sbCanal"/>
-  <bone name="SB Vag2_8" template="sbCanal"/>
-  <bone name="SB Vag2_9" template="sbCanal"/>
-  <bone name="SB Vag3_0" template="sbCanal"/>
-  <bone name="SB Vag3_1" template="sbCanal"/>
-  <bone name="SB Vag3_10" template="sbCanal"/>
-  <bone name="SB Vag3_11" template="sbCanal"/>
-  <bone name="SB Vag3_2" template="sbCanal"/>
-  <bone name="SB Vag3_3" template="sbCanal"/>
-  <bone name="SB Vag3_4" template="sbCanal"/>
-  <bone name="SB Vag3_5" template="sbCanal"/>
-  <bone name="SB Vag3_6" template="sbCanal"/>
-  <bone name="SB Vag3_7" template="sbCanal"/>
-  <bone name="SB Vag3_8" template="sbCanal"/>
-  <bone name="SB Vag3_9" template="sbCanal"/>
-  <bone name="SB Vag4_0" template="sbCanal"/>
-  <bone name="SB Vag4_1" template="sbCanal"/>
-  <bone name="SB Vag4_10" template="sbCanal"/>
-  <bone name="SB Vag4_11" template="sbCanal"/>
-  <bone name="SB Vag4_2" template="sbCanal"/>
-  <bone name="SB Vag4_3" template="sbCanal"/>
-  <bone name="SB Vag4_4" template="sbCanal"/>
-  <bone name="SB Vag4_5" template="sbCanal"/>
-  <bone name="SB Vag4_6" template="sbCanal"/>
-  <bone name="SB Vag4_7" template="sbCanal"/>
-  <bone name="SB Vag4_8" template="sbCanal"/>
-  <bone name="SB Vag4_9" template="sbCanal"/>
-  <bone name="SB Vag5_0" template="sbCanal"/>
-  <bone name="SB Vag5_1" template="sbCanal"/>
-  <bone name="SB Vag5_10" template="sbCanal"/>
-  <bone name="SB Vag5_11" template="sbCanal"/>
-  <bone name="SB Vag5_2" template="sbCanal"/>
-  <bone name="SB Vag5_3" template="sbCanal"/>
-  <bone name="SB Vag5_4" template="sbCanal"/>
-  <bone name="SB Vag5_5" template="sbCanal"/>
-  <bone name="SB Vag5_6" template="sbCanal"/>
-  <bone name="SB Vag5_7" template="sbCanal"/>
-  <bone name="SB Vag5_8" template="sbCanal"/>
-  <bone name="SB Vag5_9" template="sbCanal"/>
+  <bone name="SB Vag1_0"/>
+  <bone name="SB Vag1_1"/>
+  <bone name="SB Vag1_10"/>
+  <bone name="SB Vag1_11"/>
+  <bone name="SB Vag1_2"/>
+  <bone name="SB Vag1_3"/>
+  <bone name="SB Vag1_4"/>
+  <bone name="SB Vag1_5"/>
+  <bone name="SB Vag1_6"/>
+  <bone name="SB Vag1_7"/>
+  <bone name="SB Vag1_8"/>
+  <bone name="SB Vag1_9"/>
+  <bone name="SB Vag2_0"/>
+  <bone name="SB Vag2_1"/>
+  <bone name="SB Vag2_10"/>
+  <bone name="SB Vag2_11"/>
+  <bone name="SB Vag2_2"/>
+  <bone name="SB Vag2_3"/>
+  <bone name="SB Vag2_4"/>
+  <bone name="SB Vag2_5"/>
+  <bone name="SB Vag2_6"/>
+  <bone name="SB Vag2_7"/>
+  <bone name="SB Vag2_8"/>
+  <bone name="SB Vag2_9"/>
+  <bone name="SB Vag3_0"/>
+  <bone name="SB Vag3_1"/>
+  <bone name="SB Vag3_10"/>
+  <bone name="SB Vag3_11"/>
+  <bone name="SB Vag3_2"/>
+  <bone name="SB Vag3_3"/>
+  <bone name="SB Vag3_4"/>
+  <bone name="SB Vag3_5"/>
+  <bone name="SB Vag3_6"/>
+  <bone name="SB Vag3_7"/>
+  <bone name="SB Vag3_8"/>
+  <bone name="SB Vag3_9"/>
+  <bone name="SB Vag4_0"/>
+  <bone name="SB Vag4_1"/>
+  <bone name="SB Vag4_10"/>
+  <bone name="SB Vag4_11"/>
+  <bone name="SB Vag4_2"/>
+  <bone name="SB Vag4_3"/>
+  <bone name="SB Vag4_4"/>
+  <bone name="SB Vag4_5"/>
+  <bone name="SB Vag4_6"/>
+  <bone name="SB Vag4_7"/>
+  <bone name="SB Vag4_8"/>
+  <bone name="SB Vag4_9"/>
+  <bone name="SB Vag5_0"/>
+  <bone name="SB Vag5_1"/>
+  <bone name="SB Vag5_10"/>
+  <bone name="SB Vag5_11"/>
+  <bone name="SB Vag5_2"/>
+  <bone name="SB Vag5_3"/>
+  <bone name="SB Vag5_4"/>
+  <bone name="SB Vag5_5"/>
+  <bone name="SB Vag5_6"/>
+  <bone name="SB Vag5_7"/>
+  <bone name="SB Vag5_8"/>
+  <bone name="SB Vag5_9"/>
   <bone name="SB VagIn_0"/>
   <bone name="SB VagIn_1"/>
   <bone name="SB VagIn_10"/>
@@ -1085,66 +1085,6 @@
   <generic-constraint bodyA="SB AnusT1" bodyB="SB AnusT1 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB AnusT2" bodyB="SB AnusT2 Base" template="sbCanalWall"/>
   <generic-constraint bodyA="SB AnusT3" bodyB="SB AnusT3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_0" bodyB="SB Vag1_0 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_1" bodyB="SB Vag1_1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_10" bodyB="SB Vag1_10 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_11" bodyB="SB Vag1_11 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_2" bodyB="SB Vag1_2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_3" bodyB="SB Vag1_3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_4" bodyB="SB Vag1_4 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_5" bodyB="SB Vag1_5 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_6" bodyB="SB Vag1_6 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_7" bodyB="SB Vag1_7 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_8" bodyB="SB Vag1_8 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag1_9" bodyB="SB Vag1_9 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_0" bodyB="SB Vag2_0 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_1" bodyB="SB Vag2_1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_10" bodyB="SB Vag2_10 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_11" bodyB="SB Vag2_11 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_2" bodyB="SB Vag2_2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_3" bodyB="SB Vag2_3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_4" bodyB="SB Vag2_4 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_5" bodyB="SB Vag2_5 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_6" bodyB="SB Vag2_6 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_7" bodyB="SB Vag2_7 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_8" bodyB="SB Vag2_8 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag2_9" bodyB="SB Vag2_9 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_0" bodyB="SB Vag3_0 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_1" bodyB="SB Vag3_1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_10" bodyB="SB Vag3_10 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_11" bodyB="SB Vag3_11 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_2" bodyB="SB Vag3_2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_3" bodyB="SB Vag3_3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_4" bodyB="SB Vag3_4 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_5" bodyB="SB Vag3_5 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_6" bodyB="SB Vag3_6 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_7" bodyB="SB Vag3_7 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_8" bodyB="SB Vag3_8 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag3_9" bodyB="SB Vag3_9 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_0" bodyB="SB Vag4_0 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_1" bodyB="SB Vag4_1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_10" bodyB="SB Vag4_10 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_11" bodyB="SB Vag4_11 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_2" bodyB="SB Vag4_2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_3" bodyB="SB Vag4_3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_4" bodyB="SB Vag4_4 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_5" bodyB="SB Vag4_5 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_6" bodyB="SB Vag4_6 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_7" bodyB="SB Vag4_7 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_8" bodyB="SB Vag4_8 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag4_9" bodyB="SB Vag4_9 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_0" bodyB="SB Vag5_0 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_1" bodyB="SB Vag5_1 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_10" bodyB="SB Vag5_10 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_11" bodyB="SB Vag5_11 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_2" bodyB="SB Vag5_2 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_3" bodyB="SB Vag5_3 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_4" bodyB="SB Vag5_4 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_5" bodyB="SB Vag5_5 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_6" bodyB="SB Vag5_6 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_7" bodyB="SB Vag5_7 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_8" bodyB="SB Vag5_8 Base" template="sbCanalWall"/>
-  <generic-constraint bodyA="SB Vag5_9" bodyB="SB Vag5_9 Base" template="sbCanalWall"/>
 
 
 </system>

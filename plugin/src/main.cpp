@@ -54,6 +54,9 @@ namespace
 		float rimEdge = 0.5F;         // an opening's edge at rest, from its centre: where a rim bone's skin starts
 		float rimFollow = 1.5F;       // how far an opening's ring moves across onto the penis's line
 		float rimCatch = 1.0F;        // how far past his thickness his line may pass an opening's centre and still open it
+		bool  driveCanal = true;      // centre the vaginal canal's rings on his line and open them to his thickness
+		float canalFollow = 3.0F;     // how far a canal ring moves across onto his line
+		float canalCatch = 2.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
 
 		void Load()
 		{
@@ -79,6 +82,9 @@ namespace
 			penisRadiusTip = f("fPenisRadiusTip", penisRadiusTip);
 			rimMargin = f("fRimMargin", rimMargin);
 			bendPenis = i("bBendPenis", 1) != 0;
+			driveCanal = i("bDriveCanal", 1) != 0;
+			canalFollow = f("fCanalFollow", canalFollow);
+			canalCatch = f("fCanalCatch", canalCatch);
 			bendMax = std::clamp(f("fBendMax", bendMax), 0.0F, 45.0F);
 			bendSmoothing = std::max(0.0F, f("fBendSmoothing", bendSmoothing));
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
@@ -387,15 +393,20 @@ namespace
 		int         opening;  // 0 the vagina, 1 the anus: its centre gives the way out, and the edge's place
 		bool        outer{ false };  // an outer ring's: kept outside the inner, where the skin between keeps its area
 		bool        field{ false };  // not a ring's: carried by the opening in use as the skin round it is (below)
+		int         canal{ -1 };     // the vaginal canal's rings (0 the entrance, then 1-5 deeper): each on its own centre
 	};
 	// GT's lip and anus bones are no longer driven (v0.21): moved on their own they folded the skin round the rims.
 	// Each visible hole has an inner ring of 24 (12 showed as a polygon) and an outer ring of 12 (a shape's bones are
 	// capped: see the mesh builder's MAX_SHAPE_BONES), and the vagina its entrance ring of 12.
+	constexpr int kCanalRings = 5;  // SB Vag1_* .. SB Vag5_*, behind the entrance ring SB VagIn_*
 	const std::vector<Rim>& Rims()
 	{
 		static const std::vector<Rim> rims = [] {
 			std::vector<Rim> r;
-			for (int k = 0; k < 12; ++k) r.push_back({ std::format("SB VagIn_{}", k), 0 });
+			for (int k = 0; k < 12; ++k) r.push_back({ std::format("SB VagIn_{}", k), 0, false, false, 0 });
+			for (int i = 1; i <= kCanalRings; ++i) {
+				for (int k = 0; k < 12; ++k) r.push_back({ std::format("SB Vag{}_{}", i, k), 0, false, false, i });
+			}
 			for (int k = 0; k < 24; ++k) {
 				r.push_back({ std::format("SB VagRim_{}", k), 0 });
 				r.push_back({ std::format("SB AnusRim_{}", k), 1 });
@@ -422,6 +433,7 @@ namespace
 		bool                          outer{ false };
 		bool                          edge{ false };  // a visible hole's inner ring: its rest radius is the hole's
 		bool                          field{ false };
+		int                           canal{ -1 };
 	};
 	std::unordered_map<std::string, Driven> driven;  // under heldLock
 
@@ -435,7 +447,7 @@ namespace
 		auto& d = driven[a_rim.name];
 		if (d.node.get() != node) {
 			d = Driven{ RE::NiPointer<RE::NiAVObject>(node), node->local.translate, node->local.translate, a_rim.opening,
-				a_rim.outer, !a_rim.outer && a_rim.name.find("Rim_") != std::string::npos, a_rim.field };
+				a_rim.outer, !a_rim.outer && a_rim.name.find("Rim_") != std::string::npos, a_rim.field, a_rim.canal };
 			if (a_rim.name.ends_with("_0")) {
 				REX::INFO("rim {}: rest ({:.3f}, {:.3f}, {:.3f})", a_rim.name, d.rest.x, d.rest.y, d.rest.z);
 			}
@@ -767,6 +779,56 @@ namespace
 			shift[o] = dist > 0 ? Mul(off, moved / dist) : V(0, 0, 0);
 			grow[o] = r + (dist - moved);                       // what the hole must clear from its moved centre
 		}
+		// The vaginal canal's rings, each as an opening of its own: its centre (its bones' rest places) moves right onto
+		// his line where he passes it (up to fCanalFollow), and it opens to his thickness there (rounding off over his
+		// tip). Before v0.25 they were springs on fixed bases that his collision pushed: they stayed on the canal's own
+		// line while he ran through it at 10-20 degrees.
+		constexpr int kRings = kCanalRings + 1;
+		V     canalC[kRings], canalU[kRings], canalShift[kRings];
+		float canalGrow[kRings]{};
+		bool  canalOn[kRings]{};
+		int   canalN[kRings]{};
+		for (auto& [name, d] : driven) {
+			if (d.canal >= 0 && d.node && d.node->parent) {
+				canalC[d.canal] = Add(canalC[d.canal], ToWorld(d.node->parent, d.rest));
+				++canalN[d.canal];
+			}
+		}
+		for (int i = 0; i < kRings; ++i) {
+			if (!canalN[i] || !penis || !open[0] || !Settings::driveCanal) {
+				continue;
+			}
+			canalC[i] = Mul(canalC[i], 1.0F / canalN[i]);
+			V     start = b, su = u;
+			float before = 0;
+			if (first > 1e-3F && Len(Sub(tip->world.translate, m)) > 1e-3F) {
+				const V u1 = Mul(Sub(m, b), 1.0F / first);
+				if (Dot(Sub(canalC[i], b), u1) <= first) {
+					su = u1;
+				} else {
+					start = m;
+					su = Unit(Sub(tip->world.translate, m));
+					before = first;
+				}
+			}
+			const V     rel = Sub(canalC[i], start);
+			const float onSeg = Dot(rel, su);
+			const float along = before + onSeg;
+			if (along <= -Settings::penisBaseExtra * scale || along >= length) {
+				continue;
+			}
+			const float r = thickness(along) + Settings::rimMargin * scale;
+			const V     off = Sub(Mul(su, onSeg), rel);
+			const float dist = Len(off);
+			if (dist > r + Settings::canalCatch * scale) {
+				continue;
+			}
+			const float moved = std::min(dist, Settings::canalFollow * scale);
+			canalOn[i] = true;
+			canalU[i] = su;
+			canalShift[i] = dist > 0 ? Mul(off, moved / dist) : V(0, 0, 0);
+			canalGrow[i] = r + (dist - moved);
+		}
 		for (auto& [name, d] : driven) {
 			auto* node = d.node.get();
 			auto* parent = node ? node->parent : nullptr;
@@ -774,6 +836,22 @@ namespace
 				continue;
 			}
 			V target = d.rest;
+			if (d.canal >= 0) {
+				const int i = d.canal;
+				if (canalOn[i]) {
+					const V&    su = canalU[i];
+					const V     off = Sub(ToWorld(parent, d.rest), canalC[i]);
+					const float axial = Dot(off, su);
+					const V     across = Sub(off, Mul(su, axial));
+					const float restDist = Len(across);
+					const V     out = restDist > 1e-4F ? Mul(across, 1.0F / restDist) : V(0, 0, 0);
+					const float dist = std::max(restDist, canalGrow[i]);
+					target = ToLocal(parent, Add(Add(canalC[i], canalShift[i]), Add(Mul(out, dist), Mul(su, axial))));
+				}
+				d.now = Add(d.now, Mul(Sub(target, d.now), follow));
+				node->local.translate = d.now;
+				continue;
+			}
 			const int q = active[0] ? 0 : active[1] ? 1 : -1;   // the opening in use (only one opens)
 			if (q >= 0) {
 				const V&    su = segU[q];

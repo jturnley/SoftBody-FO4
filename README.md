@@ -195,6 +195,13 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   the bend rarely showed. The plugin now turns the `_SMP` bones his skin hangs on (`Penis_02_SMP` to
   `Penis_05_SMP`) about those joints instead. Nothing animates them.
   With the bend on (`bBendPenis=1`), the aligner no longer tries 4Stim's bend steps.
+- **The vaginal canal follows him.** The canal's six rings of 12 bones are the entrance (`SB VagIn_*`)
+  and `SB Vag1_*` to `SB Vag5_*`, 3.6 to 9.2 deep. Each is now placed the way the openings are, on a
+  centre of its own: where his line passes it, the ring moves right onto his line (up to
+  `fCanalFollow`, 3) and opens to his thickness there, rounding off over his tip. Rings past his tip
+  stay shut. Before, the deeper rings were springs on fixed bases that his collision pushed open, so
+  they kept to the canal's own line while he ran through at 10–20° to it. They are kinematic now
+  (`bDriveCanal`, `fCanalFollow`, `fCanalCatch` in the INI).
 - **Nearby bones move with the opening in use.** The vagina's and anus's centres are 4.1 units apart,
   and about 1,200 points of skin between them ride partly on each one's bones. Up to v0.23 only the
   opening in use moved, so an open anus had the skin on its vagina side hanging across it as a sheet.
