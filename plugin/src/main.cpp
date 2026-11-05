@@ -56,8 +56,8 @@ namespace
 		float rimFollow = 1.5F;       // how far an opening's ring moves across onto the penis's line
 		float rimCatch = 1.0F;        // how far past his thickness his line may pass an opening's centre and still open it
 		bool  driveCanal = true;      // centre the vaginal canal's rings on his line and open them to his thickness
-		float canalFollow = 3.0F;     // how far a canal ring moves across onto his line
-		float canalCatch = 2.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
+		float canalFollow = 8.0F;     // how far a canal ring moves across onto his line
+		float canalCatch = 8.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
 		float cervixStretch = 4.0F;   // how far his tip may carry the cervix deeper
 		float uterusSwell = 0.6F;     // how much wider the uterus grows when full (0.6: by 60%)
 
