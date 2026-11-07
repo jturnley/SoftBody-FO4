@@ -61,6 +61,10 @@ ANUS_FOLD_R = (0.22, 0.5, 1.4)  # they rise from the hole's edge between the fir
 # pads and rims are in charge. {shape: (bone-name parts that pick the region, in priority order)}
 BODY_COL_CELL = 1.5
 BODY_COL_CLEAR = 4.5
+# v0.36: the belly, butt and the waist between them are one shape (one surface, its seams kept): as three, his hands on
+# her waist slipped into the cell-wide gaps and pushed the butt's sides in alone, a shelf at its edge. {region: shape}
+BODY_COL_JOIN = {"SoftBodyColBelly": "SoftBodyColTrunk", "SoftBodyColButt": "SoftBodyColTrunk",
+                 "SoftBodyColTorso": "SoftBodyColTrunk"}
 BODY_COL_SHARE = 0.15     # a vertex joins the first region whose bones carry more than this of it
 BODY_COL = {"SoftBodyColBreasts": ("Breast",), "SoftBodyColBelly": ("Belly",), "SoftBodyColButt": ("Butt",),
             "SoftBodyColLegs": ("Leg_Thigh", "Leg_Knee", "Leg_Calf"), "SoftBodyColArms": ("Arm_UpperArm", "Arm_UpperFat",
@@ -1471,7 +1475,10 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                 region[v] = ri
                 break
     region[seg_dist(full.P, anus_fo, front_fo) < BODY_COL_CLEAR] = -1
-    for ri, name in enumerate(names):
+    shapes = list(dict.fromkeys(BODY_COL_JOIN.get(n, n) for n in names))
+    shape_of = np.array([shapes.index(BODY_COL_JOIN.get(n, n)) for n in names] + [-1])
+    region = shape_of[region]          # -1 (no region) picks the trailing -1
+    for ri, name in enumerate(shapes):
         vs = np.nonzero(region == ri)[0]
         if not len(vs):
             continue

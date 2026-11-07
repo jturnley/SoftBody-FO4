@@ -261,6 +261,9 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   Legs, Belly, Pecs, Arms, Hands and Penis press her breasts, belly and butt, and her thighs hold
   him. The shapes are tagged `SB_Col` and skip her own shapes and his balls. Nothing within 4.5 of
   the openings (`BODY_COL_CLEAR`), where the pads and rims are in charge. Needs a BodySlide rebuild.
+  Since v0.36 the belly, butt and waist are one shape, `SoftBodyColTrunk` (`BODY_COL_JOIN`). As three,
+  his hands on her waist (doggy) slipped into the gaps between them and pushed only the butt's sides
+  in, which left a shelf at its edge.
 - **Two-sided genitals.** The genitals' material draws both sides of each triangle. Seen with the camera inside
   her, the one-sided canal showed only its far half, as if it wrapped half the shaft.
 - **The anus ring is centred on the anus.** GT's anus opening is a short slit, and the ring sat 0.17

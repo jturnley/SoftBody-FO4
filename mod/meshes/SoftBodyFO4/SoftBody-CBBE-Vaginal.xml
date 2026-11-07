@@ -884,19 +884,7 @@
     <no-collide-with-tag>SB_Anus</no-collide-with-tag>
     <no-collide-with-tag>Balls</no-collide-with-tag>
   </per-triangle-shape>
-  <per-triangle-shape name="SoftBodyColBelly">
-    <margin>0.3</margin>
-    <penetration>0.8</penetration>
-    <shared>public</shared>
-    <tag>SB_Col</tag>
-    <no-collide-with-tag>SB_Col</no-collide-with-tag>
-    <no-collide-with-tag>SB_Body</no-collide-with-tag>
-    <no-collide-with-tag>SB_Hands</no-collide-with-tag>
-    <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
-    <no-collide-with-tag>SB_Anus</no-collide-with-tag>
-    <no-collide-with-tag>Balls</no-collide-with-tag>
-  </per-triangle-shape>
-  <per-triangle-shape name="SoftBodyColButt">
+  <per-triangle-shape name="SoftBodyColTrunk">
     <margin>0.3</margin>
     <penetration>0.8</penetration>
     <shared>public</shared>
@@ -921,18 +909,6 @@
     <no-collide-with-tag>Balls</no-collide-with-tag>
   </per-triangle-shape>
   <per-triangle-shape name="SoftBodyColArms">
-    <margin>0.3</margin>
-    <penetration>0.8</penetration>
-    <shared>public</shared>
-    <tag>SB_Col</tag>
-    <no-collide-with-tag>SB_Col</no-collide-with-tag>
-    <no-collide-with-tag>SB_Body</no-collide-with-tag>
-    <no-collide-with-tag>SB_Hands</no-collide-with-tag>
-    <no-collide-with-tag>SB_Vagina</no-collide-with-tag>
-    <no-collide-with-tag>SB_Anus</no-collide-with-tag>
-    <no-collide-with-tag>Balls</no-collide-with-tag>
-  </per-triangle-shape>
-  <per-triangle-shape name="SoftBodyColTorso">
     <margin>0.3</margin>
     <penetration>0.8</penetration>
     <shared>public</shared>
