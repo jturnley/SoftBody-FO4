@@ -37,7 +37,9 @@ region bone's bind space) into dent bones `<bone>_SBnn`, children of
 breasts are at most ~46% `LBreast_skin` and the rest `Chest_skin`, so half of
 the breast-core `Chest_skin` weight is moved onto the dents too (`DENTS` in
 `build_prototype.py`). Each dent bone hangs off its region bone on a short
-stiff spring (`dentSpring`). The physics XML sources live in `src/`; the
+stiff spring (`dentSpring`). Since v0.32 each dent is also sprung (`dentLink`, softer) to its four
+nearest dents, a lattice as in GT Softbody Ultra (by Goutou), so a press spreads into a smooth dimple
+instead of one cluster's bump. The physics XML sources live in `src/`; the
 build writes the game copies with the dent bones filled in.
 
 Genitals (`tools/genitals.py`, `tools/genital_textures.py`, `tools/sse_nif.py`): GT Softbody's

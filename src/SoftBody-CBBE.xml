@@ -150,6 +150,27 @@
     <angularEquilibrium x="0" y="0" z="0"/>
   </generic-constraint-default>
 
+  <!-- Dent to neighbouring dent (v0.32; the lattice idea is GT Softbody Ultra's, by Goutou): a pushed dent drags its
+       neighbours part way, so a press spreads into a smooth dimple. Softer than dentSpring, so the dents still give
+       on their own. -->
+  <generic-constraint-default name="dentLink">
+    <frameInLerp>
+      <translationLerp>0.5</translationLerp>
+      <rotationLerp>0.5</rotationLerp>
+    </frameInLerp>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <linearLowerLimit x="-1.5" y="-1.5" z="-1.5"/>
+    <linearUpperLimit x="1.5" y="1.5" z="1.5"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="150" y="150" z="150"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="3" y="3" z="3"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+
   <!-- Anchors (skeleton bones, kinematic, follow the animation) -->
   <bone name="LBreast_skin"/>
   <bone name="RBreast_skin"/>

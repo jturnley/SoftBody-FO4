@@ -86,7 +86,7 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
     for bone, (count, donors) in (dents or {}).items():
         region = bone + PHYSICS_SUFFIX
         made[bone] = add_dents(nif, shape, region, count, region, donors)
-        print("  %s: %d dent bones" % (region, len(made[bone])))
+        print("  %s: %d dent bones, %d links" % (region, len(made[bone][0]), len(made[bone][1])))
     # after the split and the dents: the genitals' seam copies CBBE's FINAL weights, or the two sides of the seam
     # follow different bones and it tears open under physics
     if genitals_from:
@@ -196,10 +196,12 @@ def write_xml(rel, dents=None, collision=None, skip=(), suffix="", nif_bones=())
     if dents:
         bones = []
         constraints = []
-        for region, names in dents.items():
+        for region, (names, links) in dents.items():
             for name in names:
                 bones.append('  <bone name="%s" template="dent"/>' % name)
                 constraints.append('  <generic-constraint bodyA="%s" bodyB="%s%s" template="dentSpring"/>' % (name, region, PHYSICS_SUFFIX))
+            for a, b in links:
+                constraints.append('  <generic-constraint bodyA="%s" bodyB="%s" template="dentLink"/>' % (a, b))
         markers = [("<!-- @DENT_BONES@ -->", bones), ("<!-- @DENT_CONSTRAINTS@ -->", constraints),
                    ("<!-- @COLLISION_SHAPES@ -->", collision_xml(collision or {}, skip))]
         bases, ring_bones, walls = canal_xml(nif_bones)

@@ -150,6 +150,27 @@
     <angularEquilibrium x="0" y="0" z="0"/>
   </generic-constraint-default>
 
+  <!-- Dent to neighbouring dent (v0.32; the lattice idea is GT Softbody Ultra's, by Goutou): a pushed dent drags its
+       neighbours part way, so a press spreads into a smooth dimple. Softer than dentSpring, so the dents still give
+       on their own. -->
+  <generic-constraint-default name="dentLink">
+    <frameInLerp>
+      <translationLerp>0.5</translationLerp>
+      <rotationLerp>0.5</rotationLerp>
+    </frameInLerp>
+    <useLinearReferenceFrameA>false</useLinearReferenceFrameA>
+    <linearLowerLimit x="-1.5" y="-1.5" z="-1.5"/>
+    <linearUpperLimit x="1.5" y="1.5" z="1.5"/>
+    <angularLowerLimit x="0" y="0" z="0"/>
+    <angularUpperLimit x="0" y="0" z="0"/>
+    <linearStiffness x="150" y="150" z="150"/>
+    <angularStiffness x="0" y="0" z="0"/>
+    <linearDamping x="3" y="3" z="3"/>
+    <angularDamping x="0" y="0" z="0"/>
+    <linearEquilibrium x="0" y="0" z="0"/>
+    <angularEquilibrium x="0" y="0" z="0"/>
+  </generic-constraint-default>
+
   <!-- Anchors (skeleton bones, kinematic, follow the animation) -->
   <bone name="LBreast_skin"/>
   <bone name="RBreast_skin"/>
@@ -868,6 +889,33 @@
   <generic-constraint bodyA="LBreast_skin_SB10" bodyB="LBreast_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="LBreast_skin_SB11" bodyB="LBreast_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="LBreast_skin_SB12" bodyB="LBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LBreast_skin_SB01" bodyB="LBreast_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB01" bodyB="LBreast_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB01" bodyB="LBreast_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB01" bodyB="LBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB01" bodyB="LBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB01" bodyB="LBreast_skin_SB12" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB02" bodyB="LBreast_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB02" bodyB="LBreast_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB02" bodyB="LBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB02" bodyB="LBreast_skin_SB11" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB03" bodyB="LBreast_skin_SB04" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB03" bodyB="LBreast_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB03" bodyB="LBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB04" bodyB="LBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB04" bodyB="LBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB05" bodyB="LBreast_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB05" bodyB="LBreast_skin_SB11" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB05" bodyB="LBreast_skin_SB12" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB06" bodyB="LBreast_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB06" bodyB="LBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB07" bodyB="LBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB07" bodyB="LBreast_skin_SB11" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB07" bodyB="LBreast_skin_SB12" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB08" bodyB="LBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB08" bodyB="LBreast_skin_SB12" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB09" bodyB="LBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="LBreast_skin_SB10" bodyB="LBreast_skin_SB11" template="dentLink"/>
   <generic-constraint bodyA="RBreast_skin_SB01" bodyB="RBreast_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="RBreast_skin_SB02" bodyB="RBreast_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="RBreast_skin_SB03" bodyB="RBreast_skin_SB" template="dentSpring"/>
@@ -880,6 +928,33 @@
   <generic-constraint bodyA="RBreast_skin_SB10" bodyB="RBreast_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="RBreast_skin_SB11" bodyB="RBreast_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="RBreast_skin_SB12" bodyB="RBreast_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RBreast_skin_SB01" bodyB="RBreast_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB01" bodyB="RBreast_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB01" bodyB="RBreast_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB01" bodyB="RBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB01" bodyB="RBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB01" bodyB="RBreast_skin_SB12" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB02" bodyB="RBreast_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB02" bodyB="RBreast_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB02" bodyB="RBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB02" bodyB="RBreast_skin_SB11" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB03" bodyB="RBreast_skin_SB04" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB03" bodyB="RBreast_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB03" bodyB="RBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB04" bodyB="RBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB04" bodyB="RBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB05" bodyB="RBreast_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB05" bodyB="RBreast_skin_SB11" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB05" bodyB="RBreast_skin_SB12" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB06" bodyB="RBreast_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB06" bodyB="RBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB07" bodyB="RBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB07" bodyB="RBreast_skin_SB11" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB07" bodyB="RBreast_skin_SB12" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB08" bodyB="RBreast_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB08" bodyB="RBreast_skin_SB12" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB09" bodyB="RBreast_skin_SB10" template="dentLink"/>
+  <generic-constraint bodyA="RBreast_skin_SB10" bodyB="RBreast_skin_SB11" template="dentLink"/>
   <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="LButtFat_skin_SB02" bodyB="LButtFat_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="LButtFat_skin_SB03" bodyB="LButtFat_skin_SB" template="dentSpring"/>
@@ -888,6 +963,24 @@
   <generic-constraint bodyA="LButtFat_skin_SB06" bodyB="LButtFat_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="LButtFat_skin_SB07" bodyB="LButtFat_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="LButtFat_skin_SB08" bodyB="LButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB02" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB03" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB04" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB01" bodyB="LButtFat_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB02" bodyB="LButtFat_skin_SB04" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB02" bodyB="LButtFat_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB02" bodyB="LButtFat_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB03" bodyB="LButtFat_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB03" bodyB="LButtFat_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB04" bodyB="LButtFat_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB04" bodyB="LButtFat_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB04" bodyB="LButtFat_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB05" bodyB="LButtFat_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB05" bodyB="LButtFat_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="LButtFat_skin_SB06" bodyB="LButtFat_skin_SB08" template="dentLink"/>
   <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="RButtFat_skin_SB02" bodyB="RButtFat_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="RButtFat_skin_SB03" bodyB="RButtFat_skin_SB" template="dentSpring"/>
@@ -896,6 +989,24 @@
   <generic-constraint bodyA="RButtFat_skin_SB06" bodyB="RButtFat_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="RButtFat_skin_SB07" bodyB="RButtFat_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="RButtFat_skin_SB08" bodyB="RButtFat_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB02" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB03" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB04" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB01" bodyB="RButtFat_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB02" bodyB="RButtFat_skin_SB04" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB02" bodyB="RButtFat_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB02" bodyB="RButtFat_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB03" bodyB="RButtFat_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB03" bodyB="RButtFat_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB04" bodyB="RButtFat_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB04" bodyB="RButtFat_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB04" bodyB="RButtFat_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB05" bodyB="RButtFat_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB05" bodyB="RButtFat_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="RButtFat_skin_SB06" bodyB="RButtFat_skin_SB08" template="dentLink"/>
   <generic-constraint bodyA="Belly_skin_SB01" bodyB="Belly_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="Belly_skin_SB02" bodyB="Belly_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="Belly_skin_SB03" bodyB="Belly_skin_SB" template="dentSpring"/>
@@ -905,6 +1016,26 @@
   <generic-constraint bodyA="Belly_skin_SB07" bodyB="Belly_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="Belly_skin_SB08" bodyB="Belly_skin_SB" template="dentSpring"/>
   <generic-constraint bodyA="Belly_skin_SB09" bodyB="Belly_skin_SB" template="dentSpring"/>
+  <generic-constraint bodyA="Belly_skin_SB01" bodyB="Belly_skin_SB04" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB01" bodyB="Belly_skin_SB05" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB01" bodyB="Belly_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB01" bodyB="Belly_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB01" bodyB="Belly_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB01" bodyB="Belly_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB02" bodyB="Belly_skin_SB03" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB02" bodyB="Belly_skin_SB04" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB02" bodyB="Belly_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB03" bodyB="Belly_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB03" bodyB="Belly_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB04" bodyB="Belly_skin_SB06" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB04" bodyB="Belly_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB05" bodyB="Belly_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB05" bodyB="Belly_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB05" bodyB="Belly_skin_SB09" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB06" bodyB="Belly_skin_SB07" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB06" bodyB="Belly_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB07" bodyB="Belly_skin_SB08" template="dentLink"/>
+  <generic-constraint bodyA="Belly_skin_SB07" bodyB="Belly_skin_SB09" template="dentLink"/>
 
   <!-- Genital springs (GT Softbody). Linear only: every angular limit is 0. -->
   <generic-constraint-default name="gtSpring">

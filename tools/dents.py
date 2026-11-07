@@ -16,6 +16,24 @@ import struct
 BONE_STRIDE = 68           # BSSkin::BoneData entry: sphere 4f, rotation 9f, translation 3f, scale f
 NEIGHBOURS = 3             # dent bones sharing each vertex
 MIN_WEIGHT = 0.02          # region weight below this stays on the region bone's neighbours as-is
+LINKS = 4                  # each dent bone is sprung to this many of its nearest dents (a lattice, as GT Ultra's)
+LINK_REACH = 1.8           # ... but none farther than this many typical spacings
+
+
+def neighbour_links(names, centres):
+    """Pairs of dent bones to spring together: each to its LINKS nearest, within LINK_REACH spacings. Tied to its
+    neighbours, a pushed dent drags them part way, so a press makes a smooth dimple, not one cluster's bump."""
+    n = len(centres)
+    if n < 2:
+        return []
+    near = [sorted((math.dist(centres[i], centres[j]), j) for j in range(n) if j != i) for i in range(n)]
+    spacing = sorted(d[0][0] for d in near)[n // 2]
+    pairs = set()
+    for i in range(n):
+        for d, j in near[i][:LINKS]:
+            if d <= LINK_REACH * spacing:
+                pairs.add((min(i, j), max(i, j)))
+    return [(names[i], names[j]) for i, j in sorted(pairs)]
 
 
 class SkinnedShape:
@@ -112,7 +130,7 @@ def add_dents(nif, shape, region, count, prefix, donors=None):
     dent bones, scaled by how strongly the vertex belongs to the region. CBBE
     breasts are at most ~46% LBreast_skin and the rest Chest_skin, so without
     this a dent could only move the skin half as far as the bone.
-    Returns the new bone names.
+    Returns the new bone names and the neighbour pairs to spring together.
     """
     donors = donors or {}
     skin = SkinnedShape(nif, shape)
@@ -159,4 +177,4 @@ def add_dents(nif, shape, region, count, prefix, donors=None):
             influences[dent_ix[j]] = influences.get(dent_ix[j], 0) + moved * gj / sum(g)
         skin.set_influences(v, [(i, x) for i, x in influences.items() if x > 1e-4])
     skin.commit()
-    return names
+    return names, neighbour_links(names, centres)
