@@ -193,6 +193,10 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   turns more than `fSnakeMax` (60°) from it. The idea is fo4-ocbpc's (ReidenXerx, GPL-3); this is our
   own version, not its code. Before, the plugin only turned him toward the opening and had the canal
   chase his line, so at 22–49° off the canal it swung up to 4 units and tore.
+  Since v0.35 the path is a smooth curve. As a polyline it turned all at once at the entrance and at
+  each ring, and his shaft kinked there. It now leaves his base along his own line for a third of
+  the way to the entrance, so the bend starts gently at his root, and corner cutting (Chaikin, four
+  rounds) rounds every turn.
 - **The penis bent through the opening** (before v0.31). Every 4 ms the plugin bends his penis so his line runs
   through the centre of the opening in use, by at most `fBendMax` (20°), following over
   `fBendSmoothing`. The bend is split evenly between his shaft's first two joints, `Penis_02_Offset`

@@ -607,6 +607,29 @@ namespace
 		bend.path.clear();
 	}
 
+	// v0.35: the snake path made a smooth curve. As a polyline it turned all at once at the entrance and at each canal
+	// ring, and his skin bones, laid along it, kinked his shaft there. It leaves his base along his own line (a_u) for a
+	// third of the way to the entrance, so the bend starts gently from his root, then Chaikin's corner cutting (four
+	// rounds, ends kept) rounds every turn
+	std::vector<V> SmoothPath(const std::vector<V>& a_path, const V& a_u)
+	{
+		if (a_path.size() < 2) {
+			return a_path;
+		}
+		std::vector<V> p{ a_path[0], Add(a_path[0], Mul(a_u, Len(Sub(a_path[1], a_path[0])) / 3.0F)) };
+		p.insert(p.end(), a_path.begin() + 1, a_path.end());
+		for (int round = 0; round < 4; ++round) {
+			std::vector<V> q{ p.front() };
+			for (std::size_t k = 0; k + 1 < p.size(); ++k) {
+				q.push_back(Add(Mul(p[k], 0.75F), Mul(p[k + 1], 0.25F)));
+				q.push_back(Add(Mul(p[k], 0.25F), Mul(p[k + 1], 0.75F)));
+			}
+			q.push_back(p.back());
+			p.swap(q);
+		}
+		return p;
+	}
+
 	// A point `a_s` along a polyline from its first point (past its end, carried on along its last piece), and the
 	// polyline's direction there
 	V AlongPath(const std::vector<V>& a_path, float a_s, V* a_dir)
@@ -702,7 +725,7 @@ namespace
 		const float follow = Settings::bendSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::bendSmoothing) : 1.0F;
 		bend.weight += ((locked ? 1.0F : 0.0F) - bend.weight) * follow;
 		if (locked) {
-			bend.path = path;
+			bend.path = SmoothPath(path, a_u);
 		}
 		const float w = bend.weight;
 		if (w < 1e-3F || bend.path.size() < 2) {
