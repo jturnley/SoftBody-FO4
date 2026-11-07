@@ -272,6 +272,16 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   point keeps its physics-bone share in full above 70% of its region's most, and none below 35%; the
   rest goes to the bone the region hangs from. The butt's and belly's sides, over the hips and ribs,
   barely move when pressed.
+  Since v0.39:
+  - **Her thighs meet her belly and butt.** The legs' collision points more than 3 units from the
+    trunk at rest are their own shape, `SoftBodyColThighs`, with the tag `SB_ColThigh`, which the trunk
+    collides with. Where the thighs join her, always touching, they stay with the shapes that skip each
+    other.
+  - **More of the butt and belly skin rides their dents.** Their `DENTS` donors are `Pelvis_Rear_skin`
+    0.5 and `Spine1_Rear_skin` 0.3 for the butt, and `Spine1_skin` 0.5 and `Spine2_skin` 0.3 for the
+    belly. The butt's most is now 0.74 (was 0.49) and the belly's 0.61 (was 0.33).
+  - **The log samples carry the butt and belly bones and their dents,** to show whether his body moves
+    them.
 - **Two-sided genitals.** The genitals' material draws both sides of each triangle. Seen with the camera inside
   her, the one-sided canal showed only its far half, as if it wrapped half the shaft.
 - **The anus ring is centred on the anus.** GT's anus opening is a short slit, and the ring sat 0.17

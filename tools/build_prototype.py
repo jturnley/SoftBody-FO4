@@ -67,9 +67,12 @@ SKIN_D = r"Textures\Actors\Character\BaseHumanFemale\FemaleBody_d.dds"   # the s
 DENTS = {
     "LBreast_skin": (12, {"Chest_skin": 0.5}),
     "RBreast_skin": (12, {"Chest_skin": 0.5}),
-    "LButtFat_skin": (8, {}),
-    "RButtFat_skin": (8, {}),
-    "Belly_skin": (9, {}),
+    # v0.39: CBBE leaves the butt and belly mostly on the pelvis and spine (a median 17% on their own bones), so a
+    # push moved the skin a sixth as far as the bones: as the breasts' Chest_skin, part of it rides the dents (none from
+    # the thighs, whose bend the skin must keep following)
+    "LButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5, "Spine1_Rear_skin": 0.3}),
+    "RButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5, "Spine1_Rear_skin": 0.3}),
+    "Belly_skin": (9, {"Spine1_skin": 0.5, "Spine2_skin": 0.3}),
 }
 
 
@@ -156,18 +159,24 @@ def collision_xml(collision, skip=()):
 BODY_COL_TAG = "SB_Col"
 BODY_COL_MARGIN, BODY_COL_PENETRATION = 0.3, 0.8
 BODY_COL_NO_COLLIDE = (BODY_COL_TAG, "SB_Body", "SB_Hands", "SB_Vagina", "SB_Anus", "Balls")
+# v0.39: her thighs, clear of where they join her (genitals.BODY_COL_THIGH), have their own tag and meet her other
+# collision shapes (the belly and butt give way); not each other
+BODY_COL_THIGH_TAG = "SB_ColThigh"
 
 
 def body_collision_xml(names):
     """per-triangle-shapes for the collision body: no weight thresholds, the whole shape collides"""
     lines = []
     for name in names:
+        thigh = name == genitals.BODY_COL_THIGH
+        tag = BODY_COL_THIGH_TAG if thigh else BODY_COL_TAG
+        skip = tuple(BODY_COL_THIGH_TAG if t == BODY_COL_TAG else t for t in BODY_COL_NO_COLLIDE) if thigh else BODY_COL_NO_COLLIDE
         lines += ['  <per-triangle-shape name="%s">' % name,
                   '    <margin>%g</margin>' % BODY_COL_MARGIN,
                   '    <penetration>%g</penetration>' % BODY_COL_PENETRATION,
                   '    <shared>public</shared>',
-                  '    <tag>%s</tag>' % BODY_COL_TAG]
-        lines += ['    <no-collide-with-tag>%s</no-collide-with-tag>' % t for t in BODY_COL_NO_COLLIDE]
+                  '    <tag>%s</tag>' % tag]
+        lines += ['    <no-collide-with-tag>%s</no-collide-with-tag>' % t for t in skip]
         lines += ['  </per-triangle-shape>']
     return lines
 

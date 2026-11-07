@@ -70,6 +70,11 @@ BODY_COL_JOIN = {"SoftBodyColBelly": "SoftBodyColTrunk", "SoftBodyColButt": "Sof
 # none below the first; the rest goes to the bone the region hangs from. The butt's and belly's sides have bone under
 # them (hips, ribs): pressed there, the skin barely moves
 BODY_COL_SOFT = (0.35, 0.7)
+# v0.39: her thighs meet her belly and butt (they overlapped in doggy): the legs' points farther than this from the trunk
+# at rest are a shape of their own with its own tag, which the trunk collides with; the rest (where they join, always
+# touching) stay with the other shapes, which skip each other
+BODY_COL_THIGH_FREE = 3.0
+BODY_COL_THIGH = "SoftBodyColThighs"
 BODY_COL_SHARE = 0.15     # a vertex joins the first region whose bones carry more than this of it
 BODY_COL = {"SoftBodyColBreasts": ("Breast",), "SoftBodyColBelly": ("Belly",), "SoftBodyColButt": ("Butt",),
             "SoftBodyColLegs": ("Leg_Thigh", "Leg_Knee", "Leg_Calf"), "SoftBodyColArms": ("Arm_UpperArm", "Arm_UpperFat",
@@ -1483,29 +1488,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     shapes = list(dict.fromkeys(BODY_COL_JOIN.get(n, n) for n in names))
     shape_of = np.array([shapes.index(BODY_COL_JOIN.get(n, n)) for n in names] + [-1])
     region = shape_of[region]          # -1 (no region) picks the trailing -1
-    for ri, name in enumerate(shapes):
-        vs = np.nonzero(region == ri)[0]
-        if not len(vs):
-            continue
-        cells = {}
-        cell_of = {}
-        for v in vs:
-            key = tuple(np.floor(full.P[v] / BODY_COL_CELL).astype(int))
-            cell_of[v] = cells.setdefault(key, len(cells))
-        P = np.zeros((len(cells), 3))
-        count = np.zeros(len(cells))
-        for v, c in cell_of.items():
-            P[c] += full.P[v]
-            count[c] += 1
-        P /= count[:, None]
-        tris = set()
-        for a, b, c in full.tris:
-            if a in cell_of and b in cell_of and c in cell_of:
-                tri = (cell_of[a], cell_of[b], cell_of[c])
-                if len(set(tri)) == 3:
-                    k = min(range(3), key=lambda i: tri[i])
-                    tris.add(tri[k:] + tri[:k])
-        tris = np.array(sorted(tris))
+    def body_proxy(name, P, tris):
         _, w, src = surface(P)
         soft = [{} for _ in w]
         for k, x in enumerate(w):
@@ -1530,6 +1513,44 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         meshes[name] = dict(P=P, UV=np.zeros((len(P), 2)), tris=tris, weights=[top4(x) for x in w], src=src,
                             fixed_normals={}, hidden=True, body_collision=True)
         report["collision_triangles"][name] = len(tris)
+
+    for ri, name in enumerate(shapes):
+        vs = np.nonzero(region == ri)[0]
+        if not len(vs):
+            continue
+        cells = {}
+        cell_of = {}
+        for v in vs:
+            key = tuple(np.floor(full.P[v] / BODY_COL_CELL).astype(int))
+            cell_of[v] = cells.setdefault(key, len(cells))
+        P = np.zeros((len(cells), 3))
+        count = np.zeros(len(cells))
+        for v, c in cell_of.items():
+            P[c] += full.P[v]
+            count[c] += 1
+        P /= count[:, None]
+        tris = set()
+        for a, b, c in full.tris:
+            if a in cell_of and b in cell_of and c in cell_of:
+                tri = (cell_of[a], cell_of[b], cell_of[c])
+                if len(set(tri)) == 3:
+                    k = min(range(3), key=lambda i: tri[i])
+                    tris.add(tri[k:] + tri[:k])
+        tris = np.array(sorted(tris))
+        pieces = [(name, P, tris)]
+        if name == "SoftBodyColLegs" and "SoftBodyColTrunk" in meshes:
+            # split the legs: points well clear of the trunk at rest go to BODY_COL_THIGH (whole triangles only)
+            free = cKDTree(meshes["SoftBodyColTrunk"]["P"]).query(P)[0] > BODY_COL_THIGH_FREE
+            pieces = []
+            for part, keep in ((name, ~free), (BODY_COL_THIGH, free)):
+                tk = tris[keep[tris].all(1)]
+                vs_ = np.unique(tk)
+                re_ = -np.ones(len(P), int)
+                re_[vs_] = np.arange(len(vs_))
+                pieces.append((part, P[vs_], re_[tk]))
+        for part, P, tris in pieces:
+            body_proxy(part, P, tris)
+
 
     # 7. the springs' anchors, from GT's node tree; its nodes must sit where its skin binds put the moving bones
     if skeleton_path:

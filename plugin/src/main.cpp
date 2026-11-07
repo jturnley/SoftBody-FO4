@@ -234,6 +234,20 @@ namespace
 		{ "SB Vag3_0", "SB Vag3_0 Base" }, { "SB Vag3_3", "SB Vag3_3 Base" }, { "SB Vag3_6", "SB Vag3_6 Base" }, { "SB Vag3_9", "SB Vag3_9 Base" },
 		{ "SB Vag4_0", "SB Vag4_0 Base" }, { "SB Vag4_3", "SB Vag4_3 Base" }, { "SB Vag4_6", "SB Vag4_6 Base" }, { "SB Vag4_9", "SB Vag4_9 Base" },
 		{ "SB Vag5_0", "SB Vag5_0 Base" }, { "SB Vag5_3", "SB Vag5_3 Base" }, { "SB Vag5_6", "SB Vag5_6 Base" }, { "SB Vag5_9", "SB Vag5_9 Base" },
+		// v0.39: her butt and belly, to see whether his body moves them: each region bone from its skeleton bone, each
+		// dent from its region bone
+		{ "LButtFat_skin_SB", "LButtFat_skin" },
+		{ "LButtFat_skin_SB01", "LButtFat_skin_SB" }, { "LButtFat_skin_SB02", "LButtFat_skin_SB" }, { "LButtFat_skin_SB03", "LButtFat_skin_SB" },
+		{ "LButtFat_skin_SB04", "LButtFat_skin_SB" }, { "LButtFat_skin_SB05", "LButtFat_skin_SB" }, { "LButtFat_skin_SB06", "LButtFat_skin_SB" },
+		{ "LButtFat_skin_SB07", "LButtFat_skin_SB" }, { "LButtFat_skin_SB08", "LButtFat_skin_SB" },
+		{ "RButtFat_skin_SB", "RButtFat_skin" },
+		{ "RButtFat_skin_SB01", "RButtFat_skin_SB" }, { "RButtFat_skin_SB02", "RButtFat_skin_SB" }, { "RButtFat_skin_SB03", "RButtFat_skin_SB" },
+		{ "RButtFat_skin_SB04", "RButtFat_skin_SB" }, { "RButtFat_skin_SB05", "RButtFat_skin_SB" }, { "RButtFat_skin_SB06", "RButtFat_skin_SB" },
+		{ "RButtFat_skin_SB07", "RButtFat_skin_SB" }, { "RButtFat_skin_SB08", "RButtFat_skin_SB" },
+		{ "Belly_skin_SB", "Belly_skin" },
+		{ "Belly_skin_SB01", "Belly_skin_SB" }, { "Belly_skin_SB02", "Belly_skin_SB" }, { "Belly_skin_SB03", "Belly_skin_SB" },
+		{ "Belly_skin_SB04", "Belly_skin_SB" }, { "Belly_skin_SB05", "Belly_skin_SB" }, { "Belly_skin_SB06", "Belly_skin_SB" },
+		{ "Belly_skin_SB07", "Belly_skin_SB" }, { "Belly_skin_SB08", "Belly_skin_SB" }, { "Belly_skin_SB09", "Belly_skin_SB" },
 	};
 
 	struct Width

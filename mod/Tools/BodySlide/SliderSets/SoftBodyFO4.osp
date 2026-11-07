@@ -17,6 +17,7 @@
         <Shape target="SoftBodyColBreasts" DataFolder="CBBE SoftBody">SoftBodyColBreasts</Shape>
         <Shape target="SoftBodyColTrunk" DataFolder="CBBE SoftBody">SoftBodyColTrunk</Shape>
         <Shape target="SoftBodyColLegs" DataFolder="CBBE SoftBody">SoftBodyColLegs</Shape>
+        <Shape target="SoftBodyColThighs" DataFolder="CBBE SoftBody">SoftBodyColThighs</Shape>
         <Shape target="SoftBodyColArms" DataFolder="CBBE SoftBody">SoftBodyColArms</Shape>
         <Slider name="Breasts" invert="false" default="0">
             <Data name="CBBEBreasts" target="CBBE" local="true">CBBEBody.osd\CBBEBreasts</Data>
@@ -89,6 +90,7 @@
             <Data name="SoftBodyVaginalCanalCBBEButt" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEButt</Data>
             <Data name="SoftBodyColTrunkCBBEButt" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEButt</Data>
             <Data name="SoftBodyColLegsCBBEButt" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEButt</Data>
+            <Data name="SoftBodyColThighsCBBEButt" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEButt</Data>
         </Slider>
         <Slider name="ButtCrack" invert="false" default="0">
             <Data name="CBBEButtCrack" target="CBBE" local="true">CBBEBody.osd\CBBEButtCrack</Data>
@@ -102,6 +104,7 @@
             <Data name="SoftBodyVaginalCanalCBBEButtCrack" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEButtCrack</Data>
             <Data name="SoftBodyColTrunkCBBEButtCrack" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEButtCrack</Data>
             <Data name="SoftBodyColLegsCBBEButtCrack" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEButtCrack</Data>
+            <Data name="SoftBodyColThighsCBBEButtCrack" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEButtCrack</Data>
         </Slider>
         <Slider name="ButtNew" invert="false" default="0">
             <Data name="CBBEButtNew" target="CBBE" local="true">CBBEBody.osd\CBBEButtNew</Data>
@@ -115,6 +118,7 @@
             <Data name="SoftBodyVaginalCanalCBBEButtNew" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEButtNew</Data>
             <Data name="SoftBodyColTrunkCBBEButtNew" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEButtNew</Data>
             <Data name="SoftBodyColLegsCBBEButtNew" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEButtNew</Data>
+            <Data name="SoftBodyColThighsCBBEButtNew" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEButtNew</Data>
         </Slider>
         <Slider name="ButtShape2" invert="false" default="0">
             <Data name="CBBEButtShape2" target="CBBE" local="true">CBBEBody.osd\CBBEButtShape2</Data>
@@ -128,6 +132,7 @@
             <Data name="SoftBodyVaginalCanalCBBEButtShape2" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEButtShape2</Data>
             <Data name="SoftBodyColTrunkCBBEButtShape2" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEButtShape2</Data>
             <Data name="SoftBodyColLegsCBBEButtShape2" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEButtShape2</Data>
+            <Data name="SoftBodyColThighsCBBEButtShape2" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEButtShape2</Data>
         </Slider>
         <Slider name="ButtSmall" invert="false" default="0">
             <Data name="CBBEButtSmall" target="CBBE" local="true">CBBEBody.osd\CBBEButtSmall</Data>
@@ -141,14 +146,15 @@
             <Data name="SoftBodyVaginalCanalCBBEButtSmall" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEButtSmall</Data>
             <Data name="SoftBodyColTrunkCBBEButtSmall" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEButtSmall</Data>
             <Data name="SoftBodyColLegsCBBEButtSmall" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEButtSmall</Data>
+            <Data name="SoftBodyColThighsCBBEButtSmall" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEButtSmall</Data>
         </Slider>
         <Slider name="CalfSize" invert="false" default="0">
             <Data name="CBBECalfSize" target="CBBE" local="true">CBBEBody.osd\CBBECalfSize</Data>
-            <Data name="SoftBodyColLegsCBBECalfSize" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBECalfSize</Data>
+            <Data name="SoftBodyColThighsCBBECalfSize" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBECalfSize</Data>
         </Slider>
         <Slider name="CalfSmooth" invert="false" default="0">
             <Data name="CBBECalfSmooth" target="CBBE" local="true">CBBEBody.osd\CBBECalfSmooth</Data>
-            <Data name="SoftBodyColLegsCBBECalfSmooth" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBECalfSmooth</Data>
+            <Data name="SoftBodyColThighsCBBECalfSmooth" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBECalfSmooth</Data>
         </Slider>
         <Slider name="ChestDepth" invert="false" default="0">
             <Data name="CBBEChestDepth" target="CBBE" local="true">CBBEBody.osd\CBBEChestDepth</Data>
@@ -186,6 +192,7 @@
             <Data name="SoftBodyVaginalCanalCBBEChubbyButt" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEChubbyButt</Data>
             <Data name="SoftBodyColTrunkCBBEChubbyButt" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEChubbyButt</Data>
             <Data name="SoftBodyColLegsCBBEChubbyButt" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEChubbyButt</Data>
+            <Data name="SoftBodyColThighsCBBEChubbyButt" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEChubbyButt</Data>
         </Slider>
         <Slider name="ChubbyLegs" invert="false" default="0">
             <Data name="CBBEChubbyLegs" target="CBBE" local="true">CBBEBody.osd\CBBEChubbyLegs</Data>
@@ -199,6 +206,7 @@
             <Data name="SoftBodyVaginalCanalCBBEChubbyLegs" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEChubbyLegs</Data>
             <Data name="SoftBodyColTrunkCBBEChubbyLegs" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEChubbyLegs</Data>
             <Data name="SoftBodyColLegsCBBEChubbyLegs" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEChubbyLegs</Data>
+            <Data name="SoftBodyColThighsCBBEChubbyLegs" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEChubbyLegs</Data>
         </Slider>
         <Slider name="ChubbyWaist" invert="false" default="0">
             <Data name="CBBEChubbyWaist" target="CBBE" local="true">CBBEBody.osd\CBBEChubbyWaist</Data>
@@ -213,6 +221,7 @@
             <Data name="SoftBodyColBreastsCBBEChubbyWaist" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEChubbyWaist</Data>
             <Data name="SoftBodyColTrunkCBBEChubbyWaist" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEChubbyWaist</Data>
             <Data name="SoftBodyColLegsCBBEChubbyWaist" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEChubbyWaist</Data>
+            <Data name="SoftBodyColThighsCBBEChubbyWaist" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEChubbyWaist</Data>
             <Data name="SoftBodyColArmsCBBEChubbyWaist" target="SoftBodyColArms" local="true">SoftBodyGenitals.osd\SoftBodyColArmsCBBEChubbyWaist</Data>
         </Slider>
         <Slider name="CrotchBack" invert="false" default="0">
@@ -227,6 +236,7 @@
             <Data name="SoftBodyVaginalCanalCBBECrotchBack" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBECrotchBack</Data>
             <Data name="SoftBodyColTrunkCBBECrotchBack" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBECrotchBack</Data>
             <Data name="SoftBodyColLegsCBBECrotchBack" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBECrotchBack</Data>
+            <Data name="SoftBodyColThighsCBBECrotchBack" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBECrotchBack</Data>
         </Slider>
         <Slider name="DoubleMelon" invert="false" default="0">
             <Data name="CBBEDoubleMelon" target="CBBE" local="true">CBBEBody.osd\CBBEDoubleMelon</Data>
@@ -246,6 +256,7 @@
             <Data name="SoftBodyVaginalCanalCBBEGroin" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEGroin</Data>
             <Data name="SoftBodyColTrunkCBBEGroin" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEGroin</Data>
             <Data name="SoftBodyColLegsCBBEGroin" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEGroin</Data>
+            <Data name="SoftBodyColThighsCBBEGroin" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEGroin</Data>
         </Slider>
         <Slider name="HipBack" invert="false" default="0">
             <Data name="CBBEHipBack" target="CBBE" local="true">CBBEBody.osd\CBBEHipBack</Data>
@@ -260,6 +271,7 @@
             <Data name="SoftBodyColBreastsCBBEHipBack" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEHipBack</Data>
             <Data name="SoftBodyColTrunkCBBEHipBack" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEHipBack</Data>
             <Data name="SoftBodyColLegsCBBEHipBack" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEHipBack</Data>
+            <Data name="SoftBodyColThighsCBBEHipBack" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEHipBack</Data>
             <Data name="SoftBodyColArmsCBBEHipBack" target="SoftBodyColArms" local="true">SoftBodyGenitals.osd\SoftBodyColArmsCBBEHipBack</Data>
         </Slider>
         <Slider name="HipBone" invert="false" default="0">
@@ -274,6 +286,7 @@
             <Data name="SoftBodyVaginalCanalCBBEHipBone" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEHipBone</Data>
             <Data name="SoftBodyColTrunkCBBEHipBone" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEHipBone</Data>
             <Data name="SoftBodyColLegsCBBEHipBone" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEHipBone</Data>
+            <Data name="SoftBodyColThighsCBBEHipBone" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEHipBone</Data>
         </Slider>
         <Slider name="Hips" invert="false" default="0">
             <Data name="CBBEHips" target="CBBE" local="true">CBBEBody.osd\CBBEHips</Data>
@@ -287,6 +300,7 @@
             <Data name="SoftBodyVaginalCanalCBBEHips" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEHips</Data>
             <Data name="SoftBodyColTrunkCBBEHips" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEHips</Data>
             <Data name="SoftBodyColLegsCBBEHips" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEHips</Data>
+            <Data name="SoftBodyColThighsCBBEHips" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEHips</Data>
         </Slider>
         <Slider name="HipUpperWidth" invert="false" default="0">
             <Data name="CBBEHipUpperWidth" target="CBBE" local="true">CBBEBody.osd\CBBEHipUpperWidth</Data>
@@ -298,15 +312,18 @@
             <Data name="SoftBodyVaginalCanalCBBEHipUpperWidth" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEHipUpperWidth</Data>
             <Data name="SoftBodyColTrunkCBBEHipUpperWidth" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEHipUpperWidth</Data>
             <Data name="SoftBodyColLegsCBBEHipUpperWidth" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEHipUpperWidth</Data>
+            <Data name="SoftBodyColThighsCBBEHipUpperWidth" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEHipUpperWidth</Data>
         </Slider>
         <Slider name="KneeHeight" invert="false" default="0">
             <Data name="CBBEKneeHeight" target="CBBE" local="true">CBBEBody.osd\CBBEKneeHeight</Data>
             <Data name="SoftBodyColLegsCBBEKneeHeight" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEKneeHeight</Data>
+            <Data name="SoftBodyColThighsCBBEKneeHeight" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEKneeHeight</Data>
         </Slider>
         <Slider name="LegShape" invert="false" default="0">
             <Data name="CBBELegShape" target="CBBE" local="true">CBBEBody.osd\CBBELegShape</Data>
             <Data name="SoftBodyColTrunkCBBELegShape" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBELegShape</Data>
             <Data name="SoftBodyColLegsCBBELegShape" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBELegShape</Data>
+            <Data name="SoftBodyColThighsCBBELegShape" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBELegShape</Data>
         </Slider>
         <Slider name="LegsThin" invert="false" default="0">
             <Data name="CBBELegsThin" target="CBBE" local="true">CBBEBody.osd\CBBELegsThin</Data>
@@ -319,6 +336,7 @@
             <Data name="SoftBodyVaginalCanalCBBELegsThin" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBELegsThin</Data>
             <Data name="SoftBodyColTrunkCBBELegsThin" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBELegsThin</Data>
             <Data name="SoftBodyColLegsCBBELegsThin" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBELegsThin</Data>
+            <Data name="SoftBodyColThighsCBBELegsThin" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBELegsThin</Data>
         </Slider>
         <Slider name="NipBGone" invert="false" default="0">
             <Data name="CBBENipBGone" target="CBBE" local="true">CBBEBody.osd\CBBENipBGone</Data>
@@ -379,6 +397,7 @@
             <Data name="SoftBodyColBreastsCBBEPregnancyBelly" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEPregnancyBelly</Data>
             <Data name="SoftBodyColTrunkCBBEPregnancyBelly" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEPregnancyBelly</Data>
             <Data name="SoftBodyColLegsCBBEPregnancyBelly" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEPregnancyBelly</Data>
+            <Data name="SoftBodyColThighsCBBEPregnancyBelly" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEPregnancyBelly</Data>
             <Data name="SoftBodyColArmsCBBEPregnancyBelly" target="SoftBodyColArms" local="true">SoftBodyGenitals.osd\SoftBodyColArmsCBBEPregnancyBelly</Data>
         </Slider>
         <Slider name="PushUp" invert="false" default="0">
@@ -399,6 +418,7 @@
             <Data name="SoftBodyVaginalCanalCBBERoundAss" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBERoundAss</Data>
             <Data name="SoftBodyColTrunkCBBERoundAss" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBERoundAss</Data>
             <Data name="SoftBodyColLegsCBBERoundAss" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBERoundAss</Data>
+            <Data name="SoftBodyColThighsCBBERoundAss" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBERoundAss</Data>
         </Slider>
         <Slider name="ShoulderSmooth" invert="false" default="0">
             <Data name="CBBEShoulderSmooth" target="CBBE" local="true">CBBEBody.osd\CBBEShoulderSmooth</Data>
@@ -429,6 +449,7 @@
             <Data name="SoftBodyVaginalCanalCBBESlimThighs" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBESlimThighs</Data>
             <Data name="SoftBodyColTrunkCBBESlimThighs" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBESlimThighs</Data>
             <Data name="SoftBodyColLegsCBBESlimThighs" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBESlimThighs</Data>
+            <Data name="SoftBodyColThighsCBBESlimThighs" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBESlimThighs</Data>
         </Slider>
         <Slider name="SternumDepth" invert="false" default="0">
             <Data name="CBBESternumDepth" target="CBBE" local="true">CBBEBody.osd\CBBESternumDepth</Data>
@@ -452,6 +473,7 @@
             <Data name="SoftBodyVaginalCanalCBBEThighs" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEThighs</Data>
             <Data name="SoftBodyColTrunkCBBEThighs" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEThighs</Data>
             <Data name="SoftBodyColLegsCBBEThighs" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEThighs</Data>
+            <Data name="SoftBodyColThighsCBBEThighs" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEThighs</Data>
         </Slider>
         <Slider name="TummyTuck" invert="false" default="0">
             <Data name="CBBETummyTuck" target="CBBE" local="true">CBBEBody.osd\CBBETummyTuck</Data>
@@ -465,6 +487,7 @@
             <Data name="SoftBodyVaginalCanalCBBETummyTuck" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBETummyTuck</Data>
             <Data name="SoftBodyColTrunkCBBETummyTuck" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBETummyTuck</Data>
             <Data name="SoftBodyColLegsCBBETummyTuck" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBETummyTuck</Data>
+            <Data name="SoftBodyColThighsCBBETummyTuck" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBETummyTuck</Data>
         </Slider>
         <Slider name="VanillaFo4" invert="false" default="0">
             <Data name="CBBEVanillaFo4" target="CBBE" local="true">CBBEBody.osd\CBBEVanillaFo4</Data>
@@ -479,6 +502,7 @@
             <Data name="SoftBodyColBreastsCBBEVanillaFo4" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEVanillaFo4</Data>
             <Data name="SoftBodyColTrunkCBBEVanillaFo4" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEVanillaFo4</Data>
             <Data name="SoftBodyColLegsCBBEVanillaFo4" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEVanillaFo4</Data>
+            <Data name="SoftBodyColThighsCBBEVanillaFo4" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEVanillaFo4</Data>
             <Data name="SoftBodyColArmsCBBEVanillaFo4" target="SoftBodyColArms" local="true">SoftBodyGenitals.osd\SoftBodyColArmsCBBEVanillaFo4</Data>
         </Slider>
         <Slider name="Waist" invert="false" default="0">
@@ -494,6 +518,7 @@
             <Data name="SoftBodyColBreastsCBBEWaist" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEWaist</Data>
             <Data name="SoftBodyColTrunkCBBEWaist" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEWaist</Data>
             <Data name="SoftBodyColLegsCBBEWaist" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEWaist</Data>
+            <Data name="SoftBodyColThighsCBBEWaist" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEWaist</Data>
             <Data name="SoftBodyColArmsCBBEWaist" target="SoftBodyColArms" local="true">SoftBodyGenitals.osd\SoftBodyColArmsCBBEWaist</Data>
         </Slider>
         <Slider name="WaistHeight" invert="false" default="0">
@@ -508,6 +533,7 @@
             <Data name="SoftBodyColBreastsCBBEWaistHeight" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEWaistHeight</Data>
             <Data name="SoftBodyColTrunkCBBEWaistHeight" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEWaistHeight</Data>
             <Data name="SoftBodyColLegsCBBEWaistHeight" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEWaistHeight</Data>
+            <Data name="SoftBodyColThighsCBBEWaistHeight" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEWaistHeight</Data>
         </Slider>
         <Slider name="WideWaistLine" invert="false" default="0">
             <Data name="CBBEWideWaistLine" target="CBBE" local="true">CBBEBody.osd\CBBEWideWaistLine</Data>
@@ -519,10 +545,11 @@
             <Data name="SoftBodyColBreastsCBBEWideWaistLine" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEWideWaistLine</Data>
             <Data name="SoftBodyColTrunkCBBEWideWaistLine" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEWideWaistLine</Data>
             <Data name="SoftBodyColLegsCBBEWideWaistLine" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEWideWaistLine</Data>
+            <Data name="SoftBodyColThighsCBBEWideWaistLine" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEWideWaistLine</Data>
         </Slider>
         <Slider name="Ankles" invert="false" default="0">
             <Data name="CBBEAnkles" target="CBBE" local="true">CBBEBody.osd\CBBEAnkles</Data>
-            <Data name="SoftBodyColLegsCBBEAnkles" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEAnkles</Data>
+            <Data name="SoftBodyColThighsCBBEAnkles" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEAnkles</Data>
         </Slider>
         <Slider name="AppleCheeks" invert="false" default="0">
             <Data name="CBBEAppleCheeks" target="CBBE" local="true">CBBEBody.osd\CBBEAppleCheeks</Data>
@@ -536,6 +563,7 @@
             <Data name="SoftBodyVaginalCanalCBBEAppleCheeks" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEAppleCheeks</Data>
             <Data name="SoftBodyColTrunkCBBEAppleCheeks" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEAppleCheeks</Data>
             <Data name="SoftBodyColLegsCBBEAppleCheeks" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEAppleCheeks</Data>
+            <Data name="SoftBodyColThighsCBBEAppleCheeks" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEAppleCheeks</Data>
         </Slider>
         <Slider name="Arms" invert="false" default="0">
             <Data name="CBBEArms" target="CBBE" local="true">CBBEBody.osd\CBBEArms</Data>
@@ -585,6 +613,7 @@
             <Data name="SoftBodyColBreastsCBBEBigBelly" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEBigBelly</Data>
             <Data name="SoftBodyColTrunkCBBEBigBelly" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEBigBelly</Data>
             <Data name="SoftBodyColLegsCBBEBigBelly" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEBigBelly</Data>
+            <Data name="SoftBodyColThighsCBBEBigBelly" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEBigBelly</Data>
         </Slider>
         <Slider name="BigButt" invert="false" default="0">
             <Data name="CBBEBigButt" target="CBBE" local="true">CBBEBody.osd\CBBEBigButt</Data>
@@ -598,6 +627,7 @@
             <Data name="SoftBodyVaginalCanalCBBEBigButt" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEBigButt</Data>
             <Data name="SoftBodyColTrunkCBBEBigButt" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEBigButt</Data>
             <Data name="SoftBodyColLegsCBBEBigButt" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEBigButt</Data>
+            <Data name="SoftBodyColThighsCBBEBigButt" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEBigButt</Data>
         </Slider>
         <Slider name="BigTorso" invert="false" default="0">
             <Data name="CBBEBigTorso" target="CBBE" local="true">CBBEBody.osd\CBBEBigTorso</Data>
@@ -612,6 +642,7 @@
             <Data name="SoftBodyColBreastsCBBEBigTorso" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBEBigTorso</Data>
             <Data name="SoftBodyColTrunkCBBEBigTorso" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEBigTorso</Data>
             <Data name="SoftBodyColLegsCBBEBigTorso" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEBigTorso</Data>
+            <Data name="SoftBodyColThighsCBBEBigTorso" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEBigTorso</Data>
             <Data name="SoftBodyColArmsCBBEBigTorso" target="SoftBodyColArms" local="true">SoftBodyGenitals.osd\SoftBodyColArmsCBBEBigTorso</Data>
         </Slider>
         <Slider name="BreastCenter" invert="false" default="0">
@@ -691,6 +722,7 @@
             <Data name="SoftBodyColBreastsCBBE7B Lower" target="SoftBodyColBreasts" local="true">SoftBodyGenitals.osd\SoftBodyColBreastsCBBE7B Lower</Data>
             <Data name="SoftBodyColTrunkCBBE7B Lower" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBE7B Lower</Data>
             <Data name="SoftBodyColLegsCBBE7B Lower" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBE7B Lower</Data>
+            <Data name="SoftBodyColThighsCBBE7B Lower" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBE7B Lower</Data>
         </Slider>
         <Slider name="MuscularChest" invert="false" default="0">
             <Data name="CBBEMuscularChest" target="CBBE" local="true">CBBEBody.osd\CBBEMuscularChest</Data>
@@ -719,6 +751,7 @@
             <Data name="SoftBodyVaginalCanalCBBEMuscularButt" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEMuscularButt</Data>
             <Data name="SoftBodyColTrunkCBBEMuscularButt" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEMuscularButt</Data>
             <Data name="SoftBodyColLegsCBBEMuscularButt" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEMuscularButt</Data>
+            <Data name="SoftBodyColThighsCBBEMuscularButt" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEMuscularButt</Data>
         </Slider>
         <Slider name="MuscularLegs" invert="false" default="0">
             <Data name="CBBEMuscularLegs" target="CBBE" local="true">CBBEBody.osd\CBBEMuscularLegs</Data>
@@ -729,10 +762,11 @@
             <Data name="SoftBodyVaginalCanalCBBEMuscularLegs" target="SoftBodyVaginalCanal" local="true">SoftBodyGenitals.osd\SoftBodyVaginalCanalCBBEMuscularLegs</Data>
             <Data name="SoftBodyColTrunkCBBEMuscularLegs" target="SoftBodyColTrunk" local="true">SoftBodyGenitals.osd\SoftBodyColTrunkCBBEMuscularLegs</Data>
             <Data name="SoftBodyColLegsCBBEMuscularLegs" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEMuscularLegs</Data>
+            <Data name="SoftBodyColThighsCBBEMuscularLegs" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEMuscularLegs</Data>
         </Slider>
         <Slider name="FeetFeminine" invert="false" default="0">
             <Data name="CBBEFeetFeminine" target="CBBE" local="true">CBBEBody.osd\CBBEFeetFeminine</Data>
-            <Data name="SoftBodyColLegsCBBEFeetFeminine" target="SoftBodyColLegs" local="true">SoftBodyGenitals.osd\SoftBodyColLegsCBBEFeetFeminine</Data>
+            <Data name="SoftBodyColThighsCBBEFeetFeminine" target="SoftBodyColThighs" local="true">SoftBodyGenitals.osd\SoftBodyColThighsCBBEFeetFeminine</Data>
         </Slider>
     </SliderSet>
 </SliderSetInfo>
