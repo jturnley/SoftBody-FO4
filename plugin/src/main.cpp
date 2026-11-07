@@ -60,7 +60,7 @@ namespace
 		float canalCatch = 8.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
 		float cervixStretch = 4.0F;   // how far his tip may carry the cervix deeper
 		float anusAimBack = 0.0F;
-		bool  calmBalls = true;       // v0.40: hold his balls' swing within ballMax of where they hang, smoothed
+		bool  calmBalls = false;      // v0.40: hold his balls' swing within ballMax of where they hang, smoothed
 		float ballMax = 20.0F;        // degrees
 		float ballSmoothing = 0.08F;  // seconds
 		float ballStretch = 0.3F;     // units: the most a ball may move from where it hangs (v0.41)

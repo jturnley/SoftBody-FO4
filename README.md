@@ -216,6 +216,10 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   what is drawn over about a second, so a fling is clamped but a lasting sag is kept. Per ball, the
   log adds the share of the plugin's writes still in place 4 ms later, to show whether SMP overwrites
   them before they're drawn.
+  The v0.42 log answered that. Only about 45% of the writes were still in place, so SMP rewrites them
+  every frame and the balls flashed between our place and SMP's. A plugin can't hold them, so since
+  v0.43 `bCalmBalls` is off by default. A real fix belongs in A-Body's own physics XML (its ball
+  springs), which needs its author's permission to ship.
 - **The penis bent through the opening** (before v0.31). Every 4 ms the plugin bends his penis so his line runs
   through the centre of the opening in use, by at most `fBendMax` (20°), following over
   `fBendSmoothing`. The bend is split evenly between his shaft's first two joints, `Penis_02_Offset`
