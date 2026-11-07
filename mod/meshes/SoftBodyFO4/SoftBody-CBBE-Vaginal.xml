@@ -912,8 +912,8 @@
     <margin>0.3</margin>
     <penetration>0.8</penetration>
     <shared>public</shared>
-    <tag>SB_ColThigh</tag>
-    <no-collide-with-tag>SB_ColThigh</no-collide-with-tag>
+    <tag>SB_Col</tag>
+    <no-collide-with-tag>SB_Col</no-collide-with-tag>
     <no-collide-with-tag>SB_Body</no-collide-with-tag>
     <no-collide-with-tag>SB_Hands</no-collide-with-tag>
     <no-collide-with-tag>SB_Vagina</no-collide-with-tag>

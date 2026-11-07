@@ -63,6 +63,7 @@ namespace
 		bool  calmBalls = true;       // v0.40: hold his balls' swing within ballMax of where they hang, smoothed
 		float ballMax = 20.0F;        // degrees
 		float ballSmoothing = 0.08F;  // seconds
+		float ballStretch = 0.3F;     // units: the most a ball may move from where it hangs (v0.41)
 		float snakeMax = 60.0F;       // degrees: the most her canal may turn from his line and still be followed     // the anus's aim moved this far toward her back (onto its hole, as seen in game)
 		float uterusSwell = 0.6F;     // how much wider the uterus grows when full (0.6: by 60%)
 
@@ -100,6 +101,7 @@ namespace
 			calmBalls = i("bCalmBalls", 1) != 0;
 			ballMax = f("fBallMax", ballMax);
 			ballSmoothing = f("fBallSmoothing", ballSmoothing);
+			ballStretch = f("fBallStretch", ballStretch);
 			bendMax = std::clamp(f("fBendMax", bendMax), 0.0F, 45.0F);
 			bendSmoothing = std::max(0.0F, f("fBendSmoothing", bendSmoothing));
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
@@ -366,7 +368,7 @@ namespace
 		for (const auto* name : kPenis) {
 			header += std::format(",{0}.x,{0}.y,{0}.z", name);
 		}
-		return header + ",cervixPush,ballsSim,ballsShown,ballLSim,ballLShown,ballRSim,ballRShown";
+		return header + ",cervixPush,ballsTurn,ballsMove,ballLTurn,ballLMove,ballRTurn,ballRMove";
 	}
 
 	// The nodes read, held (NiPointer) from scene start to scene end so a read off the main thread can't meet a freed
@@ -651,17 +653,18 @@ namespace
 		bend.path.clear();
 	}
 
-	// v0.40: his balls calmed. A-Body's ball springs (stiffness and damping 999, bounce 0.4) fling them, more so when the
-	// aligner moves him. Every 4 ms each ball bone's turn from where it hangs (the turn SMP gave it, from the hang its
-	// first frame showed, which then drifts after it over a couple of seconds) is held within fBallMax and eased in
-	// over fBallSmoothing. Only what is drawn changes: SMP keeps simulating, and its next frame is read again
+	// v0.40/v0.41: his balls calmed. A-Body's ball springs (stiffness and damping 999, bounce 0.4) fling and stretch
+	// them. SMP sets their world transforms and leaves their local ones at the NIF's (v0.40 watched the local ones and
+	// saw nothing), so each 4 ms each ball bone's place in its parent, from its world one, is held within fBallMax
+	// (turn) and fBallStretch (move) of its local (rest) one, eased in over fBallSmoothing, and written back to its world
+	// transform. Parents first, so a child follows its parent as drawn. SMP keeps simulating; only what is drawn changes
 	struct Ball
 	{
 		const char*                   name;
 		RE::NiPointer<RE::NiAVObject> node;
-		RE::NiMatrix3                 hang;           // where it hangs (drifts slowly after the simulation)
-		RE::NiMatrix3                 written;
-		V                             sim, shown;     // SMP's turn from the hang, and the one drawn
+		RE::NiTransform               written;        // the world transform last written
+		V                             simTurn, simMove;   // SMP's, from the rest
+		V                             turn, move;         // drawn, from the rest
 		bool                          started{ false };
 	};
 	Ball balls[3]{ { "Penis_Balls_01_SMP" }, { "Penis_Ball_SMP.L" }, { "Penis_Ball_SMP.R" } };
@@ -671,8 +674,26 @@ namespace
 		for (auto& b : balls) {
 			b.node.reset();
 			b.started = false;
-			b.sim = b.shown = V(0, 0, 0);
+			b.simTurn = b.simMove = b.turn = b.move = V(0, 0, 0);
 		}
+	}
+
+	RE::NiMatrix3 Times(const RE::NiMatrix3& a, const RE::NiMatrix3& b)
+	{
+		return TimesTransposed(a, Transposed(b));
+	}
+
+	V Apply(const RE::NiMatrix3& m, const V& v)
+	{
+		return V(m.entry[0][0] * v.x + m.entry[0][1] * v.y + m.entry[0][2] * v.z,
+			m.entry[1][0] * v.x + m.entry[1][1] * v.y + m.entry[1][2] * v.z,
+			m.entry[2][0] * v.x + m.entry[2][1] * v.y + m.entry[2][2] * v.z);
+	}
+
+	V Clamped(const V& v, float a_most)
+	{
+		const float l = Len(v);
+		return l > a_most ? Mul(v, a_most / l) : v;
 	}
 
 	// under heldLock, from DriveRims
@@ -680,34 +701,44 @@ namespace
 	{
 		const float most = Settings::ballMax * 0.0174533F;
 		const float follow = Settings::ballSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::ballSmoothing) : 1.0F;
-		const float drift = 1.0F - std::exp(-a_dt / 2.0F);
-		for (auto& b : balls) {
+		RE::NiAVObject* nodes[3]{};
+		for (int i = 0; i < 3; ++i) {               // SMP's places, before any is rewritten
+			auto& b = balls[i];
 			auto* node = Settings::calmBalls ? Held("him", b.name) : nullptr;
-			if (!node) {
+			if (!node || !node->parent) {
 				b.started = false;
 				continue;
 			}
 			if (!b.started || b.node.get() != node) {
 				b.node = RE::NiPointer<RE::NiAVObject>(node);
-				b.hang = b.written = node->local.rotate;
-				b.sim = b.shown = V(0, 0, 0);
+				b.simTurn = b.simMove = b.turn = b.move = V(0, 0, 0);
+				b.written = RE::NiTransform{};
 				b.started = true;
 			}
-			if (!Same(node->local.rotate, b.written)) {      // SMP wrote a new frame
-				b.sim = TurnOf(TimesTransposed(node->local.rotate, b.hang));
+			nodes[i] = node;
+			if (!SameTransform(node->world, b.written)) {      // SMP set it since
+				const auto& pw = node->parent->world;
+				const auto  rel = TimesTransposed(Transposed(pw.rotate), Transposed(node->world.rotate));  // parent^T * world
+				const V     at = Mul(Apply(Transposed(pw.rotate), Sub(node->world.translate, pw.translate)),
+                    pw.scale > 1e-6F ? 1.0F / pw.scale : 1.0F);
+				b.simTurn = TurnOf(TimesTransposed(rel, node->local.rotate));
+				b.simMove = Sub(at, node->local.translate);
 			}
-			V target = b.sim;
-			if (const float a = Len(target); a > most) {
-				target = Mul(target, most / a);
+		}
+		for (int i = 0; i < 3; ++i) {               // drawn: held, eased, and composed on the parent as drawn
+			auto& b = balls[i];
+			auto* node = nodes[i];
+			if (!node) {
+				continue;
 			}
-			b.shown = Add(b.shown, Mul(Sub(target, b.shown), follow));
-			// the hang drifts after what is shown, so a lasting sag (gravity, a pose) is kept
-			const V settle = Mul(b.shown, drift);
-			b.hang = TimesTransposed(AxisAngle(settle), Transposed(b.hang));
-			b.shown = Sub(b.shown, settle);
-			b.sim = Sub(b.sim, settle);
-			b.written = TimesTransposed(AxisAngle(b.shown), Transposed(b.hang));
-			node->local.rotate = b.written;
+			b.turn = Add(b.turn, Mul(Sub(Clamped(b.simTurn, most), b.turn), follow));
+			b.move = Add(b.move, Mul(Sub(Clamped(b.simMove, Settings::ballStretch), b.move), follow));
+			const auto& pw = node->parent->world;
+			RE::NiTransform w = node->world;
+			w.rotate = Times(pw.rotate, Times(AxisAngle(b.turn), node->local.rotate));
+			w.translate = Add(pw.translate, Mul(Apply(pw.rotate, Add(node->local.translate, b.move)), pw.scale));
+			node->world = w;
+			b.written = w;
 		}
 	}
 
@@ -1357,8 +1388,8 @@ namespace
 			}
 		}
 		line += std::format(",{:.2f}", cervixPush.load());
-		for (const auto& ball : balls) {      // degrees from where it hangs: SMP's, and drawn
-			line += ball.started ? std::format(",{:.1f},{:.1f}", Len(ball.sim) * 57.2958F, Len(ball.shown) * 57.2958F) : ",,"s;
+		for (const auto& ball : balls) {      // SMP's, from where it hangs: degrees, units
+			line += ball.started ? std::format(",{:.1f},{:.2f}", Len(ball.simTurn) * 57.2958F, Len(ball.simMove)) : ",,"s;
 		}
 		REX::INFO("{}", line);
 	}

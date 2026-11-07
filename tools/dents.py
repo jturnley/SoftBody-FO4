@@ -123,13 +123,14 @@ def kmeans(points, weights, k, iterations=20):
     return centres
 
 
-def add_dents(nif, shape, region, count, prefix, donors=None):
+def add_dents(nif, shape, region, count, prefix, donors=None, core=1.0):
     """Split `region` (a skin bone of `shape`) into `count` dent bones.
 
     donors: {skin bone: fraction} - share of that bone's weight moved onto the
     dent bones, scaled by how strongly the vertex belongs to the region. CBBE
     breasts are at most ~46% LBreast_skin and the rest Chest_skin, so without
-    this a dent could only move the skin half as far as the bone.
+    this a dent could only move the skin half as far as the bone. core: the take goes with (weight / peak) ** core, so
+    a higher one keeps it to the region's middle (v0.41: the butt's took the gluteal fold too, which creased).
     Returns the new bone names and the neighbour pairs to spring together.
     """
     donors = donors or {}
@@ -164,7 +165,7 @@ def add_dents(nif, shape, region, count, prefix, donors=None):
         influences = dict(skin.influences(v))
         moved = w
         for d, f in donor_ix.items():
-            take = influences.get(d, 0) * f * (w / peak)
+            take = influences.get(d, 0) * f * (w / peak) ** core
             if take:
                 influences[d] -= take
                 moved += take

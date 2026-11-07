@@ -207,6 +207,10 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   `fBallSmoothing` (0.08 s). The hang drifts after what is shown over about 2 s, so a lasting sag stays.
   SMP keeps simulating, and only what is drawn changes. A-Body's files are untouched. `bCalmBalls=0`
   turns it off. The log samples carry each ball's swing, SMP's and the one drawn, in degrees.
+  v0.40 did nothing: SMP sets the balls' world transforms and leaves their local ones at the NIF's. Since
+  v0.41 each ball's place in its parent is read from its world transform, held within `fBallMax` (turn)
+  and `fBallStretch` (0.3, move) of its rest, and written back to its world transform, parents first.
+  The log gives SMP's turn (degrees) and move (units) per ball.
 - **The penis bent through the opening** (before v0.31). Every 4 ms the plugin bends his penis so his line runs
   through the centre of the opening in use, by at most `fBendMax` (20°), following over
   `fBendSmoothing`. The bend is split evenly between his shaft's first two joints, `Penis_02_Offset`
@@ -288,6 +292,10 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
     belly. The butt's most is now 0.74 (was 0.49) and the belly's 0.61 (was 0.33).
   - **The log samples carry the butt and belly bones and their dents,** to show whether his body moves
     them.
+  v0.41 turned the thigh collision off again (`BODY_COL_THIGH_TAG`): in doggy the thighs shoved the belly
+  1.7 units, and one dent 4.6, even in the idle, and still went through it. It also kept the butt's and
+  belly's extra dent weight in their middles (`DENTS`' third value, `core`), because at the gluteal fold
+  it had creased.
 - **Two-sided genitals.** The genitals' material draws both sides of each triangle. Seen with the camera inside
   her, the one-sided canal showed only its far half, as if it wrapped half the shaft.
 - **The anus ring is centred on the anus.** GT's anus opening is a short slit, and the ring sat 0.17

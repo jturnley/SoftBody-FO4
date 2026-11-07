@@ -70,9 +70,10 @@ DENTS = {
     # v0.39: CBBE leaves the butt and belly mostly on the pelvis and spine (a median 17% on their own bones), so a
     # push moved the skin a sixth as far as the bones: as the breasts' Chest_skin, part of it rides the dents (none from
     # the thighs, whose bend the skin must keep following)
-    "LButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5, "Spine1_Rear_skin": 0.3}),
-    "RButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5, "Spine1_Rear_skin": 0.3}),
-    "Belly_skin": (9, {"Spine1_skin": 0.5, "Spine2_skin": 0.3}),
+    # v0.41: only in their middles (the third value, see dents.add_dents' core): at the gluteal fold it creased
+    "LButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5, "Spine1_Rear_skin": 0.3}, 3.0),
+    "RButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5, "Spine1_Rear_skin": 0.3}, 3.0),
+    "Belly_skin": (9, {"Spine1_skin": 0.5, "Spine2_skin": 0.3}, 2.0),
 }
 
 
@@ -86,9 +87,9 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
     for bone in physics_bones:
         nif.split_physics_bone(bone, PHYSICS_SUFFIX)
     made = {}
-    for bone, (count, donors) in (dents or {}).items():
+    for bone, (count, donors, *core) in (dents or {}).items():
         region = bone + PHYSICS_SUFFIX
-        made[bone] = add_dents(nif, shape, region, count, region, donors)
+        made[bone] = add_dents(nif, shape, region, count, region, donors, *core)
         print("  %s: %d dent bones, %d links" % (region, len(made[bone][0]), len(made[bone][1])))
     # after the split and the dents: the genitals' seam copies CBBE's FINAL weights, or the two sides of the seam
     # follow different bones and it tears open under physics
@@ -161,7 +162,9 @@ BODY_COL_MARGIN, BODY_COL_PENETRATION = 0.3, 0.8
 BODY_COL_NO_COLLIDE = (BODY_COL_TAG, "SB_Body", "SB_Hands", "SB_Vagina", "SB_Anus", "Balls")
 # v0.39: her thighs, clear of where they join her (genitals.BODY_COL_THIGH), have their own tag and meet her other
 # collision shapes (the belly and butt give way); not each other
-BODY_COL_THIGH_TAG = "SB_ColThigh"
+# v0.41: off (the same tag as the rest): in doggy the thighs shoved the belly 1.7 (a dent 4.6) even idle, and still
+# went through it. Set it back to "SB_ColThigh" to try again
+BODY_COL_THIGH_TAG = BODY_COL_TAG
 
 
 def body_collision_xml(names):
