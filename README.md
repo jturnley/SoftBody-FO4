@@ -244,6 +244,12 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   the painted anus sits on the hole (`ANUS_PAINT_SHIFT`, `ANUS_PAINT_R` in `tools/genitals.py`).
   In game he still met her forward of the hole, so `fAnusAimBack` (1.0) moves the anus's aim toward
   her back, across the anal canal.
+- The anus is denser, with a folded pucker (v0.33; the method follows UBE 2.0's body, by Johnny
+  Bungalow, studied for ideas only, nothing taken from it). GT's skin there had ~0.17-long triangle
+  edges. Within 1.9 of the anus it is now subdivided once (`ANUS_DENSE`; never on the seam with the
+  anal canal, and conforming, so there are no cracks). That gives ~0.09 edges, about UBE's density.
+  Ten radial folds (`ANUS_FOLDS`, 0.05 deep, `ANUS_FOLD_R`) converge on the closed hole. Needs a
+  BodySlide rebuild.
 - **Two-sided genitals.** The genitals' material draws both sides of each triangle. Seen with the camera inside
   her, the one-sided canal showed only its far half, as if it wrapped half the shaft.
 - **The anus ring is centred on the anus.** GT's anus opening is a short slit, and the ring sat 0.17

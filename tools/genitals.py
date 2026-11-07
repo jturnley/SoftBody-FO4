@@ -50,6 +50,11 @@ SAME_UV = 0.05          # corner UVs closer than this are one vertex (CBBE's rea
 OPENING_PULL = 0.8      # at the slit and anus edges the skin's genital-bone share goes this much of the way to 1 ...
 OPENING_FADE = 1.25     # ... fading out over this distance from them: real outer lips barely move round a shaft (v0.11
 # spread it over the whole patch). Skin GT left off the genital bones takes the mix of its nearest point on the edge.
+ANUS_DENSE = (1.9,)      # v0.33: the skin round the anus is subdivided once within this of its centre (GT's edges are
+                         # ~0.17 there, UBE's ~0.1; fine folds need it). A second level made 0.04 edges and slivers
+ANUS_FOLDS = 10          # radial folds of the pucker, converging on the (closed) hole
+ANUS_FOLD_DEPTH = 0.05   # their depth either way
+ANUS_FOLD_R = (0.22, 0.5, 1.4)  # they rise from the hole's edge between the first two radii and fade out by the third
 ANUS_PULL = 0.85        # the anal canal's share on the anus bones goes this much of the way to 1
 # The anal canal. GT's is a pocket 2.5 deep and 1 across, moved only by the anus ring; a penis goes 7 deep. Past
 # ANAL_KEEP (its depth from the anus ring, which stays as GT has it) it is stretched into a tube ANAL_DEPTH deep and
@@ -606,6 +611,62 @@ def vaginal_tube(P, mouth, ax, front):
     return out, S, ax2, float(start)
 
 
+def refine(P, tris, inside, ids, weights):
+    """One conforming subdivision of the triangles whose centroid `inside` picks (a mask): their edges are split, but
+    never an edge on the mesh's boundary (the anus seam with GT's canal must stay as it is), and a neighbour that shares
+    a split edge is split to match, so there are no T-junctions. New points take Loop's edge rule (3/8 each end, 1/8
+    each opposite corner), so the surface stays curved rather than faceted; old points stay where they are. ids: welded
+    ids of P (twins on GT's UV seams count as one point); weights: a {bone: weight} per point, extended to the new
+    points by the same rule. Returns the points, triangles and weights"""
+    key = lambda a, b: (min(ids[a], ids[b]), max(ids[a], ids[b]))
+    faces = {}
+    for t in tris:
+        for a, b, c in ((t[0], t[1], t[2]), (t[1], t[2], t[0]), (t[2], t[0], t[1])):
+            faces.setdefault(key(a, b), []).append(c)
+    split = set()
+    for t, pick in zip(tris, inside):
+        if pick:
+            for a, b in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])):
+                if len(faces[key(a, b)]) == 2:
+                    split.add(key(a, b))
+    P = list(P)
+    weights = list(weights)
+    mid = {}
+    def m(a, b):
+        k = (min(a, b), max(a, b))
+        if k not in mid:
+            c, d = faces[key(a, b)]
+            mid[k] = len(P)
+            P.append(0.375 * (P[a] + P[b]) + 0.125 * (P[c] + P[d]))
+            w = {}
+            for v, f in ((a, 0.375), (b, 0.375), (c, 0.125), (d, 0.125)):
+                for bone, x in weights[v].items():
+                    w[bone] = w.get(bone, 0) + f * x
+            weights.append(w)
+        return mid[k]
+    out = []
+    for t in tris:
+        a, b, c = t
+        s = [key(a, b) in split, key(b, c) in split, key(c, a) in split]
+        n = sum(s)
+        if n == 0:
+            out.append((a, b, c))
+        elif n == 3:
+            ab, bc, ca = m(a, b), m(b, c), m(c, a)
+            out += [(a, ab, ca), (ab, b, bc), (ca, bc, c), (ab, bc, ca)]
+        else:
+            while not s[0] or (n == 2 and not s[1]):      # rotate: the split edges first
+                a, b, c = b, c, a
+                s = s[1:] + s[:1]
+            if n == 1:
+                ab = m(a, b)
+                out += [(a, ab, c), (ab, b, c)]
+            else:
+                ab, bc = m(a, b), m(b, c)
+                out += [(ab, b, bc), (a, ab, c), (ab, bc, c)]
+    return np.array(P), np.array(out), weights
+
+
 def smoothstep(x):
     x = np.clip(x, 0, 1)
     return x * x * (3 - 2 * x)
@@ -868,6 +929,13 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     patch_P = T(G[pverts])
     patch_tris = np.vectorize(remap.get)(ptris)
     patch_ids = weld(patch_P)
+    patch_gtw = [body.weights[v] for v in pverts]
+    # v0.33: denser round the anus (ANUS_DENSE), as UBE's body is there, so its pucker can have fine folds
+    for reach in ANUS_DENSE:
+        cent_p = patch_P[patch_tris].mean(1)
+        patch_P, patch_tris, patch_gtw = refine(patch_P, patch_tris, np.linalg.norm(cent_p - anus_fo, axis=1) < reach,
+                                                patch_ids, patch_gtw)
+        patch_ids = weld(patch_P)
     loops = boundary_loops(patch_tris, patch_ids)
     if len(loops) != 3:
         raise ValueError("the patch should have three edges (outside, slit, anus), found %d" % len(loops))
@@ -899,6 +967,24 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
             h = (patch_P[k] - q) @ nrm
             if h > 0:
                 patch_P[k] -= f * h * nrm
+    # the pucker's radial folds (ANUS_FOLDS), into and out of her along the skin's normal at the anus; none on the seam
+    # with the canal (the hole's edge) or past ANUS_FOLD_R[2]
+    _, t, bary = closest_on_triangles([anus_fo], full.P, full.tris, ctree, cent)[0]
+    a_n = np.asarray(bary) @ full.N[full.tris[t]]
+    a_n /= np.linalg.norm(a_n)
+    a_u = (front_fo - anus_fo) - ((front_fo - anus_fo) @ a_n) * a_n
+    a_u /= np.linalg.norm(a_u)
+    a_l = np.cross(a_n, a_u)
+    for k in range(len(patch_P)):
+        off = patch_P[k] - anus_fo
+        flat = off - (off @ a_n) * a_n
+        r = np.linalg.norm(flat)
+        if r >= ANUS_FOLD_R[2] or opening_dist[k] < 0.05:
+            continue
+        rise = smoothstep((r - ANUS_FOLD_R[0]) / (ANUS_FOLD_R[1] - ANUS_FOLD_R[0]))
+        fade = 1 - smoothstep((r - ANUS_FOLD_R[1]) / (ANUS_FOLD_R[2] - ANUS_FOLD_R[1]))
+        theta = math.atan2(flat @ a_l, flat @ a_u)
+        patch_P[k] += ANUS_FOLD_DEPTH * rise * fade * math.cos(ANUS_FOLDS * theta) * a_n
     blend_normals = {}
     for k in np.nonzero(ease > 0)[0]:
         _, t, bary = closest_on_triangles([patch_P[k]], full.P, full.tris, ctree, cent)[0]
@@ -1155,7 +1241,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     _, vul_body_w, vul_src = surface(vulva_P)
     for k, v in enumerate(hole_v):           # the seam follows CBBE's sliders exactly
         vul_src[len(patch_P) + k] = ((v,), (1.0,))
-    gt_body_w = [body.weights[v] for v in pverts] + [None] * len(hole_v)
+    gt_body_w = patch_gtw + [None] * len(hole_v)
     vul_w = []
     for k in range(len(vulva_P)):
         if k >= len(patch_P):
@@ -1178,7 +1264,7 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         # easing to none at the outer seam; GT's mix between its genital bones is kept, and skin GT left off them
         # takes its nearest edge point's mix
         pull = OPENING_PULL * smooth_fade(opening_dist[k], OPENING_FADE)
-        mix = gw if g > 0.05 else {b: x for b, x in body.weights[pverts[inner_v[opening_near[k]]]].items() if is_genital(b)}
+        mix = gw if g > 0.05 else {b: x for b, x in patch_gtw[inner_v[opening_near[k]]].items() if is_genital(b)}
         mt = sum(mix.values())
         if pull > 0 and mt > 0:
             w = {b: x * (1 - pull) for b, x in w.items()}
