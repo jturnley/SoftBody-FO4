@@ -60,6 +60,9 @@ namespace
 		float canalCatch = 8.0F;      // how far past his thickness his line may pass a canal ring's centre and still open it
 		float cervixStretch = 4.0F;   // how far his tip may carry the cervix deeper
 		float anusAimBack = 0.0F;
+		bool  calmBalls = true;       // v0.40: hold his balls' swing within ballMax of where they hang, smoothed
+		float ballMax = 20.0F;        // degrees
+		float ballSmoothing = 0.08F;  // seconds
 		float snakeMax = 60.0F;       // degrees: the most her canal may turn from his line and still be followed     // the anus's aim moved this far toward her back (onto its hole, as seen in game)
 		float uterusSwell = 0.6F;     // how much wider the uterus grows when full (0.6: by 60%)
 
@@ -94,6 +97,9 @@ namespace
 			uterusSwell = f("fUterusSwell", uterusSwell);
 			anusAimBack = f("fAnusAimBack", anusAimBack);
 			snakeMax = f("fSnakeMax", snakeMax);
+			calmBalls = i("bCalmBalls", 1) != 0;
+			ballMax = f("fBallMax", ballMax);
+			ballSmoothing = f("fBallSmoothing", ballSmoothing);
 			bendMax = std::clamp(f("fBendMax", bendMax), 0.0F, 45.0F);
 			bendSmoothing = std::max(0.0F, f("fBendSmoothing", bendSmoothing));
 			penisTipLength = std::max(0.1F, f("fPenisTipLength", penisTipLength));
@@ -360,7 +366,7 @@ namespace
 		for (const auto* name : kPenis) {
 			header += std::format(",{0}.x,{0}.y,{0}.z", name);
 		}
-		return header + ",cervixPush";
+		return header + ",cervixPush,ballsSim,ballsShown,ballLSim,ballLShown,ballRSim,ballRShown";
 	}
 
 	// The nodes read, held (NiPointer) from scene start to scene end so a read off the main thread can't meet a freed
@@ -579,6 +585,25 @@ namespace
 		return m;
 	}
 
+	RE::NiMatrix3 Transposed(const RE::NiMatrix3& a)
+	{
+		RE::NiMatrix3 m;
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+				m.entry[i][j] = a.entry[j][i];
+		return m;
+	}
+
+	// the turn (axis times angle) a rotation matrix makes: AxisAngle's inverse
+	V TurnOf(const RE::NiMatrix3& m)
+	{
+		const float c = std::clamp((m.entry[0][0] + m.entry[1][1] + m.entry[2][2] - 1.0F) * 0.5F, -1.0F, 1.0F);
+		const float angle = std::acos(c);
+		const V     k(m.entry[2][1] - m.entry[1][2], m.entry[0][2] - m.entry[2][0], m.entry[1][0] - m.entry[0][1]);
+		const float s = Len(k);
+		return angle < 1e-5F || s < 1e-7F ? V(0, 0, 0) : Mul(k, angle / s);
+	}
+
 	// a world direction in a node's own frame (no scale)
 	V DirIn(const RE::NiAVObject* a_node, const V& a_world)
 	{
@@ -624,6 +649,66 @@ namespace
 		bend.started = false;
 		bend.weight = 0;
 		bend.path.clear();
+	}
+
+	// v0.40: his balls calmed. A-Body's ball springs (stiffness and damping 999, bounce 0.4) fling them, more so when the
+	// aligner moves him. Every 4 ms each ball bone's turn from where it hangs (the turn SMP gave it, from the hang its
+	// first frame showed, which then drifts after it over a couple of seconds) is held within fBallMax and eased in
+	// over fBallSmoothing. Only what is drawn changes: SMP keeps simulating, and its next frame is read again
+	struct Ball
+	{
+		const char*                   name;
+		RE::NiPointer<RE::NiAVObject> node;
+		RE::NiMatrix3                 hang;           // where it hangs (drifts slowly after the simulation)
+		RE::NiMatrix3                 written;
+		V                             sim, shown;     // SMP's turn from the hang, and the one drawn
+		bool                          started{ false };
+	};
+	Ball balls[3]{ { "Penis_Balls_01_SMP" }, { "Penis_Ball_SMP.L" }, { "Penis_Ball_SMP.R" } };
+
+	void ReleaseBalls()
+	{
+		for (auto& b : balls) {
+			b.node.reset();
+			b.started = false;
+			b.sim = b.shown = V(0, 0, 0);
+		}
+	}
+
+	// under heldLock, from DriveRims
+	void CalmBalls(float a_dt)
+	{
+		const float most = Settings::ballMax * 0.0174533F;
+		const float follow = Settings::ballSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::ballSmoothing) : 1.0F;
+		const float drift = 1.0F - std::exp(-a_dt / 2.0F);
+		for (auto& b : balls) {
+			auto* node = Settings::calmBalls ? Held("him", b.name) : nullptr;
+			if (!node) {
+				b.started = false;
+				continue;
+			}
+			if (!b.started || b.node.get() != node) {
+				b.node = RE::NiPointer<RE::NiAVObject>(node);
+				b.hang = b.written = node->local.rotate;
+				b.sim = b.shown = V(0, 0, 0);
+				b.started = true;
+			}
+			if (!Same(node->local.rotate, b.written)) {      // SMP wrote a new frame
+				b.sim = TurnOf(TimesTransposed(node->local.rotate, b.hang));
+			}
+			V target = b.sim;
+			if (const float a = Len(target); a > most) {
+				target = Mul(target, most / a);
+			}
+			b.shown = Add(b.shown, Mul(Sub(target, b.shown), follow));
+			// the hang drifts after what is shown, so a lasting sag (gravity, a pose) is kept
+			const V settle = Mul(b.shown, drift);
+			b.hang = TimesTransposed(AxisAngle(settle), Transposed(b.hang));
+			b.shown = Sub(b.shown, settle);
+			b.sim = Sub(b.sim, settle);
+			b.written = TimesTransposed(AxisAngle(b.shown), Transposed(b.hang));
+			node->local.rotate = b.written;
+		}
 	}
 
 	// v0.35: the snake path made a smooth curve. As a polyline it turned all at once at the entrance and at each canal
@@ -1161,6 +1246,7 @@ namespace
 			}
 		}
 		BendPenis(a_dt, penis, b, u, length, paths, act);
+		CalmBalls(a_dt);
 	}
 
 	// On the main thread: find her and him in the thread and hold their nodes
@@ -1201,6 +1287,9 @@ namespace
 			for (const auto& l : bend.leaves) {
 				hold("him", him, l.name);
 			}
+			for (const auto& ball : balls) {
+				hold("him", him, ball.name);
+			}
 			if (her) {
 				for (const auto& r : Rims()) {
 					HoldRim(her, r);
@@ -1226,6 +1315,7 @@ namespace
 		}
 		driven.clear();
 		ReleaseBend();
+		ReleaseBalls();
 		uterusFill = 0;
 		osOpen = 0;
 		herFormID = 0;
@@ -1267,6 +1357,9 @@ namespace
 			}
 		}
 		line += std::format(",{:.2f}", cervixPush.load());
+		for (const auto& ball : balls) {      // degrees from where it hangs: SMP's, and drawn
+			line += ball.started ? std::format(",{:.1f},{:.1f}", Len(ball.sim) * 57.2958F, Len(ball.shown) * 57.2958F) : ",,"s;
+		}
 		REX::INFO("{}", line);
 	}
 

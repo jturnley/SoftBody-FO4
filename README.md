@@ -201,6 +201,12 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   from his base, so the aligner moving him still moves it freely. In doggy, single bad frames (one 25 ms
   sample) had folded his shaft to 150° and stretched it from 11 to 18. The log notes each jump it holds
   back.
+- **His balls are calmed** (v0.40). A-Body's ball springs (stiffness and damping 999, bounce 0.4) fling
+  them, more so when the aligner moves him. Every 4 ms the plugin holds each ball bone
+  (`Penis_Balls_01_SMP`, `Penis_Ball_SMP.L/R`) within `fBallMax` (20°) of where it hangs, eased in over
+  `fBallSmoothing` (0.08 s). The hang drifts after what is shown over about 2 s, so a lasting sag stays.
+  SMP keeps simulating, and only what is drawn changes. A-Body's files are untouched. `bCalmBalls=0`
+  turns it off. The log samples carry each ball's swing, SMP's and the one drawn, in degrees.
 - **The penis bent through the opening** (before v0.31). Every 4 ms the plugin bends his penis so his line runs
   through the centre of the opening in use, by at most `fBendMax` (20°), following over
   `fBendSmoothing`. The bend is split evenly between his shaft's first two joints, `Penis_02_Offset`
