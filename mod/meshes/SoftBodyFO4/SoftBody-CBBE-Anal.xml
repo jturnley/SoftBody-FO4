@@ -120,10 +120,11 @@
   <!-- Dent bones: small, light, held to their region bone by a short stiff
        spring, so a hand dents the skin around the contact. -->
   <bone-default name="dent">
-    <!-- light enough that a dozen per breast don't outweigh the region bone -->
-    <mass>0.1</mass>
-    <inertia x="0.1" y="0.1" z="0.1"/>
-    <linearDamping>0.6</linearDamping>
+    <!-- light enough that a dozen per breast don't outweigh the region bone; v0.42: lighter still (0.1 -> 0.03) and
+         stiffer sprung, so a jump doesn't swing them (they dent under contact, which mass doesn't change) -->
+    <mass>0.03</mass>
+    <inertia x="0.03" y="0.03" z="0.03"/>
+    <linearDamping>0.9</linearDamping>
     <angularDamping>0.9</angularDamping>
     <gravity-factor>0</gravity-factor>
     <friction>0.4</friction>
@@ -142,9 +143,9 @@
     <linearUpperLimit x="2" y="2" z="2"/>
     <angularLowerLimit x="0" y="0" z="0"/>
     <angularUpperLimit x="0" y="0" z="0"/>
-    <linearStiffness x="300" y="300" z="300"/>
+    <linearStiffness x="800" y="800" z="800"/>
     <angularStiffness x="0" y="0" z="0"/>
-    <linearDamping x="4" y="4" z="4"/>
+    <linearDamping x="10" y="10" z="10"/>
     <angularDamping x="0" y="0" z="0"/>
     <linearEquilibrium x="0" y="0" z="0"/>
     <angularEquilibrium x="0" y="0" z="0"/>
@@ -163,9 +164,9 @@
     <linearUpperLimit x="1.5" y="1.5" z="1.5"/>
     <angularLowerLimit x="0" y="0" z="0"/>
     <angularUpperLimit x="0" y="0" z="0"/>
-    <linearStiffness x="150" y="150" z="150"/>
+    <linearStiffness x="300" y="300" z="300"/>
     <angularStiffness x="0" y="0" z="0"/>
-    <linearDamping x="3" y="3" z="3"/>
+    <linearDamping x="6" y="6" z="6"/>
     <angularDamping x="0" y="0" z="0"/>
     <linearEquilibrium x="0" y="0" z="0"/>
     <angularEquilibrium x="0" y="0" z="0"/>

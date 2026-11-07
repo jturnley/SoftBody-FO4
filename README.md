@@ -211,6 +211,11 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   v0.41 each ball's place in its parent is read from its world transform, held within `fBallMax` (turn)
   and `fBallStretch` (0.3, move) of its rest, and written back to its world transform, parents first.
   The log gives SMP's turn (degrees) and move (units) per ball.
+  In v0.41's log the NIF's rest was about 150° and 4 units off where SMP really holds the balls (flings
+  reached 180° and 70 units). Since v0.42 the hang is SMP's own, from its first frame, drifting after
+  what is drawn over about a second, so a fling is clamped but a lasting sag is kept. Per ball, the
+  log adds the share of the plugin's writes still in place 4 ms later, to show whether SMP overwrites
+  them before they're drawn.
 - **The penis bent through the opening** (before v0.31). Every 4 ms the plugin bends his penis so his line runs
   through the centre of the opening in use, by at most `fBendMax` (20°), following over
   `fBendSmoothing`. The bend is split evenly between his shaft's first two joints, `Penis_02_Offset`
@@ -296,6 +301,13 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   1.7 units, and one dent 4.6, even in the idle, and still went through it. It also kept the butt's and
   belly's extra dent weight in their middles (`DENTS`' third value, `core`), because at the gluteal fold
   it had creased.
+  v0.42 calmed the bounce:
+  - **Lighter, stiffer dents.** Dent mass is 0.03 (was 0.1) and `dentSpring` is 800 with damping 10
+    (was 300 and 4). `dentLink` is 300 and 6. A jump hardly swings the dents, and contact still dents
+    them, since mass doesn't change that.
+  - **Nothing taken from the spine.** Skin taken off the spine stopped following her back's bend, and
+    her belly caved in as she lay back. The belly has no donors again, and the butt keeps only
+    `Pelvis_Rear_skin`'s.
 - **Two-sided genitals.** The genitals' material draws both sides of each triangle. Seen with the camera inside
   her, the one-sided canal showed only its far half, as if it wrapped half the shaft.
 - **The anus ring is centred on the anus.** GT's anus opening is a short slit, and the ring sat 0.17

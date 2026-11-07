@@ -71,9 +71,11 @@ DENTS = {
     # push moved the skin a sixth as far as the bones: as the breasts' Chest_skin, part of it rides the dents (none from
     # the thighs, whose bend the skin must keep following)
     # v0.41: only in their middles (the third value, see dents.add_dents' core): at the gluteal fold it creased
-    "LButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5, "Spine1_Rear_skin": 0.3}, 3.0),
-    "RButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5, "Spine1_Rear_skin": 0.3}, 3.0),
-    "Belly_skin": (9, {"Spine1_skin": 0.5, "Spine2_skin": 0.3}, 2.0),
+    # v0.42: none from the spine: skin taken off it stopped following her back's bend (the belly caved in as she lay
+    # back), so the belly has none and the butt only the pelvis's
+    "LButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5}, 3.0),
+    "RButtFat_skin": (8, {"Pelvis_Rear_skin": 0.5}, 3.0),
+    "Belly_skin": (9, {}),
 }
 
 

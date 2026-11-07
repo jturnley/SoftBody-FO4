@@ -368,7 +368,7 @@ namespace
 		for (const auto* name : kPenis) {
 			header += std::format(",{0}.x,{0}.y,{0}.z", name);
 		}
-		return header + ",cervixPush,ballsTurn,ballsMove,ballLTurn,ballLMove,ballRTurn,ballRMove";
+		return header + ",cervixPush,ballsTurn,ballsMove,ballsKept,ballLTurn,ballLMove,ballLKept,ballRTurn,ballRMove,ballRKept";
 	}
 
 	// The nodes read, held (NiPointer) from scene start to scene end so a read off the main thread can't meet a freed
@@ -662,10 +662,13 @@ namespace
 	{
 		const char*                   name;
 		RE::NiPointer<RE::NiAVObject> node;
-		RE::NiTransform               written;        // the world transform last written
-		V                             simTurn, simMove;   // SMP's, from the rest
-		V                             turn, move;         // drawn, from the rest
-		bool                          started{ false };
+		RE::NiTransform               written;          // the world transform last written
+		RE::NiMatrix3                 hangTurn;         // where it hangs in its parent (v0.42: from SMP itself, drifting;
+		V                             hangAt;           // the NIF's local rest was 150 degrees and 4 units off SMP's)
+		V                             simTurn, simMove;   // SMP's, from the hang
+		V                             turn, move;         // drawn, from the hang
+		bool                          started{ false }, hung{ false };
+		std::uint32_t                 wrote{ 0 }, kept{ 0 };   // writes, and how many were still there next time (logged)
 	};
 	Ball balls[3]{ { "Penis_Balls_01_SMP" }, { "Penis_Ball_SMP.L" }, { "Penis_Ball_SMP.R" } };
 
@@ -673,8 +676,9 @@ namespace
 	{
 		for (auto& b : balls) {
 			b.node.reset();
-			b.started = false;
+			b.started = b.hung = false;
 			b.simTurn = b.simMove = b.turn = b.move = V(0, 0, 0);
+			b.wrote = b.kept = 0;
 		}
 	}
 
@@ -701,6 +705,7 @@ namespace
 	{
 		const float most = Settings::ballMax * 0.0174533F;
 		const float follow = Settings::ballSmoothing > 0 ? 1.0F - std::exp(-a_dt / Settings::ballSmoothing) : 1.0F;
+		const float drift = 1.0F - std::exp(-a_dt / 1.0F);      // the hang follows what is drawn over about a second
 		RE::NiAVObject* nodes[3]{};
 		for (int i = 0; i < 3; ++i) {               // SMP's places, before any is rewritten
 			auto& b = balls[i];
@@ -714,15 +719,23 @@ namespace
 				b.simTurn = b.simMove = b.turn = b.move = V(0, 0, 0);
 				b.written = RE::NiTransform{};
 				b.started = true;
+				b.hung = false;
 			}
 			nodes[i] = node;
-			if (!SameTransform(node->world, b.written)) {      // SMP set it since
+			if (!SameTransform(node->world, b.written)) {      // SMP (or the game) set it since
 				const auto& pw = node->parent->world;
 				const auto  rel = TimesTransposed(Transposed(pw.rotate), Transposed(node->world.rotate));  // parent^T * world
 				const V     at = Mul(Apply(Transposed(pw.rotate), Sub(node->world.translate, pw.translate)),
                     pw.scale > 1e-6F ? 1.0F / pw.scale : 1.0F);
-				b.simTurn = TurnOf(TimesTransposed(rel, node->local.rotate));
-				b.simMove = Sub(at, node->local.translate);
+				if (!b.hung) {
+					b.hangTurn = rel;
+					b.hangAt = at;
+					b.hung = true;
+				}
+				b.simTurn = TurnOf(TimesTransposed(rel, b.hangTurn));
+				b.simMove = Sub(at, b.hangAt);
+			} else if (b.wrote) {
+				++b.kept;
 			}
 		}
 		for (int i = 0; i < 3; ++i) {               // drawn: held, eased, and composed on the parent as drawn
@@ -733,12 +746,21 @@ namespace
 			}
 			b.turn = Add(b.turn, Mul(Sub(Clamped(b.simTurn, most), b.turn), follow));
 			b.move = Add(b.move, Mul(Sub(Clamped(b.simMove, Settings::ballStretch), b.move), follow));
-			const auto& pw = node->parent->world;
+			// the hang drifts after what is drawn, so a lasting sag stays and a fling doesn't
+			const V turnSettle = Mul(b.turn, drift), moveSettle = Mul(b.move, drift);
+			b.hangTurn = Times(AxisAngle(turnSettle), b.hangTurn);
+			b.hangAt = Add(b.hangAt, moveSettle);
+			b.turn = Sub(b.turn, turnSettle);
+			b.move = Sub(b.move, moveSettle);
+			b.simTurn = Sub(b.simTurn, turnSettle);
+			b.simMove = Sub(b.simMove, moveSettle);
+			const auto&     pw = node->parent->world;
 			RE::NiTransform w = node->world;
-			w.rotate = Times(pw.rotate, Times(AxisAngle(b.turn), node->local.rotate));
-			w.translate = Add(pw.translate, Mul(Apply(pw.rotate, Add(node->local.translate, b.move)), pw.scale));
+			w.rotate = Times(pw.rotate, Times(AxisAngle(b.turn), b.hangTurn));
+			w.translate = Add(pw.translate, Mul(Apply(pw.rotate, Add(b.hangAt, b.move)), pw.scale));
 			node->world = w;
 			b.written = w;
+			++b.wrote;
 		}
 	}
 
@@ -1389,7 +1411,10 @@ namespace
 		}
 		line += std::format(",{:.2f}", cervixPush.load());
 		for (const auto& ball : balls) {      // SMP's, from where it hangs: degrees, units
-			line += ball.started ? std::format(",{:.1f},{:.2f}", Len(ball.simTurn) * 57.2958F, Len(ball.simMove)) : ",,"s;
+			// SMP's, from where it hangs (degrees, units), and the share of writes still in place 4 ms on
+			line += ball.started ? std::format(",{:.1f},{:.2f},{:.2f}", Len(ball.simTurn) * 57.2958F, Len(ball.simMove),
+										   ball.wrote ? static_cast<float>(ball.kept) / static_cast<float>(ball.wrote) : 0.0F)
+								 : ",,,"s;
 		}
 		REX::INFO("{}", line);
 	}
