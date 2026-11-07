@@ -197,6 +197,10 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   each ring, and his shaft kinked there. It now leaves his base along his own line for a third of
   the way to the entrance, so the bend starts gently at his root, and corner cutting (Chaikin, four
   rounds) rounds every turn.
+  Since v0.38 each skin bone moves at most 200 units a second from where it was last placed, measured
+  from his base, so the aligner moving him still moves it freely. In doggy, single bad frames (one 25 ms
+  sample) had folded his shaft to 150° and stretched it from 11 to 18. The log notes each jump it holds
+  back.
 - **The penis bent through the opening** (before v0.31). Every 4 ms the plugin bends his penis so his line runs
   through the centre of the opening in use, by at most `fBendMax` (20°), following over
   `fBendSmoothing`. The bend is split evenly between his shaft's first two joints, `Penis_02_Offset`

@@ -507,6 +507,8 @@ namespace
 		float       share;
 	};
 	constexpr BendPivot kBendPivots[2] = { { "Penis_02_Offset", 0.5F }, { "Penis_03_Offset", 0.5F } };
+	constexpr float kBendSpeed = 200.0F;     // units per second a bent skin bone may move, relative to his base
+	std::uint32_t   bendClamped = 0;
 	struct BendLeaf
 	{
 		const char*                   name;
@@ -515,6 +517,8 @@ namespace
 		RE::NiTransform               base;     // its own place, as the NIF has it
 		RE::NiTransform               written;  // what was last written
 		std::uint32_t                 rebased{ 0 };
+		V                             rel;              // where it was last placed, from his base (v0.38)
+		bool                          placed{ false };
 	};
 	struct Bend
 	{
@@ -600,6 +604,7 @@ namespace
 			}
 			l.node.reset();
 			l.rebased = 0;
+			l.placed = false;
 		}
 		bend.turn = V(0, 0, 0);
 		bend.started = false;
@@ -744,7 +749,24 @@ namespace
 			const float s = Dot(Sub(now, a_base), u0);           // how far along his shaft
 			V       dir;
 			const V there = AlongPath(bend.path, std::max(0.0F, s), &dir);
-			const V placed = Add(now, Mul(Sub(there, now), w));
+			V placed = Add(now, Mul(Sub(there, now), w));
+			// v0.38: a skin bone moves at most kBendSpeed (per second) from where it was last placed, measured from
+			// his base, so moving him (the aligner) moves it freely. A bad frame of his line or her canal (one 25 ms
+			// sample in doggy folded his shaft to 150 degrees and stretched it from 11 to 18) now can't throw it
+			V rel = Sub(placed, a_base);
+			if (l.placed) {
+				const V     step = Sub(rel, l.rel);
+				const float most = std::max(0.2F, kBendSpeed * a_dt);
+				if (const float len = Len(step); len > most) {
+					rel = Add(l.rel, Mul(step, most / len));
+					if (++bendClamped % 200 == 1) {
+						REX::INFO("bend: held back a jump of {:.2f} in {:.0f} ms ({} times)", len, a_dt * 1000.0F, bendClamped);
+					}
+				}
+			}
+			l.rel = rel;
+			l.placed = true;
+			placed = Add(a_base, rel);
 			const V axis = Cross(u0, dir);
 			const float sn = std::min(1.0F, Len(axis));
 			const float angle = std::asin(sn) * (Dot(u0, dir) < 0 ? -1.0F : 1.0F) * w;
