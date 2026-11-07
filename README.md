@@ -264,6 +264,10 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   Since v0.36 the belly, butt and waist are one shape, `SoftBodyColTrunk` (`BODY_COL_JOIN`). As three,
   his hands on her waist (doggy) slipped into the gaps between them and pushed only the butt's sides
   in, which left a shelf at its edge.
+  Since v0.37 the collision body gives way only where the soft regions are full (`BODY_COL_SOFT`). A
+  point keeps its physics-bone share in full above 70% of its region's most, and none below 35%; the
+  rest goes to the bone the region hangs from. The butt's and belly's sides, over the hips and ribs,
+  barely move when pressed.
 - **Two-sided genitals.** The genitals' material draws both sides of each triangle. Seen with the camera inside
   her, the one-sided canal showed only its far half, as if it wrapped half the shaft.
 - **The anus ring is centred on the anus.** GT's anus opening is a short slit, and the ring sat 0.17

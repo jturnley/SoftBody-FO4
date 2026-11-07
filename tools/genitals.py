@@ -65,6 +65,11 @@ BODY_COL_CLEAR = 4.5
 # her waist slipped into the cell-wide gaps and pushed the butt's sides in alone, a shelf at its edge. {region: shape}
 BODY_COL_JOIN = {"SoftBodyColBelly": "SoftBodyColTrunk", "SoftBodyColButt": "SoftBodyColTrunk",
                  "SoftBodyColTorso": "SoftBodyColTrunk"}
+# v0.37: the collision body gives way only where the soft regions are full: a point's share on a region's physics
+# bones (<bone>_SB and its dents), as a fraction of that region's most, is kept in full above the second of these and
+# none below the first; the rest goes to the bone the region hangs from. The butt's and belly's sides have bone under
+# them (hips, ribs): pressed there, the skin barely moves
+BODY_COL_SOFT = (0.35, 0.7)
 BODY_COL_SHARE = 0.15     # a vertex joins the first region whose bones carry more than this of it
 BODY_COL = {"SoftBodyColBreasts": ("Breast",), "SoftBodyColBelly": ("Belly",), "SoftBodyColButt": ("Butt",),
             "SoftBodyColLegs": ("Leg_Thigh", "Leg_Knee", "Leg_Calf"), "SoftBodyColArms": ("Arm_UpperArm", "Arm_UpperFat",
@@ -1502,6 +1507,26 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
                     tris.add(tri[k:] + tri[:k])
         tris = np.array(sorted(tris))
         _, w, src = surface(P)
+        soft = [{} for _ in w]
+        for k, x in enumerate(w):
+            for b, s in x.items():
+                if anchor(b) != b:
+                    soft[k][anchor(b)] = soft[k].get(anchor(b), 0) + s
+        most = {}
+        for x in soft:
+            for r, s in x.items():
+                most[r] = max(most.get(r, 0), s)
+        for k, x in enumerate(w):
+            keep = {r: smoothstep((s / most[r] - BODY_COL_SOFT[0]) / (BODY_COL_SOFT[1] - BODY_COL_SOFT[0]))
+                    for r, s in soft[k].items()}
+            y = {}
+            for b, s in x.items():
+                r = anchor(b)
+                f = keep[r] if r != b else 1.0
+                y[b] = y.get(b, 0) + s * f
+                if f < 1:
+                    y[r] = y.get(r, 0) + s * (1 - f)
+            w[k] = y
         meshes[name] = dict(P=P, UV=np.zeros((len(P), 2)), tris=tris, weights=[top4(x) for x in w], src=src,
                             fixed_normals={}, hidden=True, body_collision=True)
         report["collision_triangles"][name] = len(tris)
