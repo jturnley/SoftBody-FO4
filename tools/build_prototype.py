@@ -118,6 +118,7 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
         for name, m in meshes.items():
             for part, vidx in m.get("parts", [(name, range(len(m["src"])))]):
                 drawn[part] = dict(src=[m["src"][v] for v in vidx], hidden=m.get("hidden", False),
+                                   body_collision=m.get("body_collision", False),
                                    body_bones=sorted({b for v in vidx for b in m["weights"][v] if not genitals.is_genital(b)}))
         meshes = drawn
         meshes["bones"] = sorted(bones)
@@ -147,6 +148,27 @@ def collision_xml(collision, skip=()):
                   for t in NO_COLLIDE_WITH + ((PENIS_TAG,) if tag in skip else ())]
         lines += ['    <weight-threshold bone="%s">1</weight-threshold>' % b for b in body_bones]
         lines += ['  </per-vertex-shape>']
+    return lines
+
+
+# The collision body (genitals.BODY_COL, v0.34): its own tags, colliding with anything that isn't her (his A-Body
+# Legs, Belly, Pecs, Arms, Hands and Penis), but not his balls (thrown about by the pads before, see NO_COLLIDE_WITH)
+BODY_COL_TAG = "SB_Col"
+BODY_COL_MARGIN, BODY_COL_PENETRATION = 0.3, 0.8
+BODY_COL_NO_COLLIDE = (BODY_COL_TAG, "SB_Body", "SB_Hands", "SB_Vagina", "SB_Anus", "Balls")
+
+
+def body_collision_xml(names):
+    """per-triangle-shapes for the collision body: no weight thresholds, the whole shape collides"""
+    lines = []
+    for name in names:
+        lines += ['  <per-triangle-shape name="%s">' % name,
+                  '    <margin>%g</margin>' % BODY_COL_MARGIN,
+                  '    <penetration>%g</penetration>' % BODY_COL_PENETRATION,
+                  '    <shared>public</shared>',
+                  '    <tag>%s</tag>' % BODY_COL_TAG]
+        lines += ['    <no-collide-with-tag>%s</no-collide-with-tag>' % t for t in BODY_COL_NO_COLLIDE]
+        lines += ['  </per-triangle-shape>']
     return lines
 
 
@@ -188,7 +210,7 @@ def canal_xml(nif_bones):
             ['  <generic-constraint bodyA="%s" bodyB="%s Base" template="sbCanalWall"/>' % (b, b) for b in rings if not driven(b)])
 
 
-def write_xml(rel, dents=None, collision=None, skip=(), suffix="", nif_bones=()):
+def write_xml(rel, dents=None, collision=None, skip=(), suffix="", nif_bones=(), body_collision=()):
     """Copy a physics XML from src/ to the mod, filling in the dent, collision and canal markers.
     collision: {shape: [its body (non-genital) bones]}; skip, suffix: an ACT_VARIANTS variant; nif_bones: the genital
     bones added to the NIF"""
@@ -203,7 +225,7 @@ def write_xml(rel, dents=None, collision=None, skip=(), suffix="", nif_bones=())
             for a, b in links:
                 constraints.append('  <generic-constraint bodyA="%s" bodyB="%s" template="dentLink"/>' % (a, b))
         markers = [("<!-- @DENT_BONES@ -->", bones), ("<!-- @DENT_CONSTRAINTS@ -->", constraints),
-                   ("<!-- @COLLISION_SHAPES@ -->", collision_xml(collision or {}, skip))]
+                   ("<!-- @COLLISION_SHAPES@ -->", collision_xml(collision or {}, skip) + body_collision_xml(body_collision))]
         bases, ring_bones, walls = canal_xml(nif_bones)
         markers += [("<!-- @CANAL_BASES@ -->", bases), ("<!-- @CANAL_BONES@ -->", ring_bones),
                     ("<!-- @CANAL_CONSTRAINTS@ -->", walls)]
@@ -295,10 +317,12 @@ def main():
           os.path.join(OUT, r"meshes\actors\character\characterassets\FemaleHands.nif"), HANDS_XML, "BaseFemaleHands3rd:0")
     print("physics XML")
     genital_bones = genital_meshes.pop("bones") if genital_meshes else ()
-    collision = {name: m["body_bones"] for name, m in (genital_meshes or {}).items() if m["hidden"]}
-    write_xml(BODY_XML, dents, collision, nif_bones=genital_bones)
+    collision = {name: m["body_bones"] for name, m in (genital_meshes or {}).items()
+                 if m["hidden"] and not m["body_collision"]}
+    body_collision = [name for name, m in (genital_meshes or {}).items() if m["body_collision"]]
+    write_xml(BODY_XML, dents, collision, nif_bones=genital_bones, body_collision=body_collision)
     for suffix, skip in ACT_VARIANTS.items():
-        write_xml(BODY_XML, dents, collision, skip, suffix, genital_bones)
+        write_xml(BODY_XML, dents, collision, skip, suffix, genital_bones, body_collision)
     write_xml(HANDS_XML)
     check_xml(BODY_XML, "CBBE", genital_bones)
     for suffix in ACT_VARIANTS:

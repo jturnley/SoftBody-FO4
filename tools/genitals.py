@@ -55,6 +55,16 @@ ANUS_DENSE = (1.9,)      # v0.33: the skin round the anus is subdivided once wit
 ANUS_FOLDS = 10          # radial folds of the pucker, converging on the (closed) hole
 ANUS_FOLD_DEPTH = 0.05   # their depth either way
 ANUS_FOLD_R = (0.22, 0.5, 1.4)  # they rise from the hole's edge between the first two radii and fade out by the third
+# v0.34: a low-poly collision body, split by region (the method follows UBE 2.0's SMP collision objects, studied for
+# ideas only): CBBE clustered into cells BODY_COL_CELL wide, each region its own hidden shape with its own tag, so her
+# thighs, butt, belly, breasts, torso and arms meet him. Nothing within BODY_COL_CLEAR of the openings' line, where the
+# pads and rims are in charge. {shape: (bone-name parts that pick the region, in priority order)}
+BODY_COL_CELL = 1.5
+BODY_COL_CLEAR = 4.5
+BODY_COL_SHARE = 0.15     # a vertex joins the first region whose bones carry more than this of it
+BODY_COL = {"SoftBodyColBreasts": ("Breast",), "SoftBodyColBelly": ("Belly",), "SoftBodyColButt": ("Butt",),
+            "SoftBodyColLegs": ("Leg_Thigh", "Leg_Knee", "Leg_Calf"), "SoftBodyColArms": ("Arm_UpperArm", "Arm_UpperFat",
+            "Arm_UpperTwist", "Arm_ForeArm", "Arm_Elbow"), "SoftBodyColTorso": ("Chest", "Spine", "Pelvis", "Rib")}
 ANUS_PULL = 0.85        # the anal canal's share on the anus bones goes this much of the way to 1
 # The anal canal. GT's is a pocket 2.5 deep and 1 across, moved only by the anus ring; a penis goes 7 deep. Past
 # ANAL_KEEP (its depth from the anus ring, which stays as GT has it) it is stretched into a tube ANAL_DEPTH deep and
@@ -1449,6 +1459,45 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
         meshes[VAG_PADS] = dict(P=P, UV=np.zeros((len(P), 2)), tris=tris, weights=w, src=src, fixed_normals={},
                                 hidden=True)
         report["collision_triangles"][VAG_PADS] = len(tris)
+
+    # 6b. the collision body (BODY_COL): each CBBE vertex goes to the region of its heaviest matching bones, then each
+    # region is clustered into cells; a cell's point is its vertices' middle, weighted and slider-linked like the
+    # surface nearest it. Only triangles wholly in one region are kept (the regions' seams are a cell wide at most)
+    region = np.full(len(full.P), -1)
+    names = list(BODY_COL)
+    for v, w in enumerate(full.W):
+        for ri, n in enumerate(names):          # the first region with a real share (a breast is half Chest_skin)
+            if sum(x for b, x in w.items() if any(k in b for k in BODY_COL[n])) > BODY_COL_SHARE:
+                region[v] = ri
+                break
+    region[seg_dist(full.P, anus_fo, front_fo) < BODY_COL_CLEAR] = -1
+    for ri, name in enumerate(names):
+        vs = np.nonzero(region == ri)[0]
+        if not len(vs):
+            continue
+        cells = {}
+        cell_of = {}
+        for v in vs:
+            key = tuple(np.floor(full.P[v] / BODY_COL_CELL).astype(int))
+            cell_of[v] = cells.setdefault(key, len(cells))
+        P = np.zeros((len(cells), 3))
+        count = np.zeros(len(cells))
+        for v, c in cell_of.items():
+            P[c] += full.P[v]
+            count[c] += 1
+        P /= count[:, None]
+        tris = set()
+        for a, b, c in full.tris:
+            if a in cell_of and b in cell_of and c in cell_of:
+                tri = (cell_of[a], cell_of[b], cell_of[c])
+                if len(set(tri)) == 3:
+                    k = min(range(3), key=lambda i: tri[i])
+                    tris.add(tri[k:] + tri[:k])
+        tris = np.array(sorted(tris))
+        _, w, src = surface(P)
+        meshes[name] = dict(P=P, UV=np.zeros((len(P), 2)), tris=tris, weights=[top4(x) for x in w], src=src,
+                            fixed_normals={}, hidden=True, body_collision=True)
+        report["collision_triangles"][name] = len(tris)
 
     # 7. the springs' anchors, from GT's node tree; its nodes must sit where its skin binds put the moving bones
     if skeleton_path:

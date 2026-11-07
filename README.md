@@ -250,6 +250,13 @@ commonlibf4 and 4Stim's plugin interface) does what GT Softbody's scene scripts 
   anal canal, and conforming, so there are no cracks). That gives ~0.09 edges, about UBE's density.
   Ten radial folds (`ANUS_FOLDS`, 0.05 deep, `ANUS_FOLD_R`) converge on the closed hole. Needs a
   BodySlide rebuild.
+- Her body collides with his (v0.34; the method follows UBE 2.0's SMP collision objects, studied for
+  ideas only). A low-poly copy of CBBE (cells 1.5 wide, `BODY_COL_CELL`) is split by region into
+  hidden shapes: `SoftBodyCol{Breasts,Belly,Butt,Legs,Arms,Torso}`, about 7,000 triangles in all.
+  Each is skinned like the skin it stands for, physics bones and dents included, so his A-Body
+  Legs, Belly, Pecs, Arms, Hands and Penis press her breasts, belly and butt, and her thighs hold
+  him. The shapes are tagged `SB_Col` and skip her own shapes and his balls. Nothing within 4.5 of
+  the openings (`BODY_COL_CLEAR`), where the pads and rims are in charge. Needs a BodySlide rebuild.
 - **Two-sided genitals.** The genitals' material draws both sides of each triangle. Seen with the camera inside
   her, the one-sided canal showed only its far half, as if it wrapped half the shaft.
 - **The anus ring is centred on the anus.** GT's anus opening is a short slit, and the ring sat 0.17
