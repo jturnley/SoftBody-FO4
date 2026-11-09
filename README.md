@@ -369,6 +369,11 @@ it does nothing.
 from the vaginal rim's front (`SB VagRim_0`) to the clitoris (`Clitoral1`), and fluid leaves it out along the vagina's
 axis. 4Strands squirts and urinates from it. The fields are appended, so a version 1 reader still works.
 
+Version 3 (v0.45):
+- **The anal canal** is added: `analRingCount` and `analRings`, the rim at the anus first, then its three rings inward.
+- **`SoftBodyFO4_SetCanalSqueeze(herFormID, 0-1)`** tightens her vaginal rings by up to 35% of their rest width, and
+  never past a shaft that's in her. 4Strands pulses it through her climax's contractions. `squeeze` reports the value.
+
 ## Rebuild
 
 Needs CBBE (FO4) and GT Softbody (Skyrim SE) installed; the paths are the
