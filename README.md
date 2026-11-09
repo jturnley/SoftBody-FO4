@@ -363,6 +363,33 @@ it does nothing.
 - Does a hand visibly push the breast? Too weak/strong, too slow to return?
 - Any constant twitching at rest (usually limits or stiffness too high).
 
+## One plugin for every game version (branch `commonlibf4rd`, untested)
+
+`plugin/rd` builds the same plugin source on [CommonLibF4RD](https://github.com/Zzyxz/CommonLibF4RD) (MIT, a
+submodule in `plugin/external`). That gives one DLL for the original game (1.10.163, F4SE 0.6.x), next-gen (1.10.984)
+and 1.11.x. Players need the [Runtime Database](https://www.nexusmods.com/fallout4/mods/108394), which installs
+`Data/F4SE/Plugins/f4rd-runtime.bin`. The xmake build (libxse's CommonLibF4, 1.11 only) is unchanged.
+
+```
+cmake -S plugin/rd -B plugin/rd/build -G "Visual Studio 17 2022" -A x64
+cmake --build plugin/rd/build --config RelWithDebInfo
+```
+
+It needs vcpkg (`VCPKG_ROOT`, else `C:/vcpkg`). `SOFTBODY_RD` switches what differs between the two libraries:
+- **Matrix elements** go through `At()` in `PCH.h`.
+- **Logging** is spdlog, behind libxse's `REX::INFO` names.
+- **The entry point and metadata:** no fixed game-version list.
+- **Papyrus arguments** for SMP's `DynamicHDT.SwapPhysicsFile` are packed by hand. The game's `std::function`
+  layout changed at 1.10.980, and passing the old one to a newer game crashes it, so the call picks
+  `msvc::function` or `msvc::function_ngae` by `REL::Module::get().is_og()`.
+
+To check on each game version:
+- the plugin loads (`f4se.log`, `SoftBodyFO4.log`);
+- the openings and the bend follow a 4Stim scene;
+- the per-act physics swap works.
+
+4Stim and FO4 Faster HDT-SMP must support the original game too.
+
 ## Rebuild
 
 Needs CBBE (FO4) and GT Softbody (Skyrim SE) installed; the paths are the

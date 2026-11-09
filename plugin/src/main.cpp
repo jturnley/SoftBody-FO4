@@ -203,11 +203,11 @@ namespace
 	V ToWorld(const RE::NiAVObject* a_node, const V& a_local)
 	{
 		const auto& w = a_node->world;
-		const auto& e = w.rotate.entry;
+		const auto& em = w.rotate;
 		const V     s(a_local.x * w.scale, a_local.y * w.scale, a_local.z * w.scale);
-		return V(w.translate.x + e[0][0] * s.x + e[1][0] * s.y + e[2][0] * s.z,
-			w.translate.y + e[0][1] * s.x + e[1][1] * s.y + e[2][1] * s.z,
-			w.translate.z + e[0][2] * s.x + e[1][2] * s.y + e[2][2] * s.z);
+		return V(w.translate.x + At(em, 0, 0) * s.x + At(em, 1, 0) * s.y + At(em, 2, 0) * s.z,
+			w.translate.y + At(em, 0, 1) * s.x + At(em, 1, 1) * s.y + At(em, 2, 1) * s.z,
+			w.translate.z + At(em, 0, 2) * s.x + At(em, 1, 2) * s.y + At(em, 2, 2) * s.z);
 	}
 
 	V DirToLocal(const RE::NiAVObject* a_node, const V& a_world)
@@ -560,12 +560,12 @@ namespace
 		const float   a[3] = { k.x, k.y, k.z };
 		for (int i = 0; i < 3; ++i) {
 			for (int j = 0; j < 3; ++j) {
-				m.entry[i][j] = t * a[i] * a[j] + (i == j ? c : 0.0F);
+				At(m, i, j) = t * a[i] * a[j] + (i == j ? c : 0.0F);
 			}
 		}
-		m.entry[0][1] -= s * k.z; m.entry[0][2] += s * k.y;
-		m.entry[1][0] += s * k.z; m.entry[1][2] -= s * k.x;
-		m.entry[2][0] -= s * k.y; m.entry[2][1] += s * k.x;
+		At(m, 0, 1) -= s * k.z; At(m, 0, 2) += s * k.y;
+		At(m, 1, 0) += s * k.z; At(m, 1, 2) -= s * k.x;
+		At(m, 2, 0) -= s * k.y; At(m, 2, 1) += s * k.x;
 		return m;
 	}
 
@@ -573,7 +573,7 @@ namespace
 	{
 		for (int i = 0; i < 3; ++i)
 			for (int j = 0; j < 3; ++j)
-				if (std::abs(a.entry[i][j] - b.entry[i][j]) > 1e-5F) return false;
+				if (std::abs(At(a, i, j) - At(b, i, j)) > 1e-5F) return false;
 		return true;
 	}
 
@@ -583,7 +583,7 @@ namespace
 		RE::NiMatrix3 m;
 		for (int i = 0; i < 3; ++i)
 			for (int j = 0; j < 3; ++j)
-				m.entry[i][j] = a.entry[i][0] * b.entry[j][0] + a.entry[i][1] * b.entry[j][1] + a.entry[i][2] * b.entry[j][2];
+				At(m, i, j) = At(a, i, 0) * At(b, j, 0) + At(a, i, 1) * At(b, j, 1) + At(a, i, 2) * At(b, j, 2);
 		return m;
 	}
 
@@ -592,16 +592,16 @@ namespace
 		RE::NiMatrix3 m;
 		for (int i = 0; i < 3; ++i)
 			for (int j = 0; j < 3; ++j)
-				m.entry[i][j] = a.entry[j][i];
+				At(m, i, j) = At(a, j, i);
 		return m;
 	}
 
 	// the turn (axis times angle) a rotation matrix makes: AxisAngle's inverse
 	V TurnOf(const RE::NiMatrix3& m)
 	{
-		const float c = std::clamp((m.entry[0][0] + m.entry[1][1] + m.entry[2][2] - 1.0F) * 0.5F, -1.0F, 1.0F);
+		const float c = std::clamp((At(m, 0, 0) + At(m, 1, 1) + At(m, 2, 2) - 1.0F) * 0.5F, -1.0F, 1.0F);
 		const float angle = std::acos(c);
-		const V     k(m.entry[2][1] - m.entry[1][2], m.entry[0][2] - m.entry[2][0], m.entry[1][0] - m.entry[0][1]);
+		const V     k(At(m, 2, 1) - At(m, 1, 2), At(m, 0, 2) - At(m, 2, 0), At(m, 1, 0) - At(m, 0, 1));
 		const float s = Len(k);
 		return angle < 1e-5F || s < 1e-7F ? V(0, 0, 0) : Mul(k, angle / s);
 	}
@@ -609,19 +609,19 @@ namespace
 	// a world direction in a node's own frame (no scale)
 	V DirIn(const RE::NiAVObject* a_node, const V& a_world)
 	{
-		const auto& e = a_node->world.rotate.entry;
-		return V(e[0][0] * a_world.x + e[0][1] * a_world.y + e[0][2] * a_world.z,
-			e[1][0] * a_world.x + e[1][1] * a_world.y + e[1][2] * a_world.z,
-			e[2][0] * a_world.x + e[2][1] * a_world.y + e[2][2] * a_world.z);
+		const auto& em = a_node->world.rotate;
+		return V(At(em, 0, 0) * a_world.x + At(em, 0, 1) * a_world.y + At(em, 0, 2) * a_world.z,
+			At(em, 1, 0) * a_world.x + At(em, 1, 1) * a_world.y + At(em, 1, 2) * a_world.z,
+			At(em, 2, 0) * a_world.x + At(em, 2, 1) * a_world.y + At(em, 2, 2) * a_world.z);
 	}
 
 	// a direction in a node's own frame, in the world (DirIn's inverse)
 	V DirOut(const RE::NiAVObject* a_node, const V& a_local)
 	{
-		const auto& e = a_node->world.rotate.entry;
-		return V(e[0][0] * a_local.x + e[1][0] * a_local.y + e[2][0] * a_local.z,
-			e[0][1] * a_local.x + e[1][1] * a_local.y + e[2][1] * a_local.z,
-			e[0][2] * a_local.x + e[1][2] * a_local.y + e[2][2] * a_local.z);
+		const auto& em = a_node->world.rotate;
+		return V(At(em, 0, 0) * a_local.x + At(em, 1, 0) * a_local.y + At(em, 2, 0) * a_local.z,
+			At(em, 0, 1) * a_local.x + At(em, 1, 1) * a_local.y + At(em, 2, 1) * a_local.z,
+			At(em, 0, 2) * a_local.x + At(em, 1, 2) * a_local.y + At(em, 2, 2) * a_local.z);
 	}
 
 	// v rotated by angle about the (unit) axis k
@@ -689,9 +689,9 @@ namespace
 
 	V Apply(const RE::NiMatrix3& m, const V& v)
 	{
-		return V(m.entry[0][0] * v.x + m.entry[0][1] * v.y + m.entry[0][2] * v.z,
-			m.entry[1][0] * v.x + m.entry[1][1] * v.y + m.entry[1][2] * v.z,
-			m.entry[2][0] * v.x + m.entry[2][1] * v.y + m.entry[2][2] * v.z);
+		return V(At(m, 0, 0) * v.x + At(m, 0, 1) * v.y + At(m, 0, 2) * v.z,
+			At(m, 1, 0) * v.x + At(m, 1, 1) * v.y + At(m, 1, 2) * v.z,
+			At(m, 2, 0) * v.x + At(m, 2, 1) * v.y + At(m, 2, 2) * v.z);
 	}
 
 	V Clamped(const V& v, float a_most)
@@ -1464,8 +1464,33 @@ namespace
 		RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> none;
 		for (const auto* from : { kXmlBoth, kXmlVaginal, kXmlAnal }) {
 			if (std::string_view(from) != a_path) {
+#ifdef SOFTBODY_RD
+				// CommonLibF4RD has no variadic DispatchStaticCall: the arguments are packed here
+				// and the game's std::function layout changed at 1.10.980 (CommonLibF4RD's msvc::function_ngae): the old one
+				// passed to a newer game is read as a vtable and crashes it
+				const RE::BSFixedString fromName(from), toName(a_path);
+				auto pack = [&](RE::BSScrapArray<RE::BSScript::Variable>& a_out) {
+					a_out.resize(5);
+					RE::BSScript::detail::PackVariable(a_out[0], a_her);
+					RE::BSScript::detail::PackVariable(a_out[1], fromName);
+					RE::BSScript::detail::PackVariable(a_out[2], toName);
+					RE::BSScript::detail::PackVariable(a_out[3], false);
+					RE::BSScript::detail::PackVariable(a_out[4], false);
+					return true;
+				};
+				using Args = bool(RE::BSScrapArray<RE::BSScript::Variable>&);
+				const RE::BSFixedString cls("DynamicHDT"), fn("SwapPhysicsFile");
+				if (REL::Module::get().is_og()) {
+					const auto args = RE::msvc::function<Args>::make(pack);
+					vm->DispatchStaticCall(cls, fn, args, none);
+				} else {
+					const auto args = RE::msvc::function_ngae<Args>::make(pack);
+					vm->DispatchStaticCall(cls, fn, reinterpret_cast<const RE::msvc::function<Args>&>(args), none);
+				}
+#else
 				vm->DispatchStaticCall(RE::BSFixedString("DynamicHDT"), RE::BSFixedString("SwapPhysicsFile"), none,
 					a_her, RE::BSFixedString(from), RE::BSFixedString(a_path), false, false);
+#endif
 			}
 		}
 		now = a_path;
@@ -1693,7 +1718,7 @@ namespace
 				if (auto* pelvis = Held("her", "Pelvis_skin")) {
 					const auto& r = pelvis->world.rotate;
 					for (int i = 0; i < 3; ++i)
-						for (int j = 0; j < 3; ++j) a.pelvisRotate.m[i][j] = r.entry[i][j] / pelvis->world.scale;
+						for (int j = 0; j < 3; ++j) a.pelvisRotate.m[i][j] = At(r, i, j) / pelvis->world.scale;
 				}
 			} else if (a.phase == Phase::kMeasure) {
 				std::scoped_lock held_{ heldLock };
@@ -1707,7 +1732,7 @@ namespace
 					if (auto* pelvis = Held("her", "Pelvis_skin")) {
 						const auto& r = pelvis->world.rotate;
 						for (int i = 0; i < 3; ++i)
-							for (int j = 0; j < 3; ++j) a.pelvisRotate.m[i][j] = r.entry[i][j] / pelvis->world.scale;
+							for (int j = 0; j < 3; ++j) a.pelvisRotate.m[i][j] = At(r, i, j) / pelvis->world.scale;
 					}
 				}
 			}
@@ -2173,9 +2198,57 @@ namespace
 	}
 }
 
+#ifdef SOFTBODY_RD
+// CommonLibF4RD: one DLL for the original (1.10.163), next-gen (1.10.984) and current (1.11.x) game, its addresses
+// from the Runtime Database (Data/F4SE/Plugins/f4rd-runtime.bin). It exports F4SEPlugin_Query for the original game's
+// F4SE itself; this is the newer F4SE's metadata, with no fixed game-version list (as CommonLibF4RD asks)
+namespace
+{
+	constexpr F4SE::PluginVersionData MakeVersionData() noexcept
+	{
+		F4SE::PluginVersionData data{};
+		data.pluginVersion = (SOFTBODY_VERSION_MAJOR << 24) | (SOFTBODY_VERSION_MINOR << 16) | (SOFTBODY_VERSION_PATCH << 4);
+		constexpr std::string_view name = "SoftBodyFO4";
+		for (std::size_t i = 0; i < name.size(); ++i) {
+			data.name[i] = name[i];
+		}
+		data.addressIndependence = F4SE::PluginVersionData::kAddressIndependence_Signatures;
+		data.structureIndependence = F4SE::PluginVersionData::kStructureIndependence_1_10_980Layout |
+		                             F4SE::PluginVersionData::kStructureIndependence_1_11_137Layout;
+		return data;
+	}
+
+	bool StartLog()
+	{
+		auto path = F4SE::log::log_directory();
+		if (!path) {
+			return false;
+		}
+		*path /= "SoftBodyFO4.log";
+		auto log = std::make_shared<spdlog::logger>("global log"s,
+			std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true));
+		log->set_level(spdlog::level::info);
+		log->flush_on(spdlog::level::info);
+		spdlog::set_default_logger(std::move(log));
+		spdlog::set_pattern("[%H:%M:%S.%e] [%t] [%L] %v"s);
+		return true;
+	}
+}
+
+extern "C" __declspec(dllexport) constinit F4SE::PluginVersionData F4SEPlugin_Version = MakeVersionData();
+
+extern "C" __declspec(dllexport) bool F4SEAPI F4SEPlugin_Load(const F4SE::LoadInterface* a_f4se)
+{
+	if (!StartLog() || a_f4se->IsEditor()) {
+		return false;
+	}
+	F4SE::Init(a_f4se);
+	REX::INFO("SoftBodyFO4 v{}.{}.{} (CommonLibF4RD)", SOFTBODY_VERSION_MAJOR, SOFTBODY_VERSION_MINOR, SOFTBODY_VERSION_PATCH);
+#else
 F4SE_PLUGIN_LOAD(const F4SE::LoadInterface* a_f4se)
 {
 	F4SE::Init(a_f4se);
+#endif
 	REX::INFO("SoftBodyFO4 loaded on Fallout 4 {}", a_f4se->RuntimeVersion().string());
 	Settings::Load();
 	mode = Settings::autoAlign ? Mode::kAuto : Mode::kOff;

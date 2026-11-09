@@ -5,3 +5,6 @@ plugin/build/
 plugin/.xmake/
 .vs/
 vsxmake*/
+
+# the CommonLibF4RD build (plugin/rd)
+plugin/rd/build/

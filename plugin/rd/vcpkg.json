@@ -1,0 +1,11 @@
+{
+  "name": "softbodyfo4-rd",
+  "version-string": "0.4.3",
+  "dependencies": [
+    "boost-stl-interfaces",
+    "fmt",
+    "rsm-mmio",
+    "spdlog",
+    "zydis"
+  ]
+}

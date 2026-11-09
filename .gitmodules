@@ -1,0 +1,3 @@
+[submodule "plugin/external/CommonLibF4RD"]
+	path = plugin/external/CommonLibF4RD
+	url = https://github.com/Zzyxz/CommonLibF4RD.git
