@@ -445,6 +445,7 @@ namespace
 	// requests from other plugins (SoftBodyFO4API.h) and what is published back
 	std::atomic<float>         uterusFill{ 0 };
 	std::atomic<float>         osOpen{ 0 };
+	std::atomic<float>         canalSqueeze{ 0 };  // v0.45: 0-1, from another plugin (her climax's contractions)
 	std::mutex                 publishedLock;
 	SoftBodyFO4API::Canal      published{};
 	const std::vector<Rim>& Rims()
@@ -1201,11 +1202,17 @@ namespace
 					const V     across = Sub(off, Mul(su, axial));
 					const float restDist = Len(across);
 					const V     out = restDist > 1e-4F ? Mul(across, 1.0F / restDist) : V(0, 0, 0);
-					const float dist = std::max(restDist, canalGrow[i]);
+					const float squeezed = i < kVagRings ? 1.0F - 0.35F * std::clamp(canalSqueeze.load(), 0.0F, 1.0F) : 1.0F;
+					const float dist = std::max(restDist * squeezed, canalGrow[i]);
 					target = ToLocal(parent, Add(Add(Add(canalC[i], canalShift[i]), Mul(u, push * ringDepth[i])),
 						Add(Mul(out, dist), Mul(su, axial))));
-				} else if (push > 0) {
-					target = ToLocal(parent, Add(ToWorld(parent, d.rest), Mul(u, push * ringDepth[i])));
+				} else {
+					// nothing in it: each bone toward its ring's middle by the squeeze (v0.45), and carried by the push
+					const float squeeze = i < kVagRings && canalN[i] ? 0.35F * std::clamp(canalSqueeze.load(), 0.0F, 1.0F) : 0.0F;
+					const V     restW = ToWorld(parent, d.rest);
+					if (squeeze > 0 || push > 0) {
+						target = ToLocal(parent, Add(Add(restW, Mul(Sub(canalC[i], restW), squeeze)), Mul(u, push * ringDepth[i])));
+					}
 				}
 				d.now = Add(d.now, Mul(Sub(target, d.now), follow));
 				node->local.translate = d.now;
@@ -1275,6 +1282,30 @@ namespace
 				c.uterusRadius = wombR[1] * (1 + swell);
 				c.fill = uterusFill.load();
 				c.cervixPush = push;
+				// v0.44: the urethra, a third of the way from the front of the vaginal rim to the clitoris (where GT's
+				// texture paints it), leaving her along the vagina's axis
+				auto* rimFront = Held("her", kVagina.rim[0]);
+				auto* clitoris = Held("her", "Clitoral1");
+				if (rimFront && clitoris) {
+					const V front = rimFront->world.translate;
+					put(c.urethra, Add(front, Mul(Sub(clitoris->world.translate, front), 0.33F)));
+					put(c.urethraOut, Mul(axis, -1.0F));
+				}
+				c.squeeze = canalSqueeze.load();
+			}
+			// v0.45: the anal canal: its rim (the anus's centre), then its rings inward
+			if (haveCentre[1] && canalN[kVagRings] && canalN[kRings - 1]) {
+				if (!c.herFormID) {
+					c.herFormID = herFormID.load();
+				}
+				c.analRingCount = 1 + kAnalRings;
+				put(c.analRings[0].centre, centre[1]);
+				c.analRings[0].radius = canalOn[kVagRings] ? canalGrow[kVagRings] : 0.35F * scale;
+				for (int i = 0; i < kAnalRings; ++i) {
+					const int k = kVagRings + i;
+					put(c.analRings[1 + i].centre, canalOn[k] ? Add(canalC[k], canalShift[k]) : canalC[k]);
+					c.analRings[1 + i].radius = canalOn[k] ? canalGrow[k] : 0.4F * scale;
+				}
 			}
 			std::scoped_lock lock{ publishedLock };
 			published = c;
@@ -1371,6 +1402,7 @@ namespace
 		ReleaseBalls();
 		uterusFill = 0;
 		osOpen = 0;
+		canalSqueeze = 0;
 		herFormID = 0;
 		{
 			std::scoped_lock plock{ publishedLock };
@@ -2285,5 +2317,12 @@ extern "C" __declspec(dllexport) void SoftBodyFO4_SetOsOpen(std::uint32_t a_her,
 {
 	if (a_her && a_her == herFormID.load()) {
 		osOpen = std::max(0.0F, a_radius);
+	}
+}
+
+extern "C" __declspec(dllexport) void SoftBodyFO4_SetCanalSqueeze(std::uint32_t a_her, float a_squeeze)
+{
+	if (a_her && a_her == herFormID.load()) {
+		canalSqueeze = std::clamp(a_squeeze, 0.0F, 1.0F);
 	}
 }

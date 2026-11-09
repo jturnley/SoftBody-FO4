@@ -9,7 +9,7 @@
 
 namespace SoftBodyFO4API
 {
-	constexpr std::uint32_t kVersion = 1;
+	constexpr std::uint32_t kVersion = 3;  // 2: the urethra; 3: the anal canal (fields appended: older readers still work)
 	constexpr std::uint32_t kMaxRings = 8;
 
 	struct Ring
@@ -32,6 +32,13 @@ namespace SoftBodyFO4API
 		float         uterusRadius;   // side to side, at its middle (front to back is about half)
 		float         fill;           // as last set (0-1)
 		float         cervixPush;     // how far his tip carries the cervix deeper now
+		// version 2
+		float         urethra[3];     // the urethral opening, between the vaginal entrance and the clitoris
+		float         urethraOut[3];  // unit: the way fluid leaves it (out of her, along the vagina's axis)
+		// version 3
+		std::uint32_t analRingCount;  // the anal canal: its rim first (at the anus), then its rings inward (4); its
+		Ring          analRings[kMaxRings];  // deepest ring is its closed end
+		float         squeeze;        // as last set (SoftBodyFO4_SetCanalSqueeze)
 	};
 }
 
@@ -44,3 +51,7 @@ using SoftBodyFO4_SetUterusFill_t = void (*)(std::uint32_t, float);
 // void SoftBodyFO4_SetOsOpen(std::uint32_t herFormID, float radius): the os opens to this (game units; 0 back to its
 // rest), e.g. while fluid passes through it.
 using SoftBodyFO4_SetOsOpen_t = void (*)(std::uint32_t, float);
+// void SoftBodyFO4_SetCanalSqueeze(std::uint32_t herFormID, float squeeze): 0-1, her vaginal canal tightens (by up to
+// 35% of its rest width; round a penis it can't close past his shaft), e.g. pulsed through her climax's contractions.
+// Version 3
+using SoftBodyFO4_SetCanalSqueeze_t = void (*)(std::uint32_t, float);
