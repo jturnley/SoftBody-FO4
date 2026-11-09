@@ -9,7 +9,7 @@
 
 namespace SoftBodyFO4API
 {
-	constexpr std::uint32_t kVersion = 1;
+	constexpr std::uint32_t kVersion = 2;  // 2: the urethra (fields appended; a version 1 reader still works)
 	constexpr std::uint32_t kMaxRings = 8;
 
 	struct Ring
@@ -32,6 +32,9 @@ namespace SoftBodyFO4API
 		float         uterusRadius;   // side to side, at its middle (front to back is about half)
 		float         fill;           // as last set (0-1)
 		float         cervixPush;     // how far his tip carries the cervix deeper now
+		// version 2
+		float         urethra[3];     // the urethral opening, between the vaginal entrance and the clitoris
+		float         urethraOut[3];  // unit: the way fluid leaves it (out of her, along the vagina's axis)
 	};
 }
 

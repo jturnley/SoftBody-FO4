@@ -1275,6 +1275,15 @@ namespace
 				c.uterusRadius = wombR[1] * (1 + swell);
 				c.fill = uterusFill.load();
 				c.cervixPush = push;
+				// v0.44: the urethra, a third of the way from the front of the vaginal rim to the clitoris (where GT's
+				// texture paints it), leaving her along the vagina's axis
+				auto* rimFront = Held("her", kVagina.rim[0]);
+				auto* clitoris = Held("her", "Clitoral1");
+				if (rimFront && clitoris) {
+					const V front = rimFront->world.translate;
+					put(c.urethra, Add(front, Mul(Sub(clitoris->world.translate, front), 0.33F)));
+					put(c.urethraOut, Mul(axis, -1.0F));
+				}
 			}
 			std::scoped_lock lock{ publishedLock };
 			published = c;

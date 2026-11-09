@@ -363,6 +363,12 @@ it does nothing.
 - Does a hand visibly push the breast? Too weak/strong, too slow to return?
 - Any constant twitching at rest (usually limits or stiffness too high).
 
+## For other plugins: API version 2 (v0.44)
+
+`SoftBodyFO4API.h` version 2 adds `urethra` and `urethraOut` to the canal report. The urethra sits a third of the way
+from the vaginal rim's front (`SB VagRim_0`) to the clitoris (`Clitoral1`), and fluid leaves it out along the vagina's
+axis. 4Strands squirts and urinates from it. The fields are appended, so a version 1 reader still works.
+
 ## Rebuild
 
 Needs CBBE (FO4) and GT Softbody (Skyrim SE) installed; the paths are the
