@@ -99,9 +99,12 @@ def patch(src, dst, xml_path, shape, physics_bones=(), dents=None, genitals_from
         cbbe, meshes, bones, report = genitals.build(nif, genitals_from, os.path.join(GT, GT_COLLISION),
                                                      os.path.join(GT, GT_SKELETON))
         tex = ["Textures\\" + t.replace("/", "\\") for t in genital_textures.TEXTURES]
+        film_tex = ["Textures\\" + t.replace("/", "\\") for t in genital_textures.FILM_TEXTURES]
         genitals.add_to_nif(nif, cbbe, meshes, bones,
                             materials={genitals.GENITALS: (genital_textures.MATERIAL, tex),
-                                       genitals.UTERUS: (genital_textures.MATERIAL, tex)})
+                                       genitals.UTERUS: (genital_textures.MATERIAL, tex),
+                                       genitals.FILM: (genital_textures.FILM_MATERIAL, film_tex),
+                                       genitals.FILM_VULVA: (genital_textures.FILM_MATERIAL, film_tex)})
         made_tex = genital_textures.write(OUT, meshes[genitals.GENITALS], report["vagina_vertices"],
                                           report["fit_R"], GT, GAME_DATA, meshes[genitals.VULVA],
                                           os.path.join(CBBE, SKIN_D))

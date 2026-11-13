@@ -31,7 +31,7 @@ REFERENCE = os.path.join(ROOT, r"mod\Tools\BodySlide\ShapeData\CBBE SoftBody\CBB
 SKIN_PREFIXES = ("SoftBodyVulva", "SoftBodyGenitals", "SoftBodyUterus")      # the drawn skin: the displacement field (the genitals
                                                            # may be several shapes: SoftBodyGenitals2, ...)
 OTHER_SHAPES = ("SoftBodyVaginaOut", "SoftBodyAnus", "SoftBodyAnalCanal", "SoftBodyVaginalCanal",
-                "CBBE")   # CBBE: its skin round the openings rides on the rims too
+                "CBBE", "SoftBodyFilm", "SoftBodyFilmVulva")   # CBBE: its skin round the openings rides on the rims too; the films copy CBBE and the vulva
 FIELD_K = 24          # skin points averaged for a node's move
 FIELD_SIGMA = 0.8     # game units: their weight falls off over this from the nearest
 

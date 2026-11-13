@@ -31,6 +31,9 @@ from dents import SkinnedShape
 from sse_nif import SseNif
 
 VULVA, GENITALS, UTERUS = "SoftBodyVulva", "SoftBodyGenitals", "SoftBodyUterus"
+# v0.46: the fluid film (4Strands, after DripSim's method): her skin again, the body and the vulva patch, the same
+# vertices, UVs, weights and sliders, drawn over it as an alpha-blended decal whose texture 4Strands rewrites at runtime
+FILM, FILM_VULVA = "SoftBodyFilm", "SoftBodyFilmVulva"
 # GT's anus and the front of its slit (the open loops "2Anus" and "2Vagina" join the body at), GT space
 ANUS_GT, SLIT_FRONT_GT = (0.0, -5.69, 67.6), (0.0, 2.91, 65.6)
 SLIT_GT = (0.0, 0.0, 65.58)
@@ -1391,6 +1394,12 @@ def build(cbbe_nif, gt_path, collision_path=None, skeleton_path=None):
     meshes = {VULVA: vulva,
               GENITALS: dict(P=gen_P, UV=gen_UV, tris=gen_tris, weights=gen_w, src=gen_src, fixed_normals={}),
               UTERUS: ut_mesh}
+    # the fluid film's overlays: CBBE (cut, with its rim weights) and the vulva patch, each point on itself
+    film_w = [top4(cbbe.rim_weights.get(v, cbbe.W[v])) for v in range(len(cbbe.P))]
+    meshes[FILM] = dict(P=cbbe.P.copy(), UV=cbbe.UV.copy(), tris=cbbe.tris.copy(), weights=film_w,
+                        src=[((v,), (1.0,)) for v in range(len(cbbe.P))], fixed_normals={})
+    meshes[FILM_VULVA] = dict(P=vulva["P"].copy(), UV=vulva["UV"].copy(), tris=vulva["tris"].copy(),
+                              weights=list(vulva["weights"]), src=list(vulva["src"]), fixed_normals={})
 
     # 6. the collision pads: GT's geometry, each pad wholly on its own genital bone (GT's pelvis share dropped), as
     # the lip and anus proxies of a body that does collide in FO4 have it: a pad then moves as one with its bone, and

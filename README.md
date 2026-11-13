@@ -374,6 +374,19 @@ Version 3 (v0.45):
 - **`SoftBodyFO4_SetCanalSqueeze(herFormID, 0-1)`** tightens her vaginal rings by up to 35% of their rest width, and
   never past a shaft that's in her. 4Strands pulses it through her climax's contractions. `squeeze` reports the value.
 
+## The fluid film's overlays (v0.46)
+
+The body also carries `SoftBodyFilm` and `SoftBodyFilmVulva`: copies of her CBBE skin and the vulva patch, with the
+same vertices, UVs, weights (dents and rims included) and sliders. They are drawn over the skin as an alpha-blended decal
+with `Materials\SoftBodyFO4\Film.bgsm`:
+- the skin's material, with its diffuse a transparent placeholder (`Textures\SoftBodyFO4\Film_d.dds`);
+- source alpha over inverse source alpha;
+- no depth write;
+- a no-fade decal, one-sided.
+
+4Strands puts its own texture in the placeholder's place at runtime and draws the fluid on her skin into it. The method
+is DripSim's (by AntiArc). Without 4Strands, the overlays draw nothing. Needs a BodySlide rebuild.
+
 ## Rebuild
 
 Needs CBBE (FO4) and GT Softbody (Skyrim SE) installed; the paths are the

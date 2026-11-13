@@ -20,6 +20,8 @@ from scipy import ndimage
 SIZE = 2048
 TEXTURES = ("SoftBodyFO4/Genitals_d.dds", "SoftBodyFO4/Genitals_n.dds", "SoftBodyFO4/Genitals_s.dds")
 MATERIAL = r"Materials\SoftBodyFO4\Genitals.bgsm"
+FILM_MATERIAL = r"Materials\SoftBodyFO4\Film.bgsm"
+FILM_TEXTURES = ("SoftBodyFO4/Film_d.dds",)   # the normal and specular maps stay the skin's
 SKIN_BGSM = "materials/actors/character/basehumanfemale/basehumanfemaleskin.bgsm"
 SPECULAR, GLOSS = 40, 100      # 0-255
 # GT's vulva island in its texture (u 0.27-0.37, v 0.86-1.0, front at the top): the clitoral hood is its tip,
@@ -46,7 +48,7 @@ def _blocks(image, pixel_format):
 
 def write_dds(path, image, fourcc):
     """A DDS the way CBBE's own are: legacy header (DXT1 or BC5U), full mip chain."""
-    pixel_format = {b"DXT1": "DXT1", b"BC5U": "BC5"}[fourcc]
+    pixel_format = {b"DXT1": "DXT1", b"BC5U": "BC5", b"DXT5": "DXT5"}[fourcc]
     w, h = image.size
     levels, body = [], b""
     level = image
@@ -130,6 +132,20 @@ def make_bgsm(template, textures):
         new = (textures[k] + "\0").encode("latin-1") if k < len(textures) else old
         out += struct.pack("<I", len(new)) + new
     return bytes(out + data[p:])
+
+
+def make_film_bgsm(template):
+    """The fluid film's material (v0.46): the skin's, with a transparent placeholder diffuse that 4Strands replaces at
+    runtime, alpha-blended (source alpha, inverse source alpha) as a decal over the skin it copies (no depth write, so it
+    never fights it), one-sided"""
+    data = bytearray(make_bgsm(template, ["Textures\\" + t.replace("/", "\\") for t in FILM_TEXTURES]))
+    data[32] = 1                                  # alpha blending ...
+    data[33:41] = struct.pack("<II", 6, 7)        # ... source alpha, inverse source alpha
+    data[43] = 0                                  # no depth write
+    data[47] = 1                                  # decal
+    data[48] = 0                                  # one-sided
+    data[49] = 1                                  # decal, no fade
+    return bytes(data)
 
 
 def bake_normals(mesh, vagina_vertices, R, msn_path, diffuse_path):
@@ -264,5 +280,8 @@ def write(out_root, mesh, vagina_vertices, R, gt_root, game_data, vulva, skin_pa
     mat = os.path.join(out_root, MATERIAL)
     os.makedirs(os.path.dirname(mat), exist_ok=True)
     open(mat, "wb").write(make_bgsm(template, TEXTURES))
+    # the fluid film: its material and a small transparent placeholder (4Strands puts its own texture in its place)
+    open(os.path.join(out_root, FILM_MATERIAL), "wb").write(make_film_bgsm(template))
+    write_dds(os.path.join(tex_dir, "Film_d.dds"), Image.new("RGBA", (16, 16), (0, 0, 0, 0)), b"DXT5")
     return dict(normal_coverage=coverage, material=MATERIAL, skin_gain=gain, rim_vertices=rim,
                 hood_texels=hood_texels, hood_colour=hood_now, skin_colour=skin_colour)
